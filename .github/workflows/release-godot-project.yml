@@ -148,7 +148,7 @@ jobs:
           cached: true
 
   release_github:
-    needs: metadata
+    needs: [metadata, release_android, release_ios]
     runs-on: ubuntu-latest
 
     steps:
