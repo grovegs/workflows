@@ -75,7 +75,7 @@ jobs:
           version: ${{ inputs.version }}
           platform: Android
           preset: Android ${{ inputs.environment }}
-          configuration:
+          configuration: Debug
           file-name: ${{ steps.get_project_name.outputs.project_name }}
           android-keystore: ${{ secrets.keystore }}
           android-keystore-user: ${{ secrets.keystore-user }}
