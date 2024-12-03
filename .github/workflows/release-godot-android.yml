@@ -6,17 +6,12 @@ on:
       project:
         required: true
         type: string
+      environment:
+        required: true
+        type: string
       android-format:
         required: true
         type: string
-      publish-googleplay:
-        required: false
-        type: boolean
-        default: false
-      publish-firebase:
-        required: false
-        type: boolean
-        default: false
     secrets:
       android-keystore:
         required: true
@@ -63,8 +58,8 @@ jobs:
           global-json-file: ${{ inputs.project }}/global.json
           version: 0.0.1
           platform: Android
-          preset: Android
-          configuration: Debug
+          preset: Android ${{ inputs.environment }}
+          configuration:
           file-name: Test
           android-keystore: ${{ secrets.android-keystore }}
           android-keystore-user: ${{ secrets.android-keystore-user }}
@@ -72,7 +67,7 @@ jobs:
           android-format: ${{ inputs.android-format }}
 
       - name: 🏗️ Publish to Firebase
-        if: inputs.publish-firebase
+        if: ${{ inputs.environment == 'Development' }}
         uses: grovegs/actions/.github/actions/publish-firebase@refactor/reusable-workflow
         with:
           file: ${{ steps.build_project.outputs.file }}
