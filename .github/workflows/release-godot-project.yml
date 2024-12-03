@@ -27,6 +27,9 @@ on:
       firebase-credentials:
         description: Firebase service account credentials for authentication with Firebase services.
         required: false
+      firebase-app-id-android:
+        description: Firebase app ID used to upload builds to Firebase App Distribution.
+        required: false
       android-keystore:
         description: Base64-encoded content of the Android keystore for signing the build.
         required: false
@@ -35,9 +38,6 @@ on:
         required: false
       android-keystore-password:
         description: Password for accessing the Android keystore.
-        required: false
-      android-firebase-app-id:
-        description: Firebase app ID used to upload builds to Firebase App Distribution.
         required: false
 
 jobs:
@@ -123,7 +123,7 @@ jobs:
         uses: grovegs/actions/.github/actions/publish-firebase@refactor/reusable-workflow
         with:
           file: ${{ steps.build_project.outputs.file }}
-          app-id: ${{ secrets.android-firebase-app-id }}
+          app-id: ${{ secrets.firebase-app-id-android }}
           credentials: ${{ secrets.firebase-credentials }}
           release-notes: ${{ needs.metadata.outputs.changelog }}
           tester-groups: ${{ inputs.firebase-tester-groups }}
