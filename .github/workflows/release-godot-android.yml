@@ -19,6 +19,16 @@ on:
         description: The Android build format. Supported values are `apk` or `aab`.
         required: true
         type: string
+      release-notes:
+        description: Release notes for the update. Provide a brief description of changes in the release.
+        required: false
+        default: ""
+        type: string
+      firebase-tester-groups:
+        description: Comma-separated list of Firebase tester groups to receive the build. Used for Firebase App Distribution.
+        required: false
+        default: ""
+        type: string
     secrets:
       keystore:
         description: Base64-encoded content of the Android keystore for signing the build.
@@ -87,5 +97,7 @@ jobs:
         uses: grovegs/actions/.github/actions/publish-firebase@refactor/reusable-workflow
         with:
           file: ${{ steps.build_project.outputs.file }}
-          firebase-app-id: ${{ secrets.firebase-app-id }}
-          firebase-credentials: ${{ secrets.firebase-credentials }}
+          app-id: ${{ secrets.firebase-app-id }}
+          credentials: ${{ secrets.firebase-credentials }}
+          release-notes: ${{ inputs.release-notes }}
+          tester-groups: ${{ inputs.firebase-tester-groups }}
