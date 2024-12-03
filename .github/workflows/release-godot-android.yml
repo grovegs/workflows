@@ -4,24 +4,36 @@ on:
   workflow_call:
     inputs:
       project:
+        description: The relative path to the Godot project directory containing the `project.godot` file.
         required: true
         type: string
       environment:
+        description: The build environment (e.g., Development, Production).
         required: true
         type: string
-      android-format:
+      version:
+        description: The version number for the build (e.g., 1.0.0).
+        required: true
+        type: string
+      format:
+        description: The Android build format. Supported values are `apk` or `aab`.
         required: true
         type: string
     secrets:
-      android-keystore:
+      keystore:
+        description: Base64-encoded content of the Android keystore for signing the build.
         required: true
-      android-keystore-user:
+      keystore-user:
+        description: Username for the Android keystore.
         required: true
-      android-keystore-password:
+      keystore-password:
+        description: Password for the Android keystore.
         required: true
       firebase-app-id:
+        description: Firebase app ID for uploading builds to Firebase App Distribution.
         required: false
       firebase-credentials:
+        description: Firebase service account credentials for authentication.
         required: false
 
 jobs:
@@ -50,21 +62,25 @@ jobs:
           target-platforms: Android
           cached: true
 
+      - name: Get Project Name
+        id: get_project_name
+        run: echo "project_name=$(basename ${{ inputs.project }})" >> $GITHUB_OUTPUT
+
       - name: 🏗️ Build Project
         id: build_project
         uses: grovegs/actions/.github/actions/build-godot@refactor/reusable-workflow
         with:
           project: ${{ inputs.project }}
           global-json-file: ${{ inputs.project }}/global.json
-          version: 0.0.1
+          version: ${{ inputs.version }}
           platform: Android
           preset: Android ${{ inputs.environment }}
           configuration:
-          file-name: Test
-          android-keystore: ${{ secrets.android-keystore }}
-          android-keystore-user: ${{ secrets.android-keystore-user }}
-          android-keystore-password: ${{ secrets.android-keystore-password }}
-          android-format: ${{ inputs.android-format }}
+          file-name: ${{ steps.get_project_name.outputs.project_name }}
+          android-keystore: ${{ secrets.keystore }}
+          android-keystore-user: ${{ secrets.keystore-user }}
+          android-keystore-password: ${{ secrets.keystore-password }}
+          android-format: ${{ inputs.format }}
 
       - name: 🏗️ Publish to Firebase
         if: ${{ inputs.environment == 'Development' }}
