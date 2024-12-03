@@ -102,7 +102,7 @@ jobs:
       - name: 🎮 Setup Godot
         uses: grovegs/actions/.github/actions/setup-godot@refactor/reusable-workflow
         with:
-          global-json-file: ${{ inputs.project }}/global.json
+          global-json-file: ${{ inputs.global-json-file }}
           target-platforms: Android
           cached: true
 
@@ -111,7 +111,7 @@ jobs:
         uses: grovegs/actions/.github/actions/build-godot@refactor/reusable-workflow
         with:
           project: ${{ inputs.project }}
-          global-json-file: ${{ inputs.project }}/global.json
+          global-json-file: ${{ inputs.global-json-file }}
           version: ${{ needs.metadata.outputs.version }}
           platform: Android
           preset: Android ${{ inputs.environment }}
@@ -143,7 +143,7 @@ jobs:
       - name: 🎮 Setup Godot
         uses: grovegs/actions/.github/actions/setup-godot@refactor/reusable-workflow
         with:
-          global-json-file: ${{ inputs.project }}/global.json
+          global-json-file: ${{ inputs.global-json-file }}
           target-platforms: iOS
           cached: true
 
