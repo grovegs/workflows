@@ -7,6 +7,10 @@ on:
         description: The relative path to the Godot project directory containing the `project.godot` file.
         required: true
         type: string
+      global-json-file:
+        description: The relative path to the `global.json` file to extract Dotnet and Godot version.
+        required: true
+        type: string
       version_type:
         description: Specifies the version type (e.g., major, minor, patch) for the build.
         required: true
