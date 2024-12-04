@@ -82,7 +82,7 @@ jobs:
 
   release_android:
     needs: metadata
-    runs-on: macos-latest
+    runs-on: ubuntu-latest
 
     steps:
       - name: 📥 Checkout Code
