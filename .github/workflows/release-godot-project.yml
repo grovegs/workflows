@@ -123,7 +123,13 @@ jobs:
           android-format: apk
 
       - name: Debug Output
-        run: cat ${{ inputs.project }}/android/build/build/outputs/apk/debug/output-metadata.json
+        run: |
+          echo "------PRESET------"
+          echo "Android ${{ inputs.environment }}"
+          echo "------EXPORT-PRESETS------"
+          cat ${{ inputs.project }}/export_presets.cfg
+          echo "------OUTPUT-METADATA------"
+          cat ${{ inputs.project }}/android/build/build/outputs/apk/debug/output-metadata.json
 
       - name: 📤 Publish to Firebase
         if: ${{ inputs.environment == 'Development' }}
