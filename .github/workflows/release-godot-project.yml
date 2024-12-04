@@ -122,6 +122,9 @@ jobs:
           android-keystore-password: ${{ secrets.android-keystore-password }}
           android-format: apk
 
+      - name: Debug Output
+        run: cat ${{ inputs.project }}/android/build/build/outputs/apk/debug/output-metadata.json
+
       - name: 📤 Publish to Firebase
         if: ${{ inputs.environment == 'Development' }}
         uses: grovegs/actions/.github/actions/publish-firebase@refactor/reusable-workflow
