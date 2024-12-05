@@ -45,7 +45,7 @@ on:
         required: false
 
 jobs:
-  metadata:
+  shared:
     runs-on: ubuntu-latest
     outputs:
       version: ${{ steps.bump_version.outputs.next-version }}
@@ -81,7 +81,7 @@ jobs:
           echo "title=$title" >> $GITHUB_OUTPUT
 
   release_android:
-    needs: metadata
+    needs: shared
     runs-on: ubuntu-latest
 
     steps:
@@ -112,11 +112,11 @@ jobs:
         with:
           project: ${{ inputs.project }}
           global-json-file: ${{ inputs.global-json-file }}
-          version: ${{ needs.metadata.outputs.version }}
+          version: ${{ needs.shared.outputs.version }}
           platform: Android
           preset: Android ${{ inputs.environment }}
           configuration: Debug
-          filename: ${{ needs.metadata.outputs.filename }}
+          filename: ${{ needs.shared.outputs.filename }}
           android-keystore: ${{ secrets.android-keystore }}
           android-keystore-user: ${{ secrets.android-keystore-user }}
           android-keystore-password: ${{ secrets.android-keystore-password }}
@@ -129,11 +129,11 @@ jobs:
           file: ${{ steps.build_project.outputs.file }}
           app-id: ${{ secrets.firebase-app-id-android }}
           credentials: ${{ secrets.firebase-credentials }}
-          release-notes: ${{ needs.metadata.outputs.changelog }}
+          release-notes: ${{ needs.shared.outputs.changelog }}
           tester-groups: ${{ inputs.firebase-tester-groups }}
 
   release_ios:
-    needs: metadata
+    needs: shared
     runs-on: macos-latest
 
     steps:
@@ -148,7 +148,7 @@ jobs:
           cached: true
 
   release_github:
-    needs: [metadata, release_android, release_ios]
+    needs: [shared, release_android, release_ios]
     runs-on: ubuntu-latest
 
     steps:
@@ -158,7 +158,7 @@ jobs:
       - name: 🛠️ Publish to Github
         uses: grovegs/actions/.github/actions/publish-github@refactor/reusable-workflow
         with:
-          title: ${{ needs.metadata.outputs.title }}
-          version: ${{ needs.metadata.outputs.version }}
-          changelog: ${{ needs.metadata.outputs.changelog }}
+          title: ${{ needs.shared.outputs.title }}
+          version: ${{ needs.shared.outputs.version }}
+          changelog: ${{ needs.shared.outputs.changelog }}
           github-token: ${{ secrets.github-token }}
