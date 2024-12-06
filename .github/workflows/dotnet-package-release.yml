@@ -1,14 +1,14 @@
-name: 🚀 Release Dotnet Package
+name: 🚀 Release .NET Package
 
 on:
   workflow_call:
     inputs:
       project:
-        description: The relative path to the .NET project file (e.g., `MyProject.csproj`).
+        description: The relative path to the Core .NET project directory containing the `csproj` file.
         required: true
         type: string
       global-json-file:
-        description: The relative path to the `global.json` file to extract Dotnet version.
+        description: The relative path to the `global.json` file to extract .NET version.
         required: true
         type: string
       version-type:
