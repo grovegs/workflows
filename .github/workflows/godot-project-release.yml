@@ -8,7 +8,7 @@ on:
         required: true
         type: string
       global-json-file:
-        description: The relative path to the `global.json` file to extract Dotnet and Godot version.
+        description: The relative path to the `global.json` file to extract .NET and Godot version.
         required: true
         type: string
       version-type:
