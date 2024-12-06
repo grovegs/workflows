@@ -4,11 +4,11 @@ on:
   workflow_call:
     inputs:
       project:
-        description: The relative path to the Dotnet project file.
+        description: The relative path to the .NET project file (e.g., `MyProject.csproj`).
         required: true
         type: string
       global-json-file:
-        description: The relative path to the .NET project file (e.g., `MyProject.csproj`).
+        description: The relative path to the `global.json` file to extract Dotnet version.
         required: true
         type: string
       version-type:
