@@ -59,7 +59,7 @@ jobs:
           title="$(echo $(basename "${{ inputs.project }}") | sed -E 's/([a-z])([A-Z])/\1 \2/g') ${{ steps.bump_version.outputs.next-version }}"
           echo "title=$title" >> $GITHUB_OUTPUT
 
-  pack_nuget:
+  pack:
     needs: shared
     runs-on: ubuntu-latest
     outputs:
@@ -97,23 +97,23 @@ jobs:
           path: ${{ steps.pack_nuget.outputs.file }}
 
   release_nuget:
-    needs: [shared, pack_nuget]
+    needs: [shared, pack]
     runs-on: macos-latest
 
     steps:
       - name: 📥 Download Artifact
         uses: actions/download-artifact@v4
         with:
-          path: ${{ needs.pack_nuget.outputs.file }}
+          path: ${{ needs.pack.outputs.file }}
 
       - name: 🚀 Publish Nuget
         uses: grovegs/actions/.github/actions/publish-nuget@refactor/reusable-workflow
         with:
-          file: ${{ needs.pack_nuget.outputs.file }}
+          file: ${{ needs.pack.outputs.file }}
           api-key: ${{ secrets.nuget-api-key }}
 
   release_github:
-    needs: [shared, pack_nuget]
+    needs: [shared, pack]
     runs-on: ubuntu-latest
 
     steps:
@@ -123,7 +123,7 @@ jobs:
       - name: 📥 Download Artifact
         uses: actions/download-artifact@v4
         with:
-          path: ${{ needs.pack_nuget.outputs.file }}
+          path: ${{ needs.pack.outputs.file }}
 
       - name: 🚀 Publish to Github
         uses: grovegs/actions/.github/actions/publish-github@refactor/reusable-workflow
@@ -132,4 +132,4 @@ jobs:
           version: ${{ needs.shared.outputs.version }}
           changelog: ${{ needs.shared.outputs.changelog }}
           github-token: ${{ secrets.github-token }}
-          assets: ${{ needs.pack_nuget.outputs.file }}
+          assets: ${{ needs.pack.outputs.file }}
