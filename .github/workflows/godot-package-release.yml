@@ -196,7 +196,7 @@ jobs:
       - name: 🚀 Publish Nuget
         uses: grovegs/actions/.github/actions/publish-nuget@refactor/reusable-workflow
         with:
-          file: ~/.artifacts/${{ needs.pack_core.outputs.filename }}
+          file: ~/.artifacts/${{ needs.pack_core.outputs.filename }}.nupkg
           api-key: ${{ secrets.nuget-api-key }}
 
   release_godot:
@@ -213,7 +213,7 @@ jobs:
       - name: 🚀 Publish Nuget
         uses: grovegs/actions/.github/actions/publish-nuget@refactor/reusable-workflow
         with:
-          file: ~/.artifacts/${{ needs.pack_godot.outputs.filename }}
+          file: ~/.artifacts/${{ needs.pack_godot.outputs.filename }}.nupkg
           api-key: ${{ secrets.nuget-api-key }}
 
   release_github:
