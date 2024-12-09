@@ -60,7 +60,7 @@ jobs:
     needs: shared
     runs-on: ubuntu-latest
     outputs:
-      file: ${{ steps.pack_nuget.outputs.file }}
+      filename: ${{ steps.generate_filename.outputs.filename }}
 
     steps:
       - name: 📂 Checkout Code
@@ -79,6 +79,12 @@ jobs:
           configuration: Release
           version: ${{ needs.shared.outputs.version }}
 
+      - name: 📦 Generate Filename
+        id: generate_filename
+        run: |
+          filename=${{ needs.shared.outputs.filename }}
+          echo "filename=$filename" >> $GITHUB_OUTPUT
+
       - name: 📦 Pack Nuget
         id: pack_nuget
         uses: grovegs/actions/.github/actions/pack-dotnet@refactor/reusable-workflow
@@ -86,29 +92,29 @@ jobs:
           project: ${{ inputs.project }}
           configuration: Release
           version: ${{ needs.shared.outputs.version }}
-          filename: ${{ needs.shared.outputs.filename }}
+          filename: ${{ steps.generate_filename.outputs.filename }}
 
       - name: 📤 Upload Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ needs.shared.outputs.filename }}
+          name: ${{ steps.generate_filename.outputs.filename }}
           path: ${{ steps.pack_nuget.outputs.file }}
 
   release_nuget:
-    needs: [shared, pack]
+    needs: pack
     runs-on: ubuntu-latest
 
     steps:
       - name: 📥 Download Artifact
         uses: actions/download-artifact@v4
         with:
-          name: ${{ needs.shared.outputs.filename }}
-          path: ${{ needs.pack.outputs.file }}
+          name: ${{ needs.pack.outputs.filename }}
+          path: ~/.artifacts
 
       - name: 🚀 Publish Nuget
         uses: grovegs/actions/.github/actions/publish-nuget@refactor/reusable-workflow
         with:
-          file: ${{ needs.pack.outputs.file }}
+          file: ~/.artifacts/${{ needs.pack.outputs.filename }}.nupkg
           api-key: ${{ secrets.nuget-api-key }}
 
   release_github:
@@ -122,14 +128,14 @@ jobs:
       - name: 📥 Download Artifact
         uses: actions/download-artifact@v4
         with:
-          name: ${{ needs.shared.outputs.filename }}
-          path: ${{ needs.pack.outputs.file }}
+          name: ${{ needs.pack.outputs.filename }}
+          path: ~/.artifacts
 
       - name: 🚀 Publish to Github
         uses: grovegs/actions/.github/actions/publish-github@refactor/reusable-workflow
         with:
-          title: ${{ inputs.name }}
+          title: ${{ inputs.name }} ${{ needs.shared.outputs.version }}
           version: ${{ needs.shared.outputs.version }}
           changelog: ${{ needs.shared.outputs.changelog }}
           github-token: ${{ secrets.github-token }}
-          assets: ${{ needs.pack.outputs.file }}
+          assets: ~/.artifacts/${{ needs.pack.outputs.filename }}.nupkg
