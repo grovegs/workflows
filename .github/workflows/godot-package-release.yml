@@ -68,7 +68,7 @@ jobs:
     needs: shared
     runs-on: ubuntu-latest
     outputs:
-      file: ${{ steps.pack_nuget.outputs.file }}
+      filename: ${{ steps.generate_filename.outputs.filename }}
 
     steps:
       - name: 📂 Checkout Code
@@ -87,6 +87,12 @@ jobs:
           configuration: Release
           version: ${{ needs.shared.outputs.version }}
 
+      - name: 📦 Generate Filename
+        id: generate_filename
+        run: |
+          filename=${{ needs.shared.outputs.filename }}
+          echo "filename=$filename" >> $GITHUB_OUTPUT
+
       - name: 📦 Pack Nuget
         id: pack_nuget
         uses: grovegs/actions/.github/actions/pack-dotnet@refactor/reusable-workflow
@@ -94,19 +100,19 @@ jobs:
           project: ${{ inputs.core-project }}
           configuration: Release
           version: ${{ needs.shared.outputs.version }}
-          filename: ${{ needs.shared.outputs.filename }}
+          filename: ${{ steps.generate_filename.outputs.filename }}
 
       - name: 📤 Upload Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ needs.shared.outputs.filename }}
+          name: ${{ steps.generate_filename.outputs.filename }}
           path: ${{ steps.pack_nuget.outputs.file }}
 
   pack_godot:
     needs: shared
     runs-on: ubuntu-latest
     outputs:
-      file: ${{ steps.pack_nuget.outputs.file }}
+      filename: ${{ steps.generate_filename.outputs.filename }}
 
     steps:
       - name: 📂 Checkout Code
@@ -125,6 +131,12 @@ jobs:
           configuration: Release
           version: ${{ needs.shared.outputs.version }}
 
+      - name: 📦 Generate Filename
+        id: generate_filename
+        run: |
+          filename=${{ needs.shared.outputs.filename }}-godot
+          echo "filename=$filename" >> $GITHUB_OUTPUT
+
       - name: 📦 Pack Nuget
         id: pack_nuget
         uses: grovegs/actions/.github/actions/pack-dotnet@refactor/reusable-workflow
@@ -132,23 +144,29 @@ jobs:
           project: ${{ inputs.godot-project }}
           configuration: Release
           version: ${{ needs.shared.outputs.version }}
-          filename: ${{ needs.shared.outputs.filename }}-godot
+          filename: ${{ steps.generate_filename.outputs.filename }}
 
       - name: 📤 Upload Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ needs.shared.outputs.filename }}-godot
+          name: ${{ steps.generate_filename.outputs.filename }}
           path: ${{ steps.pack_nuget.outputs.file }}
 
   pack_godot_addon:
     needs: shared
     runs-on: ubuntu-latest
     outputs:
-      file: ${{ steps.pack_addon.outputs.file }}
+      filename: ${{ steps.generate_filename.outputs.filename }}
 
     steps:
       - name: 📂 Checkout Code
         uses: actions/checkout@v4
+
+      - name: 📦 Generate Filename
+        id: generate_filename
+        run: |
+          filename=${{ needs.shared.outputs.filename }}-godot-addon
+          echo "filename=$filename" >> $GITHUB_OUTPUT
 
       - name: 📦 Pack Godot Addon
         id: pack_addon
@@ -156,46 +174,46 @@ jobs:
         with:
           addon: ${{ inputs.godot-addon }}
           version: ${{ needs.shared.outputs.version }}
-          filename: ${{ needs.shared.outputs.filename }}-godot-addon
+          filename: ${{ steps.generate_filename.outputs.filename }}
 
       - name: 📤 Upload Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ needs.shared.outputs.filename }}-godot-addon
+          name: ${{ steps.generate_filename.outputs.filename }}
           path: ${{ steps.pack_addon.outputs.file }}
 
   release_core:
-    needs: [shared, pack_core]
+    needs: [pack_core]
     runs-on: ubuntu-latest
 
     steps:
       - name: 📥 Download Artifact
         uses: actions/download-artifact@v4
         with:
-          name: ${{ needs.shared.outputs.filename }}
-          path: ~./nupkgs
+          name: ${{ needs.pack_core.outputs.filename }}
+          path: ~/.artifacts
 
       - name: 🚀 Publish Nuget
         uses: grovegs/actions/.github/actions/publish-nuget@refactor/reusable-workflow
         with:
-          file: ${{ needs.pack_core.outputs.file }}
+          file: ~/.artifacts/${{ needs.pack_core.outputs.filename }}
           api-key: ${{ secrets.nuget-api-key }}
 
   release_godot:
-    needs: [shared, pack_godot]
+    needs: [pack_godot]
     runs-on: ubuntu-latest
 
     steps:
       - name: 📥 Download Artifact
         uses: actions/download-artifact@v4
         with:
-          name: ${{ needs.shared.outputs.filename }}-godot
-          path: ~./nupkgs
+          name: ${{ needs.pack_godot.outputs.filename }}
+          path: ~/.artifacts
 
       - name: 🚀 Publish Nuget
         uses: grovegs/actions/.github/actions/publish-nuget@refactor/reusable-workflow
         with:
-          file: ${{ needs.pack_godot.outputs.file }}
+          file: ~/.artifacts/${{ needs.pack_godot.outputs.filename }}
           api-key: ${{ secrets.nuget-api-key }}
 
   release_github:
@@ -209,17 +227,19 @@ jobs:
       - name: 📥 Download All Artifacts
         uses: actions/download-artifact@v4
         with:
-          path: ~/.assets
+          path: ~/.artifacts
 
-      - name: 🔍 Get Assets
-        id: get_assets
-        run: echo "assets=$(ls ~/.assets | tr '\n' ' ')" >> $GITHUB_OUTPUT
+      - name: 🔍 Find Assets
+        id: find_assets
+        run: |
+          assets=$(find ~/.artifacts -type f | tr '\n' ' ')
+          echo "assets=$assets" >> $GITHUB_OUTPUT
 
       - name: 🚀 Publish to Github
         uses: grovegs/actions/.github/actions/publish-github@refactor/reusable-workflow
         with:
-          title: ${{ inputs.name }}
+          title: ${{ inputs.name }} ${{ needs.shared.outputs.version }}
           version: ${{ needs.shared.outputs.version }}
           changelog: ${{ needs.shared.outputs.changelog }}
           github-token: ${{ secrets.github-token }}
-          assets: ${{ steps.get_assets.outputs.assets }}
+          assets: ${{ steps.find_assets.outputs.assets }}
