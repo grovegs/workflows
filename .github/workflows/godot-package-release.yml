@@ -173,10 +173,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: ${{ needs.shared.outputs.filename }}
-          path: ${{ needs.pack_core.outputs.file }}
-
-      - name: 🔍 Verify Artifact Contents
-        run: ls -al ~/.nupkgs
+          path: ~./nupkgs
 
       - name: 🚀 Publish Nuget
         uses: grovegs/actions/.github/actions/publish-nuget@refactor/reusable-workflow
@@ -193,7 +190,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: ${{ needs.shared.outputs.filename }}-godot
-          path: ${{ needs.pack_godot.outputs.file }}
+          path: ~./nupkgs
 
       - name: 🚀 Publish Nuget
         uses: grovegs/actions/.github/actions/publish-nuget@refactor/reusable-workflow
@@ -212,11 +209,11 @@ jobs:
       - name: 📥 Download All Artifacts
         uses: actions/download-artifact@v4
         with:
-          path: ~/.artifacts
+          path: ~/.assets
 
       - name: 🔍 Get Assets
         id: get_assets
-        run: echo "assets=$(ls ~/.artifacts | tr '\n' ' ')" >> $GITHUB_OUTPUT
+        run: echo "assets=$(ls ~/.assets | tr '\n' ' ')" >> $GITHUB_OUTPUT
 
       - name: 🚀 Publish to Github
         uses: grovegs/actions/.github/actions/publish-github@refactor/reusable-workflow
