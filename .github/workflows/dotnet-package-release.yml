@@ -34,7 +34,6 @@ jobs:
       version: ${{ steps.bump_version.outputs.next-version }}
       changelog: ${{ steps.generate_changelog.outputs.changelog }}
       filename: ${{ steps.generate_filename.outputs.filename }}
-      title: ${{ steps.generate_title.outputs.title }}
 
     steps:
       - name: 📂 Checkout Code
@@ -54,14 +53,8 @@ jobs:
       - name: 📦 Generate Filename
         id: generate_filename
         run: |
-          filename=$(echo "${{ inputs.name }}" | sed -E 's/([a-z])([A-Z])/\1-\2/g' | tr '[:upper:]' '[:lower:]')-${{ steps.bump_version.outputs.next-version }}
+          filename=$(echo "${{ inputs.name }}" | sed -E 's/([[:space:]]|_)/-/g; s/([a-z])([A-Z])/\1-\2/g' | tr '[:upper:]' '[:lower:]')-${{ steps.bump_version.outputs.next-version }}
           echo "filename=$filename" >> $GITHUB_OUTPUT
-
-      - name: 📝 Generate Title
-        id: generate_title
-        run: |
-          title="$(echo "${{ inputs.name }}" | sed -E 's/([a-z])([A-Z])/\1 \2/g') ${{ steps.bump_version.outputs.next-version }}"
-          echo "title=$title" >> $GITHUB_OUTPUT
 
   pack:
     needs: shared
@@ -102,7 +95,7 @@ jobs:
 
   release_nuget:
     needs: [shared, pack]
-    runs-on: macos-latest
+    runs-on: ubuntu-latest
 
     steps:
       - name: 📥 Download Artifact
@@ -132,7 +125,7 @@ jobs:
       - name: 🚀 Publish to Github
         uses: grovegs/actions/.github/actions/publish-github@refactor/reusable-workflow
         with:
-          title: ${{ needs.shared.outputs.title }}
+          title: ${{ inputs.name }}
           version: ${{ needs.shared.outputs.version }}
           changelog: ${{ needs.shared.outputs.changelog }}
           github-token: ${{ secrets.github-token }}
