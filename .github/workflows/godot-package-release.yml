@@ -99,7 +99,7 @@ jobs:
       - name: 📤 Upload Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ needs.shared.outputs.filename }}
+          name: ${{ steps.pack_nuget.outputs.file }}
           path: ${{ steps.pack_nuget.outputs.file }}
 
   pack_godot:
@@ -137,7 +137,7 @@ jobs:
       - name: 📤 Upload Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ needs.shared.outputs.filename }}-godot
+          name: ${{ steps.pack_nuget.outputs.file }}
           path: ${{ steps.pack_nuget.outputs.file }}
 
   pack_godot_addon:
@@ -161,7 +161,7 @@ jobs:
       - name: 📤 Upload Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ needs.shared.outputs.filename }}-godot-addon
+          name: ${{ steps.pack_addon.outputs.file }}
           path: ${{ steps.pack_addon.outputs.file }}
 
   release_core:
@@ -172,7 +172,7 @@ jobs:
       - name: 📥 Download Artifact
         uses: actions/download-artifact@v4
         with:
-          name: ${{ needs.shared.outputs.filename }}
+          name: ${{ needs.pack_core.outputs.file }}
           path: ${{ needs.pack_core.outputs.file }}
 
       - name: 🚀 Publish Nuget
@@ -189,7 +189,7 @@ jobs:
       - name: 📥 Download Artifact
         uses: actions/download-artifact@v4
         with:
-          name: ${{ needs.shared.outputs.filename }}-godot
+          name: ${{ needs.pack_godot.outputs.file }}
           path: ${{ needs.pack_godot.outputs.file }}
 
       - name: 🚀 Publish Nuget
