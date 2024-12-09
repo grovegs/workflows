@@ -154,7 +154,7 @@ jobs:
 
   pack_godot_addon:
     needs: shared
-    runs-on: ubuntu-latest
+    runs-on: macos-latest
     outputs:
       filename: ${{ steps.generate_filename.outputs.filename }}
 
