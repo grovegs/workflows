@@ -175,6 +175,9 @@ jobs:
           name: ${{ needs.shared.outputs.filename }}
           path: ${{ needs.pack_core.outputs.file }}
 
+      - name: 🔍 Verify Artifact Contents
+        run: ls -al ~/.nupkgs
+
       - name: 🚀 Publish Nuget
         uses: grovegs/actions/.github/actions/publish-nuget@refactor/reusable-workflow
         with:
