@@ -3,6 +3,10 @@ name: 🚀 Release .NET Package
 on:
   workflow_call:
     inputs:
+      name:
+        description: The name of package.
+        required: true
+        type: string
       project:
         description: The relative path to the Core .NET project directory containing the `csproj` file.
         required: true
@@ -50,13 +54,13 @@ jobs:
       - name: 📦 Generate Filename
         id: generate_filename
         run: |
-          filename=$(echo $(basename "${{ inputs.project }}") | sed -E 's/([a-z])([A-Z])/\1-\2/g' | tr '[:upper:]' '[:lower:]')-${{ steps.bump_version.outputs.next-version }}
+          filename=$(echo "${{ inputs.name }}" | sed -E 's/([a-z])([A-Z])/\1-\2/g' | tr '[:upper:]' '[:lower:]')-${{ steps.bump_version.outputs.next-version }}
           echo "filename=$filename" >> $GITHUB_OUTPUT
 
       - name: 📝 Generate Title
         id: generate_title
         run: |
-          title="$(echo $(basename "${{ inputs.project }}") | sed -E 's/([a-z])([A-Z])/\1 \2/g') ${{ steps.bump_version.outputs.next-version }}"
+          title="$(echo "${{ inputs.name }}" | sed -E 's/([a-z])([A-Z])/\1 \2/g') ${{ steps.bump_version.outputs.next-version }}"
           echo "title=$title" >> $GITHUB_OUTPUT
 
   pack:
