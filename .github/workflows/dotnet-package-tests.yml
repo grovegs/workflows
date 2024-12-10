@@ -1,0 +1,33 @@
+name: 🧪 Test .NET Package
+
+on:
+  workflow_call:
+    inputs:
+      project:
+        description: The relative path to the .NET Test project directory containing the `csproj` file.
+        required: true
+        type: string
+      global-json-file:
+        description: The relative path to the `global.json` file to extract .NET version.
+        required: true
+        type: string
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📂 Checkout Code
+        uses: actions/checkout@v4
+
+      - name: ⚙️ Setup Dotnet
+        uses: grovegs/actions/.github/actions/setup-dotnet@refactor/reusable-workflow
+        with:
+          global-json-file: ${{ inputs.global-json-file }}
+          cached: true
+
+      - name: ✅ Test Dotnet
+        uses: grovegs/actions/.github/actions/test-dotnet@refactor/reusable-workflow
+        with:
+          project: ${{ inputs.project }}
+          configuration: Release

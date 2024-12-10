@@ -1,0 +1,141 @@
+name: 🚀 Release .NET Package
+
+on:
+  workflow_call:
+    inputs:
+      name:
+        description: The name of package.
+        required: true
+        type: string
+      project:
+        description: The relative path to the .NET project directory containing the `csproj` file.
+        required: true
+        type: string
+      global-json-file:
+        description: The relative path to the `global.json` file to extract .NET version.
+        required: true
+        type: string
+      version-type:
+        description: Specifies the version type (e.g., major, minor, patch) for the build.
+        required: true
+        type: string
+    secrets:
+      github-token:
+        description: The GitHub token for authentication.
+        required: true
+      nuget-api-key:
+        description: NuGet API key used for authenticating and publishing the package.
+        required: true
+
+jobs:
+  shared:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.bump_version.outputs.next-version }}
+      changelog: ${{ steps.generate_changelog.outputs.changelog }}
+      filename: ${{ steps.generate_filename.outputs.filename }}
+
+    steps:
+      - name: 📂 Checkout Code
+        uses: actions/checkout@v4
+
+      - name: 🆙 Bump Version
+        id: bump_version
+        uses: grovegs/actions/.github/actions/bump-version@refactor/reusable-workflow
+        with:
+          version-type: ${{ inputs.version-type }}
+
+      - name: 📝 Generate Changelog
+        id: generate_changelog
+        run: |
+          echo "changelog=${{ steps.bump_version.outputs.latest-version }} - ${{ steps.bump_version.outputs.next-version }}" >> $GITHUB_OUTPUT
+
+      - name: 📦 Generate Filename
+        id: generate_filename
+        run: |
+          filename=$(echo "${{ inputs.name }}" | sed -E 's/([[:space:]]|_)/-/g; s/([a-z])([A-Z])/\1-\2/g' | tr '[:upper:]' '[:lower:]')-${{ steps.bump_version.outputs.next-version }}
+          echo "filename=$filename" >> $GITHUB_OUTPUT
+
+  pack:
+    needs: shared
+    runs-on: ubuntu-latest
+    outputs:
+      filename: ${{ steps.generate_filename.outputs.filename }}
+
+    steps:
+      - name: 📂 Checkout Code
+        uses: actions/checkout@v4
+
+      - name: ⚙️ Setup Dotnet
+        uses: grovegs/actions/.github/actions/setup-dotnet@refactor/reusable-workflow
+        with:
+          global-json-file: ${{ inputs.global-json-file }}
+          cached: true
+
+      - name: 🏗️ Build Dotnet
+        uses: grovegs/actions/.github/actions/build-dotnet@refactor/reusable-workflow
+        with:
+          project: ${{ inputs.project }}
+          configuration: Release
+          version: ${{ needs.shared.outputs.version }}
+
+      - name: 📦 Generate Filename
+        id: generate_filename
+        run: |
+          filename=${{ needs.shared.outputs.filename }}
+          echo "filename=$filename" >> $GITHUB_OUTPUT
+
+      - name: 📦 Pack Nuget
+        id: pack_nuget
+        uses: grovegs/actions/.github/actions/pack-dotnet@refactor/reusable-workflow
+        with:
+          project: ${{ inputs.project }}
+          configuration: Release
+          version: ${{ needs.shared.outputs.version }}
+          filename: ${{ steps.generate_filename.outputs.filename }}
+
+      - name: 📤 Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.generate_filename.outputs.filename }}
+          path: ${{ steps.pack_nuget.outputs.file }}
+
+  release_nuget:
+    needs: pack
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📥 Download Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ needs.pack.outputs.filename }}
+          path: ~/.artifacts
+
+      - name: 🚀 Publish Nuget
+        uses: grovegs/actions/.github/actions/publish-nuget@refactor/reusable-workflow
+        with:
+          file: ~/.artifacts/${{ needs.pack.outputs.filename }}.nupkg
+          api-key: ${{ secrets.nuget-api-key }}
+
+  release_github:
+    needs: [shared, pack]
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📂 Checkout Code
+        uses: actions/checkout@v4
+
+      - name: 📥 Download Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ needs.pack.outputs.filename }}
+          path: ~/.artifacts
+
+      - name: 🚀 Publish to Github
+        uses: grovegs/actions/.github/actions/publish-github@refactor/reusable-workflow
+        with:
+          title: ${{ inputs.name }} ${{ needs.shared.outputs.version }}
+          version: ${{ needs.shared.outputs.version }}
+          changelog: ${{ needs.shared.outputs.changelog }}
+          github-token: ${{ secrets.github-token }}
+          assets: ~/.artifacts/${{ needs.pack.outputs.filename }}.nupkg

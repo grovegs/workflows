@@ -3,12 +3,16 @@ name: 🚀 Release Godot Project
 on:
   workflow_call:
     inputs:
+      name:
+        description: The name of project.
+        required: true
+        type: string
       project:
         description: The relative path to the Godot project directory containing the `project.godot` file.
         required: true
         type: string
       global-json-file:
-        description: The relative path to the `global.json` file to extract Dotnet and Godot version.
+        description: The relative path to the `global.json` file to extract .NET and Godot version.
         required: true
         type: string
       version-type:
@@ -45,13 +49,12 @@ on:
         required: false
 
 jobs:
-  metadata:
+  shared:
     runs-on: ubuntu-latest
     outputs:
       version: ${{ steps.bump_version.outputs.next-version }}
       changelog: ${{ steps.generate_changelog.outputs.changelog }}
       filename: ${{ steps.generate_filename.outputs.filename }}
-      title: ${{ steps.generate_title.outputs.title }}
 
     steps:
       - name: 🔄 Checkout Code
@@ -71,17 +74,11 @@ jobs:
       - name: 📦 Generate Filename
         id: generate_filename
         run: |
-          filename=$(echo $(basename "${{ inputs.project }}") | sed -E 's/([a-z])([A-Z])/\1-\2/g' | tr '[:upper:]' '[:lower:]')-${{ steps.bump_version.outputs.next-version }}
+          filename=$(echo "${{ inputs.name }}" | sed -E 's/([[:space:]]|_)/-/g; s/([a-z])([A-Z])/\1-\2/g' | tr '[:upper:]' '[:lower:]')-${{ steps.bump_version.outputs.next-version }}
           echo "filename=$filename" >> $GITHUB_OUTPUT
 
-      - name: 📝 Generate Title
-        id: generate_title
-        run: |
-          title="$(echo $(basename "${{ inputs.project }}") | sed -E 's/([a-z])([A-Z])/\1 \2/g') ${{ steps.bump_version.outputs.next-version }}"
-          echo "title=$title" >> $GITHUB_OUTPUT
-
   release_android:
-    needs: metadata
+    needs: shared
     runs-on: ubuntu-latest
 
     steps:
@@ -99,6 +96,12 @@ jobs:
         with:
           packages: platform-tools build-tools;34.0.0 platforms;android-34 cmake;3.10.2.4988404 ndk;23.2.8568313
 
+      - name: 🛠️ Setup Dotnet
+        uses: grovegs/actions/.github/actions/setup-dotnet@refactor/reusable-workflow
+        with:
+          global-json-file: ${{ inputs.global-json-file }}
+          cached: true
+
       - name: 🎮 Setup Godot
         uses: grovegs/actions/.github/actions/setup-godot@refactor/reusable-workflow
         with:
@@ -112,11 +115,11 @@ jobs:
         with:
           project: ${{ inputs.project }}
           global-json-file: ${{ inputs.global-json-file }}
-          version: ${{ needs.metadata.outputs.version }}
+          version: ${{ needs.shared.outputs.version }}
           platform: Android
           preset: Android ${{ inputs.environment }}
           configuration: Debug
-          filename: ${{ needs.metadata.outputs.filename }}
+          filename: ${{ needs.shared.outputs.filename }}
           android-keystore: ${{ secrets.android-keystore }}
           android-keystore-user: ${{ secrets.android-keystore-user }}
           android-keystore-password: ${{ secrets.android-keystore-password }}
@@ -129,11 +132,11 @@ jobs:
           file: ${{ steps.build_project.outputs.file }}
           app-id: ${{ secrets.firebase-app-id-android }}
           credentials: ${{ secrets.firebase-credentials }}
-          release-notes: ${{ needs.metadata.outputs.changelog }}
+          release-notes: ${{ needs.shared.outputs.changelog }}
           tester-groups: ${{ inputs.firebase-tester-groups }}
 
   release_ios:
-    needs: metadata
+    needs: shared
     runs-on: macos-latest
 
     steps:
@@ -148,7 +151,7 @@ jobs:
           cached: true
 
   release_github:
-    needs: [metadata, release_android, release_ios]
+    needs: [shared, release_android, release_ios]
     runs-on: ubuntu-latest
 
     steps:
@@ -158,7 +161,7 @@ jobs:
       - name: 🛠️ Publish to Github
         uses: grovegs/actions/.github/actions/publish-github@refactor/reusable-workflow
         with:
-          title: ${{ needs.metadata.outputs.title }}
-          version: ${{ needs.metadata.outputs.version }}
-          changelog: ${{ needs.metadata.outputs.changelog }}
+          title: ${{ inputs.name }}
+          version: ${{ needs.shared.outputs.version }}
+          changelog: ${{ needs.shared.outputs.changelog }}
           github-token: ${{ secrets.github-token }}
