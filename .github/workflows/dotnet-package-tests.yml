@@ -1,4 +1,4 @@
-name: 🚀 Release .NET Package
+name: 🧪 Test .NET Package
 
 on:
   workflow_call:
