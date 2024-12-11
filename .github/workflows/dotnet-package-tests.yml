@@ -3,7 +3,7 @@ name: 🧪 Test .NET Package
 on:
   workflow_call:
     inputs:
-      project:
+      test-project:
         description: The relative path to the .NET Test project directory containing the `csproj` file.
         required: true
         type: string
@@ -29,5 +29,5 @@ jobs:
       - name: ✅ Test Dotnet
         uses: grovegs/actions/.github/actions/test-dotnet@refactor/reusable-workflow
         with:
-          project: ${{ inputs.project }}
+          project: ${{ inputs.test-project }}
           configuration: Release
