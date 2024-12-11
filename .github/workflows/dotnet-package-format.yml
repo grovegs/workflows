@@ -30,7 +30,7 @@ jobs:
           global-json-file: ${{ inputs.global-json-file }}
           cached: true
 
-      - name: ✅ Test Dotnet
+      - name: 🔍 Format Dotnet
         uses: grovegs/actions/.github/actions/test-dotnet@refactor/reusable-workflow
         with:
           project: ${{ inputs.project }}
@@ -49,7 +49,7 @@ jobs:
           global-json-file: ${{ inputs.global-json-file }}
           cached: true
 
-      - name: ✅ Test Dotnet
+      - name: 🔍 Format Dotnet
         uses: grovegs/actions/.github/actions/test-dotnet@refactor/reusable-workflow
         with:
           project: ${{ inputs.test-project }}
