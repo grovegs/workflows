@@ -102,14 +102,14 @@ jobs:
         uses: grovegs/actions/.github/actions/setup-dotnet@refactor/reusable-workflow
         with:
           global-json-file: ${{ inputs.global-json-file }}
-          cached: true
+          cache: true
 
       - name: 🎮 Setup Godot
         uses: grovegs/actions/.github/actions/setup-godot@refactor/reusable-workflow
         with:
           global-json-file: ${{ inputs.global-json-file }}
           target-platforms: Android
-          cached: true
+          cache: true
 
       - name: 🏗️ Build Project
         id: build_project
@@ -150,7 +150,7 @@ jobs:
         with:
           global-json-file: ${{ inputs.global-json-file }}
           target-platforms: iOS
-          cached: true
+          cache: true
 
   release_github:
     needs: [shared, release_android, release_ios]
