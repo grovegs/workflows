@@ -1,4 +1,4 @@
-name: 🔍 Format Godot Package
+name: 🔍 Format Godot Project
 
 on:
   workflow_call:
