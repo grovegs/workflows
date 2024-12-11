@@ -28,7 +28,7 @@ jobs:
         uses: grovegs/actions/.github/actions/setup-dotnet@refactor/reusable-workflow
         with:
           global-json-file: ${{ inputs.global-json-file }}
-          cached: true
+          cache: true
 
       - name: 🔍 Format Dotnet
         uses: grovegs/actions/.github/actions/format-dotnet@refactor/reusable-workflow
@@ -46,7 +46,7 @@ jobs:
         uses: grovegs/actions/.github/actions/setup-dotnet@refactor/reusable-workflow
         with:
           global-json-file: ${{ inputs.global-json-file }}
-          cached: true
+          cache: true
 
       - name: 🔍 Format Dotnet
         uses: grovegs/actions/.github/actions/format-dotnet@refactor/reusable-workflow
