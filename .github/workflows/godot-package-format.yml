@@ -1,0 +1,98 @@
+name: 🔍 Format Godot Package
+
+on:
+  workflow_call:
+    inputs:
+      core-project:
+        description: The relative path to the Core .NET project directory containing the `csproj` file.
+        required: true
+        type: string
+      godot-project:
+        description: The relative path to the Godot .NET project directory containing the `csproj` file.
+        required: true
+        type: string
+      core-test-project:
+        description: The relative path to the Core .NET Test project directory containing the `csproj` file.
+        required: true
+        type: string
+      godot-test-project:
+        description: The relative path to the Godot .NET Test project directory containing the `csproj` file.
+        required: true
+        type: string
+      global-json-file:
+        description: The relative path to the `global.json` file to extract .NET version.
+        required: true
+        type: string
+
+jobs:
+  format_core_project:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📂 Checkout Code
+        uses: actions/checkout@v4
+
+      - name: ⚙️ Setup Dotnet
+        uses: grovegs/actions/.github/actions/setup-dotnet@refactor/reusable-workflow
+        with:
+          global-json-file: ${{ inputs.global-json-file }}
+          cached: true
+
+      - name: 🔍 Format Dotnet
+        uses: grovegs/actions/.github/actions/format-dotnet@refactor/reusable-workflow
+        with:
+          project: ${{ inputs.core-project }}
+
+  format_godot_project:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📂 Checkout Code
+        uses: actions/checkout@v4
+
+      - name: ⚙️ Setup Dotnet
+        uses: grovegs/actions/.github/actions/setup-dotnet@refactor/reusable-workflow
+        with:
+          global-json-file: ${{ inputs.global-json-file }}
+          cached: true
+
+      - name: 🔍 Format Dotnet
+        uses: grovegs/actions/.github/actions/format-dotnet@refactor/reusable-workflow
+        with:
+          project: ${{ inputs.godot-project }}
+
+  format_core_test_project:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📂 Checkout Code
+        uses: actions/checkout@v4
+
+      - name: ⚙️ Setup Dotnet
+        uses: grovegs/actions/.github/actions/setup-dotnet@refactor/reusable-workflow
+        with:
+          global-json-file: ${{ inputs.global-json-file }}
+          cached: true
+
+      - name: 🔍 Format Dotnet
+        uses: grovegs/actions/.github/actions/format-dotnet@refactor/reusable-workflow
+        with:
+          project: ${{ inputs.core-test-project }}
+
+  format_godot_test_project:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📂 Checkout Code
+        uses: actions/checkout@v4
+
+      - name: ⚙️ Setup Dotnet
+        uses: grovegs/actions/.github/actions/setup-dotnet@refactor/reusable-workflow
+        with:
+          global-json-file: ${{ inputs.global-json-file }}
+          cached: true
+
+      - name: 🔍 Format Dotnet
+        uses: grovegs/actions/.github/actions/format-dotnet@refactor/reusable-workflow
+        with:
+          project: ${{ inputs.godot-test-project }}
