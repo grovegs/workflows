@@ -1,13 +1,13 @@
-name: 🧪 Test Godot Package
+name: 🔍 Format Godot Package
 
 on:
   workflow_call:
     inputs:
-      core-test-project:
-        description: The relative path to the Core .NET Test project directory containing the `csproj` file.
+      project:
+        description: The relative path to the Godot .NET project directory containing the `csproj` file.
         required: true
         type: string
-      godot-test-project:
+      test-project:
         description: The relative path to the Godot .NET Test project directory containing the `csproj` file.
         required: true
         type: string
@@ -17,7 +17,7 @@ on:
         type: string
 
 jobs:
-  test_core:
+  format_project:
     runs-on: ubuntu-latest
 
     steps:
@@ -30,12 +30,12 @@ jobs:
           global-json-file: ${{ inputs.global-json-file }}
           cached: true
 
-      - name: ✅ Test Dotnet
+      - name: 🔍 Format Dotnet
         uses: grovegs/actions/.github/actions/format-dotnet@refactor/reusable-workflow
         with:
-          project: ${{ inputs.core-test-project }}
+          project: ${{ inputs.project }}
 
-  test_godot:
+  format_test_project:
     runs-on: ubuntu-latest
 
     steps:
@@ -48,7 +48,7 @@ jobs:
           global-json-file: ${{ inputs.global-json-file }}
           cached: true
 
-      - name: ✅ Test Dotnet
+      - name: 🔍 Format Dotnet
         uses: grovegs/actions/.github/actions/format-dotnet@refactor/reusable-workflow
         with:
-          project: ${{ inputs.godot-test-project }}
+          project: ${{ inputs.test-project }}
