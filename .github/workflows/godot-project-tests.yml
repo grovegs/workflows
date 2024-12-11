@@ -1,0 +1,62 @@
+name: 🧪 Test Godot Project
+
+on:
+  workflow_call:
+    inputs:
+      project:
+        description: The relative path to the Godot project directory containing the `project.godot` file.
+        required: true
+        type: string
+      test-project:
+        description: The relative path to the .NET Test project directory containing the `csproj` file.
+        required: true
+        type: string
+      global-json-file:
+        description: The relative path to the `global.json` file to extract .NET version.
+        required: true
+        type: string
+
+jobs:
+  test_dotnet:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📂 Checkout Code
+        uses: actions/checkout@v4
+
+      - name: ⚙️ Setup Dotnet
+        uses: grovegs/actions/.github/actions/setup-dotnet@refactor/reusable-workflow
+        with:
+          global-json-file: ${{ inputs.global-json-file }}
+          cached: true
+
+      - name: ✅ Test Dotnet
+        uses: grovegs/actions/.github/actions/test-dotnet@refactor/reusable-workflow
+        with:
+          project: ${{ inputs.test-project }}
+          configuration: Release
+
+  test_imports:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📂 Checkout Code
+        uses: actions/checkout@v4
+
+      - name: 🛠️ Setup Dotnet
+        uses: grovegs/actions/.github/actions/setup-dotnet@refactor/reusable-workflow
+        with:
+          global-json-file: ${{ inputs.global-json-file }}
+          cached: true
+
+      - name: 🎮 Setup Godot
+        uses: grovegs/actions/.github/actions/setup-godot@refactor/reusable-workflow
+        with:
+          global-json-file: ${{ inputs.global-json-file }}
+          cached: true
+
+      - name: ✅ Test Godot
+        uses: grovegs/actions/.github/actions/test-godot@refactor/reusable-workflow
+        with:
+          project: ${{ inputs.project }}
+          global-json-file: ${{ inputs.global-json-file }}
