@@ -55,8 +55,10 @@ jobs:
 
       - name: 📝 Generate Changelog
         id: generate_changelog
-        run: |
-          echo "changelog=${{ steps.bump_version.outputs.latest-version }} - ${{ steps.bump_version.outputs.next-version }}" >> $GITHUB_OUTPUT
+        uses: grovegs/actions/.github/actions/generate-changelog@refactor/reusable-workflow
+        with:
+          latest-version: ${{ steps.bump_version.outputs.latest-version }}
+          next-version: ${{ steps.bump_version.outputs.next-version }}
 
       - name: 📦 Generate Filename
         id: generate_filename
