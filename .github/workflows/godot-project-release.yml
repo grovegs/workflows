@@ -62,13 +62,13 @@ jobs:
 
       - name: 🔧 Bump Version
         id: bump_version
-        uses: grovegs/actions/.github/actions/bump-version@refactor/reusable-workflow
+        uses: grovegs/actions/.github/actions/bump-version@develop
         with:
           version-type: ${{ inputs.version-type }}
 
       - name: 📝 Generate Changelog
         id: generate_changelog
-        uses: grovegs/actions/.github/actions/generate-changelog@refactor/reusable-workflow
+        uses: grovegs/actions/.github/actions/generate-changelog@develop
         with:
           latest-version: ${{ steps.bump_version.outputs.latest-version }}
           next-version: ${{ steps.bump_version.outputs.next-version }}
@@ -99,13 +99,13 @@ jobs:
           packages: platform-tools build-tools;34.0.0 platforms;android-34 cmake;3.10.2.4988404 ndk;23.2.8568313
 
       - name: 🛠️ Setup Dotnet
-        uses: grovegs/actions/.github/actions/setup-dotnet@refactor/reusable-workflow
+        uses: grovegs/actions/.github/actions/setup-dotnet@develop
         with:
           global-json-file: ${{ inputs.global-json-file }}
           cache: true
 
       - name: 🎮 Setup Godot
-        uses: grovegs/actions/.github/actions/setup-godot@refactor/reusable-workflow
+        uses: grovegs/actions/.github/actions/setup-godot@develop
         with:
           global-json-file: ${{ inputs.global-json-file }}
           target-platforms: Android
@@ -113,7 +113,7 @@ jobs:
 
       - name: 🏗️ Build Project
         id: build_project
-        uses: grovegs/actions/.github/actions/build-godot@refactor/reusable-workflow
+        uses: grovegs/actions/.github/actions/build-godot@develop
         with:
           project: ${{ inputs.project }}
           global-json-file: ${{ inputs.global-json-file }}
@@ -129,7 +129,7 @@ jobs:
 
       - name: 📤 Publish to Firebase
         if: ${{ inputs.environment == 'Development' }}
-        uses: grovegs/actions/.github/actions/publish-firebase@refactor/reusable-workflow
+        uses: grovegs/actions/.github/actions/publish-firebase@develop
         with:
           file: ${{ steps.build_project.outputs.file }}
           app-id: ${{ secrets.firebase-app-id-android }}
@@ -146,7 +146,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: 🎮 Setup Godot
-        uses: grovegs/actions/.github/actions/setup-godot@refactor/reusable-workflow
+        uses: grovegs/actions/.github/actions/setup-godot@develop
         with:
           global-json-file: ${{ inputs.global-json-file }}
           target-platforms: iOS
@@ -161,7 +161,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: 🛠️ Publish to Github
-        uses: grovegs/actions/.github/actions/publish-github@refactor/reusable-workflow
+        uses: grovegs/actions/.github/actions/publish-github@develop
         with:
           title: ${{ inputs.name }}
           version: ${{ needs.shared.outputs.version }}

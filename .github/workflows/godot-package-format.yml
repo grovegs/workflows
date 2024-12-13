@@ -33,13 +33,13 @@ jobs:
         uses: actions/checkout@v4
 
       - name: ⚙️ Setup Dotnet
-        uses: grovegs/actions/.github/actions/setup-dotnet@refactor/reusable-workflow
+        uses: grovegs/actions/.github/actions/setup-dotnet@develop
         with:
           global-json-file: ${{ inputs.global-json-file }}
           cache: true
 
       - name: 🔍 Format Dotnet
-        uses: grovegs/actions/.github/actions/format-dotnet@refactor/reusable-workflow
+        uses: grovegs/actions/.github/actions/format-dotnet@develop
         with:
           project: ${{ inputs.core-project }}
 
@@ -51,13 +51,13 @@ jobs:
         uses: actions/checkout@v4
 
       - name: ⚙️ Setup Dotnet
-        uses: grovegs/actions/.github/actions/setup-dotnet@refactor/reusable-workflow
+        uses: grovegs/actions/.github/actions/setup-dotnet@develop
         with:
           global-json-file: ${{ inputs.global-json-file }}
           cache: true
 
       - name: 🔍 Format Dotnet
-        uses: grovegs/actions/.github/actions/format-dotnet@refactor/reusable-workflow
+        uses: grovegs/actions/.github/actions/format-dotnet@develop
         with:
           project: ${{ inputs.godot-project }}
 
@@ -69,13 +69,13 @@ jobs:
         uses: actions/checkout@v4
 
       - name: ⚙️ Setup Dotnet
-        uses: grovegs/actions/.github/actions/setup-dotnet@refactor/reusable-workflow
+        uses: grovegs/actions/.github/actions/setup-dotnet@develop
         with:
           global-json-file: ${{ inputs.global-json-file }}
           cache: true
 
       - name: 🔍 Format Dotnet
-        uses: grovegs/actions/.github/actions/format-dotnet@refactor/reusable-workflow
+        uses: grovegs/actions/.github/actions/format-dotnet@develop
         with:
           project: ${{ inputs.core-test-project }}
 
@@ -87,12 +87,12 @@ jobs:
         uses: actions/checkout@v4
 
       - name: ⚙️ Setup Dotnet
-        uses: grovegs/actions/.github/actions/setup-dotnet@refactor/reusable-workflow
+        uses: grovegs/actions/.github/actions/setup-dotnet@develop
         with:
           global-json-file: ${{ inputs.global-json-file }}
           cache: true
 
       - name: 🔍 Format Dotnet
-        uses: grovegs/actions/.github/actions/format-dotnet@refactor/reusable-workflow
+        uses: grovegs/actions/.github/actions/format-dotnet@develop
         with:
           project: ${{ inputs.godot-test-project }}
