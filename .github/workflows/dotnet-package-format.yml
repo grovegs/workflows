@@ -1,8 +1,12 @@
-name: 🧪 Test .NET Package
+name: 🔍 Format .NET Package
 
 on:
   workflow_call:
     inputs:
+      project:
+        description: The relative path to the .NET project directory containing the `csproj` file.
+        required: true
+        type: string
       test-project:
         description: The relative path to the .NET Test project directory containing the `csproj` file.
         required: true
@@ -13,7 +17,7 @@ on:
         type: string
 
 jobs:
-  test:
+  format_project:
     runs-on: ubuntu-latest
 
     steps:
@@ -26,7 +30,26 @@ jobs:
           global-json-file: ${{ inputs.global-json-file }}
           cache: true
 
-      - name: ✅ Test Dotnet
+      - name: 🔍 Format Dotnet
+        uses: grovegs/actions/.github/actions/test-dotnet@develop
+        with:
+          project: ${{ inputs.project }}
+          configuration: Release
+
+  format_test_project:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📂 Checkout Code
+        uses: actions/checkout@v4
+
+      - name: ⚙️ Setup Dotnet
+        uses: grovegs/actions/.github/actions/setup-dotnet@develop
+        with:
+          global-json-file: ${{ inputs.global-json-file }}
+          cache: true
+
+      - name: 🔍 Format Dotnet
         uses: grovegs/actions/.github/actions/test-dotnet@develop
         with:
           project: ${{ inputs.test-project }}

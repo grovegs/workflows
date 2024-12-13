@@ -1,14 +1,14 @@
-name: 🧪 Test Godot Package
+name: 🧪 Test Godot Project
 
 on:
   workflow_call:
     inputs:
-      core-project:
-        description: The relative path to the Core .NET Test project directory containing the `csproj` file.
+      project:
+        description: The relative path to the Godot project directory containing the `project.godot` file.
         required: true
         type: string
-      godot-project:
-        description: The relative path to the Godot .NET Test project directory containing the `csproj` file.
+      test-project:
+        description: The relative path to the .NET Test project directory containing the `csproj` file.
         required: true
         type: string
       global-json-file:
@@ -17,7 +17,7 @@ on:
         type: string
 
 jobs:
-  test_core:
+  test_dotnet:
     runs-on: ubuntu-latest
 
     steps:
@@ -33,7 +33,7 @@ jobs:
       - name: ✅ Test Dotnet
         uses: grovegs/actions/.github/actions/test-dotnet@develop
         with:
-          project: ${{ inputs.core-project }}
+          project: ${{ inputs.test-project }}
           configuration: Release
 
   test_godot:
@@ -43,14 +43,20 @@ jobs:
       - name: 📂 Checkout Code
         uses: actions/checkout@v4
 
-      - name: ⚙️ Setup Dotnet
+      - name: 🛠️ Setup Dotnet
         uses: grovegs/actions/.github/actions/setup-dotnet@develop
         with:
           global-json-file: ${{ inputs.global-json-file }}
           cache: true
 
-      - name: ✅ Test Dotnet
-        uses: grovegs/actions/.github/actions/test-dotnet@develop
+      - name: 🎮 Setup Godot
+        uses: grovegs/actions/.github/actions/setup-godot@develop
         with:
-          project: ${{ inputs.godot-project }}
-          configuration: Release
+          global-json-file: ${{ inputs.global-json-file }}
+          cache: true
+
+      - name: ✅ Test Godot
+        uses: grovegs/actions/.github/actions/test-godot@develop
+        with:
+          project: ${{ inputs.project }}
+          global-json-file: ${{ inputs.global-json-file }}
