@@ -163,7 +163,7 @@ jobs:
       - name: 🛠️ Publish to Github
         uses: grovegs/actions/.github/actions/publish-github@develop
         with:
-          title: ${{ inputs.name }}
+          title: ${{ inputs.name }} ${{ needs.shared.outputs.version }}
           version: ${{ needs.shared.outputs.version }}
           changelog: ${{ needs.shared.outputs.changelog }}
           github-token: ${{ secrets.github-token }}
