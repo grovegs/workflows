@@ -181,8 +181,8 @@ jobs:
           project: ${{ inputs.project }}
           global-json-file: ${{ inputs.global-json-file }}
           version: ${{ needs.shared.outputs.version }}
-          platform: Android
-          preset: Android ${{ inputs.environment }}
+          platform: iOS
+          preset: iOS ${{ inputs.environment }}
           configuration: Release
           filename: ${{ needs.shared.outputs.filename }}
           ios-team-id: ${{ secrets.ios-team-id }}
