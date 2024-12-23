@@ -36,7 +36,10 @@ on:
         description: Firebase service account credentials for authentication with Firebase services.
         required: false
       firebase-app-id-android:
-        description: Firebase app ID used to upload builds to Firebase App Distribution.
+        description: Firebase iOS app ID used to upload builds to Firebase App Distribution.
+        required: false
+      firebase-app-id-ios:
+        description: Firebase Android app ID used to upload builds to Firebase App Distribution.
         required: false
       android-keystore:
         description: Base64-encoded content of the Android keystore for signing the build.
@@ -46,6 +49,18 @@ on:
         required: false
       android-keystore-password:
         description: Password for accessing the Android keystore.
+        required: false
+      ios-team-id:
+        description: "The Apple Developer Team ID associated with your Apple Developer account."
+        required: false
+      ios-certificate:
+        description: "The Base64-encoded iOS distribution certificate (.cer file) used for signing the application."
+        required: false
+      ios-provisioning-profile:
+        description: "The Base64-encoded iOS provisioning profile (.mobileprovision file) required for building the application."
+        required: false
+      ios-provisioning-profile-uuid:
+        description: "The UUID of the iOS provisioning profile to be used during the build process."
         required: false
 
 jobs:
@@ -121,12 +136,12 @@ jobs:
           version: ${{ needs.shared.outputs.version }}
           platform: Android
           preset: Android ${{ inputs.environment }}
-          configuration: Debug
+          configuration: Release
           filename: ${{ needs.shared.outputs.filename }}
           android-keystore: ${{ secrets.android-keystore }}
           android-keystore-user: ${{ secrets.android-keystore-user }}
           android-keystore-password: ${{ secrets.android-keystore-password }}
-          android-format: apk
+          android-format: aab
 
       - name: 📤 Publish to Firebase
         if: ${{ inputs.environment == 'Development' }}
@@ -146,12 +161,44 @@ jobs:
       - name: 📥 Checkout Code
         uses: actions/checkout@v4
 
+      - name: 🛠️ Setup Dotnet
+        uses: grovegs/actions/.github/actions/setup-dotnet@develop
+        with:
+          global-json-file: ${{ inputs.global-json-file }}
+          cache: true
+
       - name: 🎮 Setup Godot
         uses: grovegs/actions/.github/actions/setup-godot@develop
         with:
           global-json-file: ${{ inputs.global-json-file }}
           target-platforms: iOS
           cache: true
+
+      - name: 🏗️ Build Project
+        id: build_project
+        uses: grovegs/actions/.github/actions/build-godot@develop
+        with:
+          project: ${{ inputs.project }}
+          global-json-file: ${{ inputs.global-json-file }}
+          version: ${{ needs.shared.outputs.version }}
+          platform: Android
+          preset: Android ${{ inputs.environment }}
+          configuration: Release
+          filename: ${{ needs.shared.outputs.filename }}
+          ios-team-id: ${{ secrets.ios-team-id }}
+          ios-certificate: ${{ secrets.ios-certificate }}
+          ios-provisioning-profile: ${{ secrets.ios-provisioning-profile }}
+          ios-provisioning-profile-uuid: ${{ secrets.ios-provisioning-profile-uuid }}
+
+      - name: 📤 Publish to Firebase
+        if: ${{ inputs.environment == 'Development' }}
+        uses: grovegs/actions/.github/actions/publish-firebase@develop
+        with:
+          file: ${{ steps.build_project.outputs.file }}
+          app-id: ${{ secrets.firebase-app-id-ios }}
+          credentials: ${{ secrets.firebase-credentials }}
+          release-notes: ${{ needs.shared.outputs.changelog }}
+          tester-groups: ${{ inputs.firebase-tester-groups }}
 
   release_github:
     needs: [shared, release_android, release_ios]
