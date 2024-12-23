@@ -36,10 +36,10 @@ on:
         description: Firebase service account credentials for authentication with Firebase services.
         required: false
       firebase-app-id-android:
-        description: Firebase iOS app ID used to upload builds to Firebase App Distribution.
+        description: Firebase Android app ID used to upload builds to Firebase App Distribution.
         required: false
       firebase-app-id-ios:
-        description: Firebase Android app ID used to upload builds to Firebase App Distribution.
+        description: Firebase iOS app ID used to upload builds to Firebase App Distribution.
         required: false
       android-keystore:
         description: Base64-encoded content of the Android keystore for signing the build.
