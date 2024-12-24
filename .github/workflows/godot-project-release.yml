@@ -28,6 +28,16 @@ on:
         required: false
         default: ""
         type: string
+      release-android:
+        description: "Flag to enable or disable the Android release job."
+        required: false
+        default: true
+        type: boolean
+      release-ios:
+        description: "Flag to enable or disable the iOS release job."
+        required: false
+        default: true
+        type: boolean
     secrets:
       github-token:
         description: The GitHub token for authentication.
@@ -96,6 +106,7 @@ jobs:
           echo "filename=$filename" >> $GITHUB_OUTPUT
 
   release_android:
+    if: ${{ inputs.release-android }}
     needs: shared
     runs-on: ubuntu-latest
 
@@ -154,6 +165,7 @@ jobs:
           tester-groups: ${{ inputs.firebase-tester-groups }}
 
   release_ios:
+    if: ${{ inputs.release-ios }}
     needs: shared
     runs-on: macos-latest
 
