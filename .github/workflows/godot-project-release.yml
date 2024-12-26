@@ -152,7 +152,7 @@ jobs:
           android-keystore: ${{ secrets.android-keystore }}
           android-keystore-user: ${{ secrets.android-keystore-user }}
           android-keystore-password: ${{ secrets.android-keystore-password }}
-          android-format: aab
+          android-format: ${{ inputs.environment == 'Production' && 'aab' || inputs.environment == 'Development' && 'apk' || '' }}
 
       - name: 📤 Publish to Firebase
         if: ${{ inputs.environment == 'Development' }}
