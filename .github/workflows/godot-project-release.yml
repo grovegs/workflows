@@ -129,14 +129,14 @@ jobs:
         uses: grovegs/actions/.github/actions/setup-dotnet@develop
         with:
           global-json-file: ${{ inputs.global-json-file }}
-          cache: true
+          cache: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop' }}
 
       - name: 🎮 Setup Godot
         uses: grovegs/actions/.github/actions/setup-godot@develop
         with:
           global-json-file: ${{ inputs.global-json-file }}
           target-platforms: Android
-          cache: true
+          cache: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop' }}
 
       - name: 🏗️ Build Project
         id: build_project
@@ -177,14 +177,14 @@ jobs:
         uses: grovegs/actions/.github/actions/setup-dotnet@develop
         with:
           global-json-file: ${{ inputs.global-json-file }}
-          cache: true
+          cache: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop' }}
 
       - name: 🎮 Setup Godot
         uses: grovegs/actions/.github/actions/setup-godot@develop
         with:
           global-json-file: ${{ inputs.global-json-file }}
           target-platforms: iOS
-          cache: true
+          cache: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop' }}
 
       - name: 🏗️ Build Project
         id: build_project

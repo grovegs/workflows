@@ -36,7 +36,7 @@ jobs:
         uses: grovegs/actions/.github/actions/setup-dotnet@develop
         with:
           global-json-file: ${{ inputs.global-json-file }}
-          cache: true
+          cache: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop' }}
 
       - name: 🔍 Format Dotnet
         uses: grovegs/actions/.github/actions/format-dotnet@develop
@@ -54,7 +54,7 @@ jobs:
         uses: grovegs/actions/.github/actions/setup-dotnet@develop
         with:
           global-json-file: ${{ inputs.global-json-file }}
-          cache: true
+          cache: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop' }}
 
       - name: 🔍 Format Dotnet
         uses: grovegs/actions/.github/actions/format-dotnet@develop
@@ -72,7 +72,7 @@ jobs:
         uses: grovegs/actions/.github/actions/setup-dotnet@develop
         with:
           global-json-file: ${{ inputs.global-json-file }}
-          cache: true
+          cache: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop' }}
 
       - name: 🔍 Format Dotnet
         uses: grovegs/actions/.github/actions/format-dotnet@develop
@@ -90,7 +90,7 @@ jobs:
         uses: grovegs/actions/.github/actions/setup-dotnet@develop
         with:
           global-json-file: ${{ inputs.global-json-file }}
-          cache: true
+          cache: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop' }}
 
       - name: 🔍 Format Dotnet
         uses: grovegs/actions/.github/actions/format-dotnet@develop
