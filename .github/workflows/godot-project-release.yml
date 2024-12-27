@@ -149,6 +149,7 @@ jobs:
           preset: Android ${{ inputs.environment }}
           configuration: Release
           filename: ${{ needs.shared.outputs.filename }}
+          define-constants: ${{ inputs.environment == 'Development' && 'DEVELOPMENT' || '' }}
           android-keystore: ${{ secrets.android-keystore }}
           android-keystore-user: ${{ secrets.android-keystore-user }}
           android-keystore-password: ${{ secrets.android-keystore-password }}
