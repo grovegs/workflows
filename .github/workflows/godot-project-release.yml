@@ -144,7 +144,7 @@ jobs:
           project: ${{ inputs.project }}
           configuration: Release
           version: ${{ needs.shared.outputs.version }}
-          define-constants: ${{ inputs.environment == 'Development' && 'DEVELOPMENT' || '' }}
+          define-symbols: ${{ inputs.environment == 'Development' && 'DEVELOPMENT' || '' }}
 
       - name: 🏗️ Build Godot
         id: build_godot
@@ -200,7 +200,7 @@ jobs:
           project: ${{ inputs.project }}
           configuration: Release
           version: ${{ needs.shared.outputs.version }}
-          define-constants: ${{ inputs.environment == 'Development' && 'DEVELOPMENT' || '' }}
+          define-symbols: ${{ inputs.environment == 'Development' && 'DEVELOPMENT' || '' }}
 
       - name: 🏗️ Build Project
         id: build_godot
