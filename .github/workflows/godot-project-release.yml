@@ -138,8 +138,16 @@ jobs:
           target-platforms: Android
           cache: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop' }}
 
-      - name: 🏗️ Build Project
-        id: build_project
+      - name: 🏗️ Build Dotnet
+        uses: grovegs/actions/.github/actions/build-dotnet@develop
+        with:
+          project: ${{ inputs.project }}
+          configuration: Release
+          version: ${{ needs.shared.outputs.version }}
+          define-constants: ${{ inputs.environment == 'Development' && 'DEVELOPMENT' || '' }}
+
+      - name: 🏗️ Build Godot
+        id: build_godot
         uses: grovegs/actions/.github/actions/build-godot@develop
         with:
           project: ${{ inputs.project }}
@@ -149,7 +157,6 @@ jobs:
           preset: Android ${{ inputs.environment }}
           configuration: Release
           filename: ${{ needs.shared.outputs.filename }}
-          define-constants: ${{ inputs.environment == 'Development' && 'DEVELOPMENT' || '' }}
           android-keystore: ${{ secrets.android-keystore }}
           android-keystore-user: ${{ secrets.android-keystore-user }}
           android-keystore-password: ${{ secrets.android-keystore-password }}
@@ -159,7 +166,7 @@ jobs:
         if: ${{ inputs.environment == 'Development' }}
         uses: grovegs/actions/.github/actions/publish-firebase@develop
         with:
-          file: ${{ steps.build_project.outputs.file }}
+          file: ${{ steps.build_godot.outputs.file }}
           app-id: ${{ secrets.firebase-app-id-android }}
           credentials: ${{ secrets.firebase-credentials }}
           release-notes: ${{ needs.shared.outputs.changelog }}
@@ -187,8 +194,16 @@ jobs:
           target-platforms: iOS
           cache: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop' }}
 
+      - name: 🏗️ Build Dotnet
+        uses: grovegs/actions/.github/actions/build-dotnet@develop
+        with:
+          project: ${{ inputs.project }}
+          configuration: Release
+          version: ${{ needs.shared.outputs.version }}
+          define-constants: ${{ inputs.environment == 'Development' && 'DEVELOPMENT' || '' }}
+
       - name: 🏗️ Build Project
-        id: build_project
+        id: build_godot
         uses: grovegs/actions/.github/actions/build-godot@develop
         with:
           project: ${{ inputs.project }}
@@ -207,7 +222,7 @@ jobs:
         if: ${{ inputs.environment == 'Development' }}
         uses: grovegs/actions/.github/actions/publish-firebase@develop
         with:
-          file: ${{ steps.build_project.outputs.file }}
+          file: ${{ steps.build_godot.outputs.file }}
           app-id: ${{ secrets.firebase-app-id-ios }}
           credentials: ${{ secrets.firebase-credentials }}
           release-notes: ${{ needs.shared.outputs.changelog }}
