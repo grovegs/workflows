@@ -197,9 +197,7 @@ jobs:
         uses: grovegs/actions/.github/actions/build-dotnet@develop
         with:
           project: ${{ inputs.project }}
-          configuration: Release
-          version: ${{ needs.shared.outputs.version }}
-          define-symbols: ${{ inputs.environment == 'Development' && 'DEVELOPMENT' || '' }}
+          configuration: Debug
 
       - name: 🏗️ Build Project
         id: build_godot
