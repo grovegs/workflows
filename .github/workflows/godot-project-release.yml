@@ -66,6 +66,9 @@ on:
       ios-certificate:
         description: "The Base64-encoded iOS distribution certificate (.cer file) used for signing the application."
         required: false
+      ios-certificate-password:
+        description: "The password used to import the password-protected iOS distribution certificate (.p12) for signing the application."
+        required: false
       ios-provisioning-profile:
         description: "The Base64-encoded iOS provisioning profile (.mobileprovision file) required for building the application."
         required: false
@@ -213,6 +216,7 @@ jobs:
           extra-arguments: ${{ inputs.environment == 'Development' && '-p:DefineSymbols=DEVELOPMENT' || '' }}
           ios-team-id: ${{ secrets.ios-team-id }}
           ios-certificate: ${{ secrets.ios-certificate }}
+          ios-certificate-password: ${{ secrets.ios-certificate-password }}
           ios-provisioning-profile: ${{ secrets.ios-provisioning-profile }}
           ios-provisioning-profile-uuid: ${{ secrets.ios-provisioning-profile-uuid }}
 
