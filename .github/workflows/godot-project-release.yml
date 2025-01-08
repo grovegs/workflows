@@ -105,7 +105,7 @@ jobs:
       - name: 📦 Generate Filename
         id: generate_filename
         run: |
-          filename=$(echo "${{ inputs.name }}" | sed -E 's/([[:space:]]|_)/-/g; s/([a-z])([A-Z])/\1-\2/g' | tr '[:upper:]' '[:lower:]')-${{ steps.bump_version.outputs.next-version }}
+          filename=$(echo "${{ inputs.name }}" | sed -E 's/([[:space:]]|_)/-/g; s/([a-z])([A-Z])/\1-\2/g' | tr '[:upper:]' '[:lower:]')
           echo "filename=$filename" >> $GITHUB_OUTPUT
 
   release_android:
