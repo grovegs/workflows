@@ -75,6 +75,10 @@ on:
       ios-provisioning-profile-uuid:
         description: "The UUID of the iOS provisioning profile to be used during the build process."
         required: false
+      ios-keychain-password:
+        description: "The password used to unlock the temporary iOS keychain during the build process."
+        required: false
+        default: ""
 
 jobs:
   shared:
@@ -219,6 +223,7 @@ jobs:
           ios-certificate-password: ${{ secrets.ios-certificate-password }}
           ios-provisioning-profile: ${{ secrets.ios-provisioning-profile }}
           ios-provisioning-profile-uuid: ${{ secrets.ios-provisioning-profile-uuid }}
+          ios-keychain-password: ${{ secrets.ios-keychain-password }}
 
       - name: 📤 Publish to Firebase
         if: ${{ inputs.environment == 'Development' }}
