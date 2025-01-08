@@ -78,7 +78,6 @@ on:
       ios-keychain-password:
         description: "The password used to unlock the temporary iOS keychain during the build process."
         required: false
-        default: ""
 
 jobs:
   shared:
