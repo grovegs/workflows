@@ -146,7 +146,6 @@ jobs:
         with:
           project: ${{ inputs.project }}
           configuration: Debug
-          define-symbols: ${{ inputs.environment == 'Development' && 'DEVELOPMENT' || '' }}
 
       - name: 🏗️ Build Godot
         id: build_godot
@@ -202,7 +201,6 @@ jobs:
         with:
           project: ${{ inputs.project }}
           configuration: Debug
-          define-symbols: ${{ inputs.environment == 'Development' && 'DEVELOPMENT' || '' }}
 
 
       - name: 🏗️ Build Project
