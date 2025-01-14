@@ -146,6 +146,7 @@ jobs:
         with:
           project: ${{ inputs.project }}
           configuration: Debug
+          define-symbols: ${{ inputs.environment == 'Development' && 'DEVELOPMENT' || '' }}
 
       - name: 🏗️ Build Godot
         id: build_godot
@@ -158,7 +159,6 @@ jobs:
           preset: Android ${{ inputs.environment }}
           configuration: Release
           filename: ${{ needs.shared.outputs.filename }}
-          extra-arguments: ${{ inputs.environment == 'Development' && '/p:DefineSymbols=DEVELOPMENT' || '' }}
           android-keystore: ${{ secrets.android-keystore }}
           android-keystore-user: ${{ secrets.android-keystore-user }}
           android-keystore-password: ${{ secrets.android-keystore-password }}
@@ -201,6 +201,8 @@ jobs:
         with:
           project: ${{ inputs.project }}
           configuration: Debug
+          define-symbols: ${{ inputs.environment == 'Development' && 'DEVELOPMENT' || '' }}
+
 
       - name: 🏗️ Build Project
         id: build_godot
@@ -213,7 +215,6 @@ jobs:
           preset: iOS ${{ inputs.environment }}
           configuration: Release
           filename: ${{ needs.shared.outputs.filename }}
-          extra-arguments: ${{ inputs.environment == 'Development' && '/p:DefineSymbols=DEVELOPMENT' || '' }}
           ios-team-id: ${{ secrets.ios-team-id }}
           ios-certificate: ${{ secrets.ios-certificate }}
           ios-certificate-password: ${{ secrets.ios-certificate-password }}
