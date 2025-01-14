@@ -232,6 +232,7 @@ jobs:
           tester-groups: ${{ inputs.firebase-tester-groups }}
 
   release_github:
+    if: ${{ needs.release_android.result != 'failure' && needs.release_ios.result != 'failure' }}
     needs: [shared, release_android, release_ios]
     runs-on: ubuntu-latest
 
