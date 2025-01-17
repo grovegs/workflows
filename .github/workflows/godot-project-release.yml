@@ -111,7 +111,7 @@ jobs:
   release_android:
     if: ${{ inputs.release-android }}
     needs: shared
-    runs-on: ubuntu-latest
+    runs-on: macos-latest
 
     steps:
       - name: 📥 Checkout Code
