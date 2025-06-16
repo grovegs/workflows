@@ -25,13 +25,13 @@ jobs:
         uses: actions/checkout@v4
 
       - name: ⚙️ Setup Dotnet
-        uses: grovegs/actions/.github/actions/setup-dotnet@develop
+        uses: grovegs/actions/.github/actions/setup-dotnet@main
         with:
           global-json-file: ${{ inputs.global-json-file }}
           cache: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop' }}
 
       - name: ✅ Test Dotnet
-        uses: grovegs/actions/.github/actions/test-dotnet@develop
+        uses: grovegs/actions/.github/actions/test-dotnet@main
         with:
           project: ${{ inputs.test-project }}
           configuration: Release
@@ -44,19 +44,19 @@ jobs:
         uses: actions/checkout@v4
 
       - name: 🛠️ Setup Dotnet
-        uses: grovegs/actions/.github/actions/setup-dotnet@develop
+        uses: grovegs/actions/.github/actions/setup-dotnet@main
         with:
           global-json-file: ${{ inputs.global-json-file }}
           cache: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop' }}
 
       - name: 🎮 Setup Godot
-        uses: grovegs/actions/.github/actions/setup-godot@develop
+        uses: grovegs/actions/.github/actions/setup-godot@main
         with:
           global-json-file: ${{ inputs.global-json-file }}
           cache: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop' }}
 
       - name: ✅ Test Godot
-        uses: grovegs/actions/.github/actions/test-godot@develop
+        uses: grovegs/actions/.github/actions/test-godot@main
         with:
           project: ${{ inputs.project }}
           global-json-file: ${{ inputs.global-json-file }}
