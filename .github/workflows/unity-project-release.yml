@@ -8,7 +8,7 @@ on:
         required: true
         type: string
       project:
-        description: The relative path to the Unity project directory containing the `project.godot` file.
+        description: The relative path to the Unity project directory containing the `ProjectSettings` folder.
         required: true
         type: string
       version-type:
@@ -120,7 +120,7 @@ jobs:
           cache: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop' }}
 
       - name: 🏗️ Build Unity
-        id: build_godot
+        id: build_unity
         uses: grovegs/actions/.github/actions/build-unity@feature/build-unity
         with:
           project: ${{ inputs.project }}
@@ -133,12 +133,13 @@ jobs:
           android-keystore-user: ${{ secrets.android-keystore-user }}
           android-keystore-password: ${{ secrets.android-keystore-password }}
           android-format: ${{ inputs.environment == 'Production' && 'aab' || inputs.environment == 'Development' && 'apk' || '' }}
+          unity-license: ${{ secrets.unity-license }}
 
       - name: 📤 Publish to Firebase
         if: ${{ inputs.environment == 'Development' }}
         uses: grovegs/actions/.github/actions/publish-firebase@main
         with:
-          file: ${{ steps.build_godot.outputs.file }}
+          file: ${{ steps.build_unity.outputs.file }}
           app-id: ${{ secrets.firebase-app-id-android }}
           credentials: ${{ secrets.firebase-credentials }}
           release-notes: ${{ needs.shared.outputs.changelog }}
@@ -153,50 +154,34 @@ jobs:
       - name: 📥 Checkout Code
         uses: actions/checkout@v4
 
-      - name: 🛠️ Setup Dotnet
-        uses: grovegs/actions/.github/actions/setup-dotnet@main
-        with:
-          global-json-file: ${{ inputs.global-json-file }}
-          cache: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop' }}
-
       - name: 🎮 Setup Unity
-        uses: grovegs/actions/.github/actions/setup-godot@main
+        uses: grovegs/actions/.github/actions/setup-unity@main
         with:
-          global-json-file: ${{ inputs.global-json-file }}
-          target-platforms: iOS
+          unity-modules: android
           cache: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop' }}
 
-      - name: 🏗️ Build Dotnet
-        uses: grovegs/actions/.github/actions/build-dotnet@main
+      - name: 🏗️ Build Unity
+        id: build_unity
+        uses: grovegs/actions/.github/actions/build-unity@feature/build-unity
         with:
           project: ${{ inputs.project }}
-          configuration: Debug
-
-
-      - name: 🏗️ Build Project
-        id: build_godot
-        uses: grovegs/actions/.github/actions/build-godot@main
-        with:
-          project: ${{ inputs.project }}
-          global-json-file: ${{ inputs.global-json-file }}
           version: ${{ needs.shared.outputs.version }}
-          platform: iOS
-          preset: iOS ${{ inputs.environment }}
+          platform: Android
           configuration: Release
           filename: ${{ needs.shared.outputs.filename }}
           define-symbols: ${{ inputs.environment == 'Development' && 'DEVELOPMENT' || '' }}
-          ios-team-id: ${{ secrets.ios-team-id }}
-          ios-certificate: ${{ secrets.ios-certificate }}
-          ios-certificate-password: ${{ secrets.ios-certificate-password }}
-          ios-provisioning-profile: ${{ secrets.ios-provisioning-profile }}
-          ios-provisioning-profile-uuid: ${{ secrets.ios-provisioning-profile-uuid }}
+          android-keystore: ${{ secrets.android-keystore }}
+          android-keystore-user: ${{ secrets.android-keystore-user }}
+          android-keystore-password: ${{ secrets.android-keystore-password }}
+          android-format: ${{ inputs.environment == 'Production' && 'aab' || inputs.environment == 'Development' && 'apk' || '' }}
+          unity-license: ${{ secrets.unity-license }}
 
       - name: 📤 Publish to Firebase
         if: ${{ inputs.environment == 'Development' }}
         uses: grovegs/actions/.github/actions/publish-firebase@main
         with:
-          file: ${{ steps.build_godot.outputs.file }}
-          app-id: ${{ secrets.firebase-app-id-ios }}
+          file: ${{ steps.build_unity.outputs.file }}
+          app-id: ${{ secrets.firebase-app-id-android }}
           credentials: ${{ secrets.firebase-credentials }}
           release-notes: ${{ needs.shared.outputs.changelog }}
           tester-groups: ${{ inputs.firebase-tester-groups }}
