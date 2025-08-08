@@ -125,6 +125,7 @@ jobs:
       - name: 🎮 Setup Unity
         uses: grovegs/actions/.github/actions/setup-unity@feature/build-unity
         with:
+          project: ${{ inputs.project }}
           unity-modules: android
           cache: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop' }}
           unity-email: ${{ secrets.unity-email }}
