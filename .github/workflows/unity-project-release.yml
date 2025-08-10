@@ -34,6 +34,18 @@ on:
         required: false
         default: true
         type: boolean
+      ios-bundle-identifier:
+        description: "The iOS bundle identifier (e.g., com.company.appname)."
+        required: false
+        type: string
+      android-profile-name:
+        description: "The name of the Unity Build Profile to use for Android. If not specified, defaults to 'Android {environment}'."
+        required: false
+        type: string
+      ios-profile-name:
+        description: "The name of the Unity Build Profile to use for iOS. If not specified, defaults to 'iOS {environment}'."
+        required: false
+        type: string
     secrets:
       github-token:
         description: The GitHub token for authentication.
@@ -69,7 +81,7 @@ on:
         description: "The Apple Developer Team ID associated with your Apple Developer account."
         required: false
       ios-certificate:
-        description: "The Base64-encoded iOS distribution certificate (.cer file) used for signing the application."
+        description: "The Base64-encoded iOS distribution certificate (.p12 file) used for signing the application."
         required: false
       ios-certificate-password:
         description: "The password used to import the password-protected iOS distribution certificate (.p12) for signing the application."
@@ -114,7 +126,7 @@ jobs:
           echo "filename=$filename" >> $GITHUB_OUTPUT
 
   release_android:
-    if: ${{ inputs.release-android }}
+    if: inputs.release-android
     needs: shared
     runs-on: macos-latest
 
@@ -129,7 +141,7 @@ jobs:
           unity-modules: android
           cache: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop' }}
 
-      - name: 🏗️ Build Unity
+      - name: 🏗️ Build Unity for Android
         id: build_unity
         uses: grovegs/actions/.github/actions/build-unity@feature/build-unity
         with:
@@ -138,6 +150,7 @@ jobs:
           platform: Android
           configuration: Release
           filename: ${{ needs.shared.outputs.filename }}
+          profile-name: ${{ inputs.android-profile-name || format('Android {0}', inputs.environment) }}
           unity-email: ${{ secrets.unity-email }}
           unity-password: ${{ secrets.unity-password }}
           unity-license-key: ${{ secrets.unity-license-key }}
@@ -145,10 +158,10 @@ jobs:
           android-keystore: ${{ secrets.android-keystore }}
           android-keystore-user: ${{ secrets.android-keystore-user }}
           android-keystore-password: ${{ secrets.android-keystore-password }}
-          android-format: ${{ inputs.environment == 'Production' && 'aab' || inputs.environment == 'Development' && 'apk' || '' }}
+          android-format: ${{ inputs.environment == 'Production' && 'aab' || inputs.environment == 'Development' && 'apk' || 'apk' }}
 
-      - name: 📤 Publish to Firebase
-        if: ${{ inputs.environment == 'Development' }}
+      - name: 📤 Publish Android to Firebase
+        if: inputs.environment == 'Development'
         uses: grovegs/actions/.github/actions/publish-firebase@main
         with:
           file: ${{ steps.build_unity.outputs.file }}
@@ -158,7 +171,7 @@ jobs:
           tester-groups: ${{ inputs.firebase-tester-groups }}
 
   release_ios:
-    if: ${{ inputs.release-ios }}
+    if: inputs.release-ios
     needs: shared
     runs-on: macos-latest
 
@@ -167,41 +180,44 @@ jobs:
         uses: actions/checkout@v4
 
       - name: 🎮 Setup Unity
-        uses: grovegs/actions/.github/actions/setup-unity@main
+        uses: grovegs/actions/.github/actions/setup-unity@feature/build-unity
         with:
-          unity-modules: android
+          project: ${{ inputs.project }}
+          unity-modules: ios
           cache: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop' }}
 
-      - name: 🏗️ Build Unity
+      - name: 🏗️ Build Unity for iOS
         id: build_unity
         uses: grovegs/actions/.github/actions/build-unity@feature/build-unity
         with:
           project: ${{ inputs.project }}
           version: ${{ needs.shared.outputs.version }}
-          platform: Android
+          platform: iOS
           configuration: Release
           filename: ${{ needs.shared.outputs.filename }}
+          profile-name: ${{ inputs.ios-profile-name || format('iOS {0}', inputs.environment) }}
           unity-email: ${{ secrets.unity-email }}
           unity-password: ${{ secrets.unity-password }}
           unity-license-key: ${{ secrets.unity-license-key }}
           define-symbols: ${{ inputs.environment == 'Development' && 'DEVELOPMENT' || '' }}
-          android-keystore: ${{ secrets.android-keystore }}
-          android-keystore-user: ${{ secrets.android-keystore-user }}
-          android-keystore-password: ${{ secrets.android-keystore-password }}
-          android-format: ${{ inputs.environment == 'Production' && 'aab' || inputs.environment == 'Development' && 'apk' || '' }}
+          ios-team-id: ${{ secrets.ios-team-id }}
+          ios-certificate: ${{ secrets.ios-certificate }}
+          ios-certificate-password: ${{ secrets.ios-certificate-password }}
+          ios-provisioning-profile: ${{ secrets.ios-provisioning-profile }}
+          ios-bundle-identifier: ${{ inputs.ios-bundle-identifier }}
 
-      - name: 📤 Publish to Firebase
-        if: ${{ inputs.environment == 'Development' }}
+      - name: 📤 Publish iOS to Firebase
+        if: inputs.environment == 'Development'
         uses: grovegs/actions/.github/actions/publish-firebase@main
         with:
           file: ${{ steps.build_unity.outputs.file }}
-          app-id: ${{ secrets.firebase-app-id-android }}
+          app-id: ${{ secrets.firebase-app-id-ios }}
           credentials: ${{ secrets.firebase-credentials }}
           release-notes: ${{ needs.shared.outputs.changelog }}
           tester-groups: ${{ inputs.firebase-tester-groups }}
 
   release_github:
-    if: ${{ needs.release_android.result != 'failure' && needs.release_ios.result != 'failure' }}
+    if: always() && (needs.release_android.result == 'success' || needs.release_ios.result == 'success') && (needs.release_android.result != 'failure' && needs.release_ios.result != 'failure')
     needs: [shared, release_android, release_ios]
     runs-on: ubuntu-latest
 
@@ -209,7 +225,7 @@ jobs:
       - name: 📥 Checkout Code
         uses: actions/checkout@v4
 
-      - name: 🛠️ Publish to Github
+      - name: 🛠️ Publish to GitHub
         uses: grovegs/actions/.github/actions/publish-github@main
         with:
           title: ${{ inputs.name }} ${{ needs.shared.outputs.version }}
