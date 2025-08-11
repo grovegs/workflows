@@ -34,10 +34,6 @@ on:
         required: false
         default: true
         type: boolean
-      ios-bundle-identifier:
-        description: "The iOS bundle identifier (e.g., com.company.appname)."
-        required: false
-        type: string
     secrets:
       github-token:
         description: The GitHub token for authentication.
@@ -194,7 +190,7 @@ jobs:
           ios-certificate: ${{ secrets.ios-certificate }}
           ios-certificate-password: ${{ secrets.ios-certificate-password }}
           ios-provisioning-profile: ${{ secrets.ios-provisioning-profile }}
-          ios-bundle-identifier: ${{ inputs.ios-bundle-identifier }}
+          ios-provisioning-profile-uuid: ${{ secrets.ios-provisioning-profile-uuid }}
 
       - name: 📤 Publish to Firebase
         if: inputs.environment == 'Development'
