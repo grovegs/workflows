@@ -19,8 +19,8 @@ on:
         description: The build environment (e.g., Development, Production).
         required: true
         type: string
-      firebase-tester-groups:
-        description: Comma-separated list of Firebase tester groups to receive the build. Used for Firebase App Distribution.
+      tester-groups:
+        description: Comma-separated list of tester groups to receive the build.
         required: false
         default: ""
         type: string
@@ -155,7 +155,7 @@ jobs:
           app-id: ${{ secrets.firebase-app-id-android }}
           credentials: ${{ secrets.firebase-credentials }}
           release-notes: ${{ needs.shared.outputs.changelog }}
-          tester-groups: ${{ inputs.firebase-tester-groups }}
+          tester-groups: ${{ inputs.tester-groups }}
 
   release_ios:
     if: inputs.release-ios
@@ -200,7 +200,7 @@ jobs:
           app-id: ${{ secrets.firebase-app-id-ios }}
           credentials: ${{ secrets.firebase-credentials }}
           release-notes: ${{ needs.shared.outputs.changelog }}
-          tester-groups: ${{ inputs.firebase-tester-groups }}
+          tester-groups: ${{ inputs.tester-groups }}
 
   release_github:
     if: always() && (needs.release_android.result == 'success' || needs.release_ios.result == 'success') && (needs.release_android.result != 'failure' && needs.release_ios.result != 'failure')
