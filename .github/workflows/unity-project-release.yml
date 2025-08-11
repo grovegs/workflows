@@ -126,6 +126,17 @@ jobs:
       - name: 📥 Checkout Code
         uses: actions/checkout@v4
 
+      - name: ☕ Setup JDK
+        uses: actions/setup-java@v4
+        with:
+          java-version: "17"
+          distribution: "temurin"
+
+      - name: 🛠️ Setup Android SDK
+        uses: android-actions/setup-android@v3
+        with:
+          packages: platform-tools;34.0.5 build-tools;34.0.0 platforms;android-34 cmake;3.22.1 ndk;27.2.12479018
+
       - name: 🎮 Setup Unity
         uses: grovegs/actions/.github/actions/setup-unity@feature/build-unity
         with:
