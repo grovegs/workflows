@@ -38,14 +38,6 @@ on:
         description: "The iOS bundle identifier (e.g., com.company.appname)."
         required: false
         type: string
-      android-profile-name:
-        description: "The name of the Unity Build Profile to use for Android. If not specified, defaults to 'Android {environment}'."
-        required: false
-        type: string
-      ios-profile-name:
-        description: "The name of the Unity Build Profile to use for iOS. If not specified, defaults to 'iOS {environment}'."
-        required: false
-        type: string
     secrets:
       github-token:
         description: The GitHub token for authentication.
@@ -141,7 +133,7 @@ jobs:
           unity-modules: android
           cache: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop' }}
 
-      - name: 🏗️ Build Unity for Android
+      - name: 🏗️ Build Unity
         id: build_unity
         uses: grovegs/actions/.github/actions/build-unity@feature/build-unity
         with:
@@ -150,17 +142,16 @@ jobs:
           platform: Android
           configuration: Release
           filename: ${{ needs.shared.outputs.filename }}
-          profile-name: ${{ inputs.android-profile-name || format('Android {0}', inputs.environment) }}
+          profile-name: ${{ format('Android {0}', inputs.environment) }}
           unity-email: ${{ secrets.unity-email }}
           unity-password: ${{ secrets.unity-password }}
           unity-license-key: ${{ secrets.unity-license-key }}
-          define-symbols: ${{ inputs.environment == 'Development' && 'DEVELOPMENT' || '' }}
           android-keystore: ${{ secrets.android-keystore }}
           android-keystore-user: ${{ secrets.android-keystore-user }}
           android-keystore-password: ${{ secrets.android-keystore-password }}
           android-format: ${{ inputs.environment == 'Production' && 'aab' || inputs.environment == 'Development' && 'apk' || 'apk' }}
 
-      - name: 📤 Publish Android to Firebase
+      - name: 📤 Publish to Firebase
         if: inputs.environment == 'Development'
         uses: grovegs/actions/.github/actions/publish-firebase@main
         with:
@@ -186,7 +177,7 @@ jobs:
           unity-modules: ios
           cache: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop' }}
 
-      - name: 🏗️ Build Unity for iOS
+      - name: 🏗️ Build Unity
         id: build_unity
         uses: grovegs/actions/.github/actions/build-unity@feature/build-unity
         with:
@@ -195,18 +186,17 @@ jobs:
           platform: iOS
           configuration: Release
           filename: ${{ needs.shared.outputs.filename }}
-          profile-name: ${{ inputs.ios-profile-name || format('iOS {0}', inputs.environment) }}
+          profile-name: ${{ format('iOS {0}', inputs.environment) }}
           unity-email: ${{ secrets.unity-email }}
           unity-password: ${{ secrets.unity-password }}
           unity-license-key: ${{ secrets.unity-license-key }}
-          define-symbols: ${{ inputs.environment == 'Development' && 'DEVELOPMENT' || '' }}
           ios-team-id: ${{ secrets.ios-team-id }}
           ios-certificate: ${{ secrets.ios-certificate }}
           ios-certificate-password: ${{ secrets.ios-certificate-password }}
           ios-provisioning-profile: ${{ secrets.ios-provisioning-profile }}
           ios-bundle-identifier: ${{ inputs.ios-bundle-identifier }}
 
-      - name: 📤 Publish iOS to Firebase
+      - name: 📤 Publish to Firebase
         if: inputs.environment == 'Development'
         uses: grovegs/actions/.github/actions/publish-firebase@main
         with:
