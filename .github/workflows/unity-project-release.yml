@@ -1,0 +1,295 @@
+name: 🚀 Release Unity Project
+
+on:
+  workflow_call:
+    inputs:
+      name:
+        description: The name of project.
+        required: true
+        type: string
+      project:
+        description: The relative path to the Unity project directory containing the `ProjectSettings` folder.
+        required: true
+        type: string
+      version-type:
+        description: Specifies the version type (e.g., major, minor, patch) for the build.
+        required: true
+        type: string
+      environment:
+        description: The build environment (e.g., Development, Production).
+        required: true
+        type: string
+      tester-groups:
+        description: Comma-separated list of tester groups to receive the build.
+        required: false
+        default: ""
+        type: string
+      release-android:
+        description: "Flag to enable or disable the Android release job."
+        required: false
+        default: true
+        type: boolean
+      release-ios:
+        description: "Flag to enable or disable the iOS release job."
+        required: false
+        default: true
+        type: boolean
+    secrets:
+      github-token:
+        description: The GitHub token for authentication.
+        required: true
+      unity-email:
+        description: "The Unity account email address."
+        required: true
+      unity-password:
+        description: "The Unity account password."
+        required: true
+      unity-license-key:
+        description: "The Unity license serial key."
+        required: true
+      firebase-credentials:
+        description: Firebase service account credentials for authentication with Firebase services.
+        required: false
+      firebase-app-id-android:
+        description: Firebase Android app ID used to upload builds to Firebase App Distribution.
+        required: false
+      firebase-app-id-ios:
+        description: Firebase iOS app ID used to upload builds to Firebase App Distribution.
+        required: false
+      android-keystore:
+        description: Base64-encoded content of the Android keystore for signing the build.
+        required: false
+      android-keystore-user:
+        description: Username for accessing the Android keystore.
+        required: false
+      android-keystore-password:
+        description: Password for accessing the Android keystore.
+        required: false
+      ios-team-id:
+        description: "The Apple Developer Team ID associated with your Apple Developer account."
+        required: false
+      ios-certificate:
+        description: "The Base64-encoded iOS distribution certificate (.p12 file) used for signing the application."
+        required: false
+      ios-certificate-password:
+        description: "The password used to import the password-protected iOS distribution certificate (.p12) for signing the application."
+        required: false
+      ios-provisioning-profile:
+        description: "The Base64-encoded iOS provisioning profile (.mobileprovision file) required for building the application."
+        required: false
+      ios-provisioning-profile-uuid:
+        description: "The UUID of the iOS provisioning profile to be used during the build process."
+        required: false
+      ios-api-key:
+        description: "Base64-encoded App Store Connect API private key (.p8 file) for TestFlight uploads."
+        required: false
+      ios-api-key-id:
+        description: "App Store Connect API Key ID for TestFlight uploads."
+        required: false
+      ios-api-issuer-id:
+        description: "App Store Connect API Issuer ID for TestFlight uploads."
+        required: false
+
+jobs:
+  shared:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.bump_version.outputs.next-version }}
+      changelog: ${{ steps.generate_changelog.outputs.changelog }}
+      filename: ${{ steps.generate_filename.outputs.filename }}
+
+    steps:
+      - name: 🔄 Checkout Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: 🔧 Bump Version
+        id: bump_version
+        uses: grovegs/actions/.github/actions/bump-version@main
+        with:
+          version-type: ${{ inputs.version-type }}
+
+      - name: 📝 Generate Changelog
+        id: generate_changelog
+        uses: grovegs/actions/.github/actions/generate-changelog@main
+        with:
+          next-version: ${{ steps.bump_version.outputs.next-version }}
+
+      - name: 📦 Generate Filename
+        id: generate_filename
+        run: |
+          filename=$(echo "${{ inputs.name }}" | sed -E 's/([[:space:]]|_)/-/g; s/([a-z])([A-Z])/\1-\2/g' | tr '[:upper:]' '[:lower:]')
+          echo "filename=$filename" >> $GITHUB_OUTPUT
+
+  release_android:
+    if: inputs.release-android
+    needs: shared
+    runs-on: macos-latest
+
+    steps:
+      - name: 📥 Checkout Code
+        uses: actions/checkout@v4
+
+      - name: 🎮 Setup Unity
+        uses: grovegs/actions/.github/actions/setup-unity@main
+        with:
+          project: ${{ inputs.project }}
+          unity-modules: android
+          cache: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop' }}
+
+      - name: 🏗️ Build Unity
+        id: build_unity
+        uses: grovegs/actions/.github/actions/build-unity@main
+        with:
+          project: ${{ inputs.project }}
+          version: ${{ needs.shared.outputs.version }}
+          platform: Android
+          configuration: Release
+          filename: ${{ needs.shared.outputs.filename }}
+          profile-name: ${{ format('Android {0}', inputs.environment) }}
+          unity-email: ${{ secrets.unity-email }}
+          unity-password: ${{ secrets.unity-password }}
+          unity-license-key: ${{ secrets.unity-license-key }}
+          android-keystore: ${{ secrets.android-keystore }}
+          android-keystore-user: ${{ secrets.android-keystore-user }}
+          android-keystore-password: ${{ secrets.android-keystore-password }}
+          android-format: ${{ inputs.environment == 'Production' && 'aab' || inputs.environment == 'Development' && 'apk' || 'apk' }}
+
+      - name: 📤 Upload Android Artifact
+        uses: actions/upload-artifact@v4
+        if: steps.build_unity.outputs.file != ''
+        with:
+          name: android-build
+          path: ${{ steps.build_unity.outputs.file }}
+          retention-days: 7
+
+      - name: 📤 Publish to Firebase
+        if: inputs.environment == 'Development'
+        continue-on-error: true
+        uses: grovegs/actions/.github/actions/publish-firebase@main
+        with:
+          file: ${{ steps.build_unity.outputs.file }}
+          app-id: ${{ secrets.firebase-app-id-android }}
+          credentials: ${{ secrets.firebase-credentials }}
+          release-notes: ${{ needs.shared.outputs.changelog }}
+          tester-groups: ${{ inputs.tester-groups }}
+
+  release_ios:
+    if: inputs.release-ios
+    needs: shared
+    runs-on: macos-latest
+
+    steps:
+      - name: 📥 Checkout Code
+        uses: actions/checkout@v4
+
+      - name: 🎮 Setup Unity
+        uses: grovegs/actions/.github/actions/setup-unity@main
+        with:
+          project: ${{ inputs.project }}
+          unity-modules: ios
+          cache: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop' }}
+
+      - name: 🏗️ Build Unity
+        id: build_unity
+        uses: grovegs/actions/.github/actions/build-unity@main
+        with:
+          project: ${{ inputs.project }}
+          version: ${{ needs.shared.outputs.version }}
+          platform: iOS
+          configuration: Release
+          filename: ${{ needs.shared.outputs.filename }}
+          profile-name: ${{ format('iOS {0}', inputs.environment) }}
+          unity-email: ${{ secrets.unity-email }}
+          unity-password: ${{ secrets.unity-password }}
+          unity-license-key: ${{ secrets.unity-license-key }}
+          ios-team-id: ${{ secrets.ios-team-id }}
+          ios-certificate: ${{ secrets.ios-certificate }}
+          ios-certificate-password: ${{ secrets.ios-certificate-password }}
+          ios-provisioning-profile: ${{ secrets.ios-provisioning-profile }}
+          ios-provisioning-profile-uuid: ${{ secrets.ios-provisioning-profile-uuid }}
+          ios-export-method: ${{ inputs.environment == 'Production' && 'app-store' || inputs.environment == 'Development' && 'ad-hoc' || 'ad-hoc' }}
+
+      - name: 📤 Upload iOS Artifact
+        uses: actions/upload-artifact@v4
+        if: steps.build_unity.outputs.file != ''
+        with:
+          name: ios-build
+          path: ${{ steps.build_unity.outputs.file }}
+          retention-days: 7
+
+      - name: 📤 Publish to Firebase
+        if: inputs.environment == 'Development'
+        continue-on-error: true
+        uses: grovegs/actions/.github/actions/publish-firebase@main
+        with:
+          file: ${{ steps.build_unity.outputs.file }}
+          app-id: ${{ secrets.firebase-app-id-ios }}
+          credentials: ${{ secrets.firebase-credentials }}
+          release-notes: ${{ needs.shared.outputs.changelog }}
+          tester-groups: ${{ inputs.tester-groups }}
+
+      - name: 📤 Publish to TestFlight
+        if: inputs.environment == 'Production'
+        continue-on-error: true
+        uses: grovegs/actions/.github/actions/publish-testflight@main
+        with:
+          file: ${{ steps.build_unity.outputs.file }}
+          api-key: ${{ secrets.ios-api-key }}
+          api-key-id: ${{ secrets.ios-api-key-id }}
+          api-issuer-id: ${{ secrets.ios-api-issuer-id }}
+
+  release_github:
+    if: always() && needs.shared.result == 'success' && needs.release_android.result != 'failure' && needs.release_ios.result != 'failure' && (needs.release_android.result == 'success' || needs.release_ios.result == 'success')
+    needs: [shared, release_android, release_ios]
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📥 Checkout Code
+        uses: actions/checkout@v4
+
+      - name: 📥 Download Android Build
+        if: needs.release_android.result != 'skipped' && needs.release_android.result != 'cancelled'
+        uses: actions/download-artifact@v4
+        with:
+          name: android-build
+          path: ./builds/
+        continue-on-error: true
+
+      - name: 📥 Download iOS Build
+        if: needs.release_ios.result != 'skipped' && needs.release_ios.result != 'cancelled'
+        uses: actions/download-artifact@v4
+        with:
+          name: ios-build
+          path: ./builds/
+        continue-on-error: true
+
+      - name: 📦 Collect Build Files
+        id: collect_files
+        run: |
+          files=()
+          if [ -d "./builds" ]; then
+            for file in ./builds/*; do
+              if [ -f "$file" ]; then
+                files+=("$file")
+              fi
+            done
+          fi
+          
+          assets_string=""
+          for file in "${files[@]}"; do
+            assets_string="$assets_string $file"
+          done
+          
+          echo "assets=$assets_string" >> $GITHUB_OUTPUT
+          echo "Found build files: $assets_string"
+
+      - name: 🛠️ Publish to GitHub
+        uses: grovegs/actions/.github/actions/publish-github@main
+        with:
+          title: ${{ inputs.name }} ${{ needs.shared.outputs.version }}
+          version: ${{ needs.shared.outputs.version }}
+          changelog: ${{ needs.shared.outputs.changelog }}
+          github-token: ${{ secrets.github-token }}
+          assets: ${{ steps.collect_files.outputs.assets }}
