@@ -156,8 +156,17 @@ jobs:
           android-keystore-password: ${{ secrets.android-keystore-password }}
           android-format: ${{ inputs.environment == 'Production' && 'aab' || inputs.environment == 'Development' && 'apk' || 'apk' }}
 
+      - name: 📤 Upload Android Artifact
+        uses: actions/upload-artifact@v4
+        if: steps.build_unity.outputs.file != ''
+        with:
+          name: android-build
+          path: ${{ steps.build_unity.outputs.file }}
+          retention-days: 7
+
       - name: 📤 Publish to Firebase
         if: inputs.environment == 'Development'
+        continue-on-error: true
         uses: grovegs/actions/.github/actions/publish-firebase@main
         with:
           file: ${{ steps.build_unity.outputs.file }}
@@ -202,8 +211,17 @@ jobs:
           ios-provisioning-profile-uuid: ${{ secrets.ios-provisioning-profile-uuid }}
           ios-export-method: ${{ inputs.environment == 'Production' && 'app-store' || inputs.environment == 'Development' && 'ad-hoc' || 'ad-hoc' }}
 
+      - name: 📤 Upload iOS Artifact
+        uses: actions/upload-artifact@v4
+        if: steps.build_unity.outputs.file != ''
+        with:
+          name: ios-build
+          path: ${{ steps.build_unity.outputs.file }}
+          retention-days: 7
+
       - name: 📤 Publish to Firebase
         if: inputs.environment == 'Development'
+        continue-on-error: true
         uses: grovegs/actions/.github/actions/publish-firebase@main
         with:
           file: ${{ steps.build_unity.outputs.file }}
@@ -214,6 +232,7 @@ jobs:
 
       - name: 📤 Publish to TestFlight
         if: inputs.environment == 'Production'
+        continue-on-error: true
         uses: grovegs/actions/.github/actions/publish-testflight@main
         with:
           file: ${{ steps.build_unity.outputs.file }}
@@ -222,13 +241,49 @@ jobs:
           api-issuer-id: ${{ secrets.ios-api-issuer-id }}
 
   release_github:
-    if: always() && (needs.release_android.result == 'success' || needs.release_ios.result == 'success') && (needs.release_android.result != 'failure' && needs.release_ios.result != 'failure')
+    if: always() && needs.shared.result == 'success' && needs.release_android.result != 'failure' && needs.release_ios.result != 'failure' && (needs.release_android.result == 'success' || needs.release_ios.result == 'success')
     needs: [shared, release_android, release_ios]
     runs-on: ubuntu-latest
 
     steps:
       - name: 📥 Checkout Code
         uses: actions/checkout@v4
+
+      - name: 📥 Download Android Build
+        if: needs.release_android.result != 'skipped' && needs.release_android.result != 'cancelled'
+        uses: actions/download-artifact@v4
+        with:
+          name: android-build
+          path: ./builds/
+        continue-on-error: true
+
+      - name: 📥 Download iOS Build
+        if: needs.release_ios.result != 'skipped' && needs.release_ios.result != 'cancelled'
+        uses: actions/download-artifact@v4
+        with:
+          name: ios-build
+          path: ./builds/
+        continue-on-error: true
+
+      - name: 📦 Collect Build Files
+        id: collect_files
+        run: |
+          files=()
+          if [ -d "./builds" ]; then
+            for file in ./builds/*; do
+              if [ -f "$file" ]; then
+                files+=("$file")
+              fi
+            done
+          fi
+          
+          assets_string=""
+          for file in "${files[@]}"; do
+            assets_string="$assets_string $file"
+          done
+          
+          echo "assets=$assets_string" >> $GITHUB_OUTPUT
+          echo "Found build files: $assets_string"
 
       - name: 🛠️ Publish to GitHub
         uses: grovegs/actions/.github/actions/publish-github@main
@@ -237,3 +292,4 @@ jobs:
           version: ${{ needs.shared.outputs.version }}
           changelog: ${{ needs.shared.outputs.changelog }}
           github-token: ${{ secrets.github-token }}
+          assets: ${{ steps.collect_files.outputs.assets }}
