@@ -80,6 +80,15 @@ on:
       ios-provisioning-profile-uuid:
         description: "The UUID of the iOS provisioning profile to be used during the build process."
         required: false
+      apple-api-key:
+        description: "Base64-encoded App Store Connect API private key (.p8 file) for TestFlight uploads."
+        required: false
+      apple-api-key-id:
+        description: "App Store Connect API Key ID for TestFlight uploads."
+        required: false
+      apple-api-issuer-id:
+        description: "App Store Connect API Issuer ID for TestFlight uploads."
+        required: false
 
 jobs:
   shared:
@@ -202,6 +211,15 @@ jobs:
           credentials: ${{ secrets.firebase-credentials }}
           release-notes: ${{ needs.shared.outputs.changelog }}
           tester-groups: ${{ inputs.tester-groups }}
+
+      - name: 📤 Publish to TestFlight
+        if: inputs.environment == 'Production'
+        uses: grovegs/actions/.github/actions/publish-testflight@main
+        with:
+          file: ${{ steps.build_unity.outputs.file }}
+          api-key: ${{ secrets.apple-api-key }}
+          api-key-id: ${{ secrets.apple-api-key-id }}
+          api-issuer-id: ${{ secrets.apple-api-issuer-id }}
 
   release_github:
     if: always() && (needs.release_android.result == 'success' || needs.release_ios.result == 'success') && (needs.release_android.result != 'failure' && needs.release_ios.result != 'failure')
