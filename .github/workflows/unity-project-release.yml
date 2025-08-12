@@ -191,6 +191,7 @@ jobs:
           ios-certificate-password: ${{ secrets.ios-certificate-password }}
           ios-provisioning-profile: ${{ secrets.ios-provisioning-profile }}
           ios-provisioning-profile-uuid: ${{ secrets.ios-provisioning-profile-uuid }}
+          ios-export-method: ${{ inputs.environment == 'Production' && 'app-store' || inputs.environment == 'Development' && 'ad-hoc' || 'ad-hoc' }}
 
       - name: 📤 Publish to Firebase
         if: inputs.environment == 'Development'
