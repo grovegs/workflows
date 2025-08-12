@@ -123,7 +123,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: 🎮 Setup Unity
-        uses: grovegs/actions/.github/actions/setup-unity@feature/build-unity
+        uses: grovegs/actions/.github/actions/setup-unity@main
         with:
           project: ${{ inputs.project }}
           unity-modules: android
@@ -131,7 +131,7 @@ jobs:
 
       - name: 🏗️ Build Unity
         id: build_unity
-        uses: grovegs/actions/.github/actions/build-unity@feature/build-unity
+        uses: grovegs/actions/.github/actions/build-unity@main
         with:
           project: ${{ inputs.project }}
           version: ${{ needs.shared.outputs.version }}
@@ -167,7 +167,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: 🎮 Setup Unity
-        uses: grovegs/actions/.github/actions/setup-unity@feature/build-unity
+        uses: grovegs/actions/.github/actions/setup-unity@main
         with:
           project: ${{ inputs.project }}
           unity-modules: ios
@@ -175,7 +175,7 @@ jobs:
 
       - name: 🏗️ Build Unity
         id: build_unity
-        uses: grovegs/actions/.github/actions/build-unity@feature/build-unity
+        uses: grovegs/actions/.github/actions/build-unity@main
         with:
           project: ${{ inputs.project }}
           version: ${{ needs.shared.outputs.version }}
