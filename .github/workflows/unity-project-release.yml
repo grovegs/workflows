@@ -178,7 +178,7 @@ jobs:
   release_ios:
     if: inputs.release-ios
     needs: shared
-    runs-on: macos-latest
+    runs-on: macos-14
 
     steps:
       - name: 📥 Checkout Code
