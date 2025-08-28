@@ -155,8 +155,9 @@ jobs:
           android-keystore-user: ${{ secrets.android-keystore-user }}
           android-keystore-password: ${{ secrets.android-keystore-password }}
           android-format: ${{ inputs.environment == 'Production' && 'aab' || inputs.environment == 'Development' && 'apk' || 'apk' }}
+          cache: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop' }}
 
-      - name: 📤 Upload Android Artifact
+      - name: 📤 Upload Build Artifact
         uses: actions/upload-artifact@v4
         if: steps.build_unity.outputs.file != ''
         with:
@@ -210,8 +211,9 @@ jobs:
           ios-provisioning-profile: ${{ secrets.ios-provisioning-profile }}
           ios-provisioning-profile-uuid: ${{ secrets.ios-provisioning-profile-uuid }}
           ios-export-method: ${{ inputs.environment == 'Production' && 'app-store' || inputs.environment == 'Development' && 'ad-hoc' || 'ad-hoc' }}
+          cache: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop' }}
 
-      - name: 📤 Upload iOS Artifact
+      - name: 📤 Upload Build Artifact
         uses: actions/upload-artifact@v4
         if: steps.build_unity.outputs.file != ''
         with:
