@@ -185,6 +185,13 @@ jobs:
       - name: 📥 Checkout Code
         uses: actions/checkout@v4
 
+      - name: 🎯 Select Xcode
+        id: select_xcode
+        uses: grovegs/actions/.github/actions/select-xcode@main
+        with:
+          min-ios-sdk-version: "18.0"
+          min-xcode-version: "16.0"
+
       - name: 🎮 Setup Unity
         uses: grovegs/actions/.github/actions/setup-unity@main
         with:
@@ -278,12 +285,12 @@ jobs:
               fi
             done
           fi
-          
+
           assets_string=""
           for file in "${files[@]}"; do
             assets_string="$assets_string $file"
           done
-          
+
           echo "assets=$assets_string" >> $GITHUB_OUTPUT
           echo "Found build files: $assets_string"
 
