@@ -185,9 +185,8 @@ jobs:
       - name: 📥 Checkout Code
         uses: actions/checkout@v4
 
-      - name: 🎯 Select Xcode
-        id: select_xcode
-        uses: grovegs/actions/.github/actions/select-xcode@main
+      - name: 🍎 Setup Xcode
+        uses: grovegs/actions/.github/actions/setup-xcode@main
         with:
           min-ios-sdk-version: "18.0"
           min-xcode-version: "16.0"
