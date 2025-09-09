@@ -188,8 +188,8 @@ jobs:
       - name: 🍎 Setup Xcode
         uses: grovegs/actions/.github/actions/setup-xcode@main
         with:
-          min-ios-sdk-version: "18.0"
-          min-xcode-version: "16.0"
+          ios-sdk-version: "18.0"
+          xcode-version: "16.0"
 
       - name: 🎮 Setup Unity
         uses: grovegs/actions/.github/actions/setup-unity@main
