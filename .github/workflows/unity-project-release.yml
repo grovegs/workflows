@@ -200,7 +200,7 @@ jobs:
         uses: grovegs/actions/.github/actions/setup-xcode@main
         with:
           ios-sdk-version: "18.0"
-          xcode-version: "16.0"
+          xcode-version: "16.1"
 
       - name: 🎮 Setup Unity
         uses: grovegs/actions/.github/actions/setup-unity@main
