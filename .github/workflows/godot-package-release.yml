@@ -45,7 +45,7 @@ jobs:
 
     steps:
       - name: 📂 Checkout Code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           fetch-depth: 0
 
@@ -75,7 +75,7 @@ jobs:
 
     steps:
       - name: 📂 Checkout Code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: ⚙️ Setup Dotnet
         uses: grovegs/actions/.github/actions/setup-dotnet@main
@@ -119,7 +119,7 @@ jobs:
 
     steps:
       - name: 📂 Checkout Code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: ⚙️ Setup Dotnet
         uses: grovegs/actions/.github/actions/setup-dotnet@main
@@ -163,7 +163,7 @@ jobs:
 
     steps:
       - name: 📂 Checkout Code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: 📦 Generate Filename
         id: generate_filename
@@ -225,7 +225,7 @@ jobs:
 
     steps:
       - name: 📂 Checkout Code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: 📥 Download All Artifacts
         uses: actions/download-artifact@v5

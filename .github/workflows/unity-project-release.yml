@@ -100,7 +100,7 @@ jobs:
 
     steps:
       - name: 🔄 Checkout Code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           fetch-depth: 0
 
@@ -129,7 +129,7 @@ jobs:
 
     steps:
       - name: 📥 Checkout Code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: 🤖 Setup Android
         uses: grovegs/actions/.github/actions/setup-android@main
@@ -190,7 +190,7 @@ jobs:
 
     steps:
       - name: 📥 Checkout Code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: 🍎 Setup Xcode
         uses: grovegs/actions/.github/actions/setup-xcode@main
@@ -261,7 +261,7 @@ jobs:
 
     steps:
       - name: 📥 Checkout Code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: 📥 Download Android Build
         if: needs.release_android.result != 'skipped' && needs.release_android.result != 'cancelled'

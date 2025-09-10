@@ -86,7 +86,7 @@ jobs:
 
     steps:
       - name: 🔄 Checkout Code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           fetch-depth: 0
 
@@ -115,7 +115,7 @@ jobs:
 
     steps:
       - name: 📥 Checkout Code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: ☕ Setup JDK
         uses: actions/setup-java@v4
@@ -181,7 +181,7 @@ jobs:
 
     steps:
       - name: 📥 Checkout Code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: 🛠️ Setup Dotnet
         uses: grovegs/actions/.github/actions/setup-dotnet@main
@@ -238,7 +238,7 @@ jobs:
 
     steps:
       - name: 📥 Checkout Code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: 🛠️ Publish to Github
         uses: grovegs/actions/.github/actions/publish-github@main
