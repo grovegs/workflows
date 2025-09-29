@@ -1,0 +1,71 @@
+name: 🧪 Tests
+
+on:
+    push:
+        branches:
+            - main
+            - develop
+    pull_request:
+        branches:
+            - main
+            - develop
+
+permissions:
+    contents: read
+
+jobs:
+    test-dotnet-package:
+        name: Test .NET Package Workflow
+        runs-on: ubuntu-latest
+
+        steps:
+            - name: 📂 Checkout Code
+              uses: actions/checkout@v5
+
+            - name: 🧪 Test .NET Package
+              uses: ./.github/workflows/dotnet-package-tests.yml
+              with:
+                  test-project: sandbox/ConsoleApp
+                  global-json-file: sandbox/ConsoleApp/global.json
+
+    test-godot-project:
+        name: Test Godot Project Workflow
+        runs-on: ubuntu-latest
+
+        steps:
+            - name: 📂 Checkout Code
+              uses: actions/checkout@v5
+
+            - name: 🧪 Test Godot Project
+              uses: ./.github/workflows/godot-project-tests.yml
+              with:
+                  project: sandbox/GodotApplication
+                  test-project: sandbox/GodotApplication
+                  global-json-file: sandbox/GodotApplication/global.json
+
+    test-format-workflows:
+        name: Test Format Workflows
+        runs-on: ubuntu-latest
+
+        steps:
+            - name: 📂 Checkout Code
+              uses: actions/checkout@v5
+
+            - name: 🎨 Test .NET Package Format
+              uses: ./.github/workflows/dotnet-package-format.yml
+              with:
+                  project: sandbox/ConsoleApp
+                  global-json-file: sandbox/ConsoleApp/global.json
+
+            - name: 🎨 Test Godot Package Format
+              uses: ./.github/workflows/godot-package-format.yml
+              with:
+                  project: sandbox/GodotApplication
+                  global-json-file: sandbox/GodotApplication/global.json
+
+            - name: 🎨 Test Godot Project Format
+              uses: ./.github/workflows/godot-project-format.yml
+              with:
+                  project: sandbox/GodotApplication
+                  test-project: sandbox/GodotApplication
+                  global-json-file: sandbox/GodotApplication/global.json
