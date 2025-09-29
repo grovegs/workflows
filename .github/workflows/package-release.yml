@@ -1,4 +1,4 @@
-name: 🚀 Release Godot Package
+name: 🚀 Release Package
 
 on:
   workflow_call:
@@ -7,26 +7,31 @@ on:
         description: The name of package.
         required: true
         type: string
-      core-project:
-        description: The relative path to the Core .NET project directory containing the `csproj` file.
-        required: true
-        type: string
-      godot-project:
-        description: The relative path to the Godot .NET project directory containing the `csproj` file.
-        required: true
-        type: string
-      godot-addon:
-        description: The relative path to the Godot Addon directory containing the `plugin.cfg` file.
-        required: true
-        type: string
-      global-json-file:
-        description: The relative path to the `global.json` file to extract .NET and Godot version.
-        required: true
-        type: string
       version-type:
         description: Specifies the version type (e.g., major, minor, patch) for the build.
         required: true
         type: string
+      global-json-file:
+        description: The relative path to the `global.json` file to extract .NET version.
+        required: true
+        type: string
+      project:
+        description: The relative path to the main .NET project directory containing the `csproj` file.
+        required: false
+        type: string
+      core-project:
+        description: The relative path to the Core .NET project directory containing the `csproj` file.
+        required: false
+        type: string
+      godot-project:
+        description: The relative path to the Godot .NET project directory containing the `csproj` file.
+        required: false
+        type: string
+      godot-addon:
+        description: The relative path to the Godot Addon directory containing the `plugin.cfg` file.
+        required: false
+        type: string
+
     secrets:
       github-token:
         description: The GitHub token for authentication.
@@ -68,7 +73,8 @@ jobs:
           filename=$(echo "${{ inputs.name }}" | sed -E 's/([[:space:]]|_)/-/g; s/([a-z])([A-Z])/\1-\2/g' | tr '[:upper:]' '[:lower:]')-${{ steps.bump_version.outputs.next-version }}
           echo "filename=$filename" >> $GITHUB_OUTPUT
 
-  pack_core:
+  pack_main:
+    if: inputs.project != ''
     needs: shared
     runs-on: ubuntu-latest
     outputs:
@@ -84,7 +90,52 @@ jobs:
           global-json-file: ${{ inputs.global-json-file }}
           cache: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop' }}
 
-      - name: 🏗️ Build Dotnet
+      - name: 🏗️ Build Main Project
+        uses: grovegs/actions/.github/actions/build-dotnet@v0.0.1
+        with:
+          project: ${{ inputs.project }}
+          configuration: Release
+          version: ${{ needs.shared.outputs.version }}
+
+      - name: 📦 Generate Filename
+        id: generate_filename
+        run: |
+          filename=${{ needs.shared.outputs.filename }}
+          echo "filename=$filename" >> $GITHUB_OUTPUT
+
+      - name: 📦 Pack NuGet
+        id: pack_nuget
+        uses: grovegs/actions/.github/actions/pack-dotnet@v0.0.1
+        with:
+          project: ${{ inputs.project }}
+          configuration: Release
+          version: ${{ needs.shared.outputs.version }}
+          filename: ${{ steps.generate_filename.outputs.filename }}
+
+      - name: 📤 Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.generate_filename.outputs.filename }}
+          path: ${{ steps.pack_nuget.outputs.file }}
+
+  pack_core:
+    if: inputs.core-project != ''
+    needs: shared
+    runs-on: ubuntu-latest
+    outputs:
+      filename: ${{ steps.generate_filename.outputs.filename }}
+
+    steps:
+      - name: 📂 Checkout Code
+        uses: actions/checkout@v5
+
+      - name: ⚙️ Setup Dotnet
+        uses: grovegs/actions/.github/actions/setup-dotnet@v0.0.1
+        with:
+          global-json-file: ${{ inputs.global-json-file }}
+          cache: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop' }}
+
+      - name: 🏗️ Build Core Project
         uses: grovegs/actions/.github/actions/build-dotnet@v0.0.1
         with:
           project: ${{ inputs.core-project }}
@@ -97,7 +148,7 @@ jobs:
           filename=${{ needs.shared.outputs.filename }}
           echo "filename=$filename" >> $GITHUB_OUTPUT
 
-      - name: 📦 Pack Nuget
+      - name: 📦 Pack NuGet
         id: pack_nuget
         uses: grovegs/actions/.github/actions/pack-dotnet@v0.0.1
         with:
@@ -113,6 +164,7 @@ jobs:
           path: ${{ steps.pack_nuget.outputs.file }}
 
   pack_godot:
+    if: inputs.godot-project != ''
     needs: shared
     runs-on: ubuntu-latest
     outputs:
@@ -128,7 +180,7 @@ jobs:
           global-json-file: ${{ inputs.global-json-file }}
           cache: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop' }}
 
-      - name: 🏗️ Build Dotnet
+      - name: 🏗️ Build Godot Project
         uses: grovegs/actions/.github/actions/build-dotnet@v0.0.1
         with:
           project: ${{ inputs.godot-project }}
@@ -141,7 +193,7 @@ jobs:
           filename=${{ needs.shared.outputs.filename }}-godot
           echo "filename=$filename" >> $GITHUB_OUTPUT
 
-      - name: 📦 Pack Nuget
+      - name: 📦 Pack NuGet
         id: pack_nuget
         uses: grovegs/actions/.github/actions/pack-dotnet@v0.0.1
         with:
@@ -157,6 +209,7 @@ jobs:
           path: ${{ steps.pack_nuget.outputs.file }}
 
   pack_godot_addon:
+    if: inputs.godot-addon != ''
     needs: shared
     runs-on: macos-latest
     outputs:
@@ -186,7 +239,26 @@ jobs:
           name: ${{ steps.generate_filename.outputs.filename }}
           path: ${{ steps.pack_addon.outputs.file }}
 
+  release_main:
+    if: inputs.project != '' && needs.pack_main.result == 'success'
+    needs: [pack_main]
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📥 Download Artifact
+        uses: actions/download-artifact@v5
+        with:
+          name: ${{ needs.pack_main.outputs.filename }}
+          path: ~/.artifacts
+
+      - name: 🚀 Publish NuGet
+        uses: grovegs/actions/.github/actions/publish-nuget@v0.0.1
+        with:
+          file: ~/.artifacts/${{ needs.pack_main.outputs.filename }}.nupkg
+          api-key: ${{ secrets.nuget-api-key }}
+
   release_core:
+    if: inputs.core-project != '' && needs.pack_core.result == 'success'
     needs: [pack_core]
     runs-on: ubuntu-latest
 
@@ -197,13 +269,14 @@ jobs:
           name: ${{ needs.pack_core.outputs.filename }}
           path: ~/.artifacts
 
-      - name: 🚀 Publish Nuget
+      - name: 🚀 Publish NuGet
         uses: grovegs/actions/.github/actions/publish-nuget@v0.0.1
         with:
           file: ~/.artifacts/${{ needs.pack_core.outputs.filename }}.nupkg
           api-key: ${{ secrets.nuget-api-key }}
 
   release_godot:
+    if: inputs.godot-project != '' && needs.pack_godot.result == 'success'
     needs: [pack_godot]
     runs-on: ubuntu-latest
 
@@ -214,14 +287,15 @@ jobs:
           name: ${{ needs.pack_godot.outputs.filename }}
           path: ~/.artifacts
 
-      - name: 🚀 Publish Nuget
+      - name: 🚀 Publish NuGet
         uses: grovegs/actions/.github/actions/publish-nuget@v0.0.1
         with:
           file: ~/.artifacts/${{ needs.pack_godot.outputs.filename }}.nupkg
           api-key: ${{ secrets.nuget-api-key }}
 
   release_github:
-    needs: [shared, pack_core, pack_godot, pack_godot_addon]
+    if: always() && needs.shared.result == 'success' && (needs.pack_main.result == 'success' || needs.pack_core.result == 'success' || needs.pack_godot.result == 'success' || needs.pack_godot_addon.result == 'success')
+    needs: [shared, pack_main, pack_core, pack_godot, pack_godot_addon]
     runs-on: ubuntu-latest
 
     steps:
@@ -236,10 +310,11 @@ jobs:
       - name: 🔍 Find Assets
         id: find_assets
         run: |
-          assets=$(find ~/.artifacts -type f | tr '\n' ' ')
+          assets=$(find ~/.artifacts -type f 2>/dev/null | tr '\n' ' ' || echo "")
           echo "assets=$assets" >> $GITHUB_OUTPUT
+          echo "Found assets: $assets"
 
-      - name: 🚀 Publish to Github
+      - name: 🚀 Publish to GitHub
         uses: grovegs/actions/.github/actions/publish-github@v0.0.1
         with:
           title: ${{ inputs.name }} ${{ needs.shared.outputs.version }}

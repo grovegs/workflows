@@ -1,23 +1,31 @@
-name: 🔍 Format Godot Package
+name: 🔍 Format Package
 
 on:
   workflow_call:
     inputs:
+      project:
+        description: The relative path to the main .NET project directory containing the `csproj` file.
+        required: false
+        type: string
+      test-project:
+        description: The relative path to the main .NET Test project directory containing the `csproj` file.
+        required: false
+        type: string
       core-project:
         description: The relative path to the Core .NET project directory containing the `csproj` file.
-        required: true
+        required: false
         type: string
       godot-project:
         description: The relative path to the Godot .NET project directory containing the `csproj` file.
-        required: true
+        required: false
         type: string
       core-test-project:
         description: The relative path to the Core .NET Test project directory containing the `csproj` file.
-        required: true
+        required: false
         type: string
       godot-test-project:
         description: The relative path to the Godot .NET Test project directory containing the `csproj` file.
-        required: true
+        required: false
         type: string
       global-json-file:
         description: The relative path to the `global.json` file to extract .NET version.
@@ -25,7 +33,8 @@ on:
         type: string
 
 jobs:
-  format_core_project:
+  format_main_project:
+    if: inputs.project != ''
     runs-on: ubuntu-latest
 
     steps:
@@ -38,12 +47,51 @@ jobs:
           global-json-file: ${{ inputs.global-json-file }}
           cache: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop' }}
 
-      - name: 🔍 Format Dotnet
+      - name: 🔍 Format Main Project
+        uses: grovegs/actions/.github/actions/format-dotnet@v0.0.1
+        with:
+          project: ${{ inputs.project }}
+
+  format_main_test_project:
+    if: inputs.test-project != ''
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📂 Checkout Code
+        uses: actions/checkout@v5
+
+      - name: ⚙️ Setup Dotnet
+        uses: grovegs/actions/.github/actions/setup-dotnet@v0.0.1
+        with:
+          global-json-file: ${{ inputs.global-json-file }}
+          cache: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop' }}
+
+      - name: 🔍 Format Main Test Project
+        uses: grovegs/actions/.github/actions/format-dotnet@v0.0.1
+        with:
+          project: ${{ inputs.test-project }}
+
+  format_core_project:
+    if: inputs.core-project != ''
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📂 Checkout Code
+        uses: actions/checkout@v5
+
+      - name: ⚙️ Setup Dotnet
+        uses: grovegs/actions/.github/actions/setup-dotnet@v0.0.1
+        with:
+          global-json-file: ${{ inputs.global-json-file }}
+          cache: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop' }}
+
+      - name: 🔍 Format Core Project
         uses: grovegs/actions/.github/actions/format-dotnet@v0.0.1
         with:
           project: ${{ inputs.core-project }}
 
   format_godot_project:
+    if: inputs.godot-project != ''
     runs-on: ubuntu-latest
 
     steps:
@@ -56,12 +104,13 @@ jobs:
           global-json-file: ${{ inputs.global-json-file }}
           cache: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop' }}
 
-      - name: 🔍 Format Dotnet
+      - name: 🔍 Format Godot Project
         uses: grovegs/actions/.github/actions/format-dotnet@v0.0.1
         with:
           project: ${{ inputs.godot-project }}
 
   format_core_test_project:
+    if: inputs.core-test-project != ''
     runs-on: ubuntu-latest
 
     steps:
@@ -74,12 +123,13 @@ jobs:
           global-json-file: ${{ inputs.global-json-file }}
           cache: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop' }}
 
-      - name: 🔍 Format Dotnet
+      - name: 🔍 Format Core Test Project
         uses: grovegs/actions/.github/actions/format-dotnet@v0.0.1
         with:
           project: ${{ inputs.core-test-project }}
 
   format_godot_test_project:
+    if: inputs.godot-test-project != ''
     runs-on: ubuntu-latest
 
     steps:
@@ -92,7 +142,7 @@ jobs:
           global-json-file: ${{ inputs.global-json-file }}
           cache: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop' }}
 
-      - name: 🔍 Format Dotnet
+      - name: 🔍 Format Godot Test Project
         uses: grovegs/actions/.github/actions/format-dotnet@v0.0.1
         with:
           project: ${{ inputs.godot-test-project }}

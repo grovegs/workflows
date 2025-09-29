@@ -14,8 +14,8 @@ permissions:
     contents: read
 
 jobs:
-    test-dotnet-package:
-        name: Test .NET Package Workflow
+    test-package-workflows:
+        name: Test Package Workflows
         runs-on: ubuntu-latest
 
         steps:
@@ -23,10 +23,10 @@ jobs:
               uses: actions/checkout@v5
 
             - name: 🧪 Test .NET Package
-              uses: ./.github/workflows/dotnet-package-tests.yml
+              uses: ./.github/workflows/package-tests.yml
               with:
-                  test-project: sandbox/ConsoleApp
-                  global-json-file: sandbox/ConsoleApp/global.json
+                  test-project: sandbox/ConsoleApplication
+                  global-json-file: sandbox/ConsoleApplication/global.json
 
     test-godot-project:
         name: Test Godot Project Workflow
@@ -51,14 +51,14 @@ jobs:
             - name: 📂 Checkout Code
               uses: actions/checkout@v5
 
-            - name: 🎨 Test .NET Package Format
-              uses: ./.github/workflows/dotnet-package-format.yml
+            - name: 🎨 Test Unified Package Format (.NET)
+              uses: ./.github/workflows/package-format.yml
               with:
-                  project: sandbox/ConsoleApp
-                  global-json-file: sandbox/ConsoleApp/global.json
+                  project: sandbox/ConsoleApplication
+                  global-json-file: sandbox/ConsoleApplication/global.json
 
-            - name: 🎨 Test Godot Package Format
-              uses: ./.github/workflows/godot-package-format.yml
+            - name: 🎨 Test Unified Package Format (Godot)
+              uses: ./.github/workflows/package-format.yml
               with:
                   project: sandbox/GodotApplication
                   global-json-file: sandbox/GodotApplication/global.json

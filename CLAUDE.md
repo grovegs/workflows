@@ -12,12 +12,13 @@ This is Grove Games' collection of reusable GitHub Actions workflows for buildin
 - `.github/workflows/` - Main reusable workflow definitions
   - `godot-project-*` - Workflows for Godot Engine projects
   - `unity-project-*` - Workflows for Unity Engine projects
-  - `dotnet-package-*` - Workflows for .NET packages/libraries
+  - `package-*` - Unified workflows for .NET and Godot packages
   - `release.yml` - Main release orchestration workflow
+  - `tests.yml` - Automated testing of workflows using sandbox applications
 
 ### Sandbox Applications
 - `sandbox/GodotApplication/` - Sample Godot C# project for testing workflows
-- `sandbox/ConsoleApp/` - Sample .NET console application for testing
+- `sandbox/ConsoleApplication/` - Sample .NET console application for testing
 
 ## Workflow Types and Commands
 
@@ -36,10 +37,15 @@ Key requirements for Godot projects:
 - Supports Firebase App Distribution and TestFlight publishing
 - Requires Unity license credentials and platform-specific signing certificates
 
-### .NET Package Workflows
-- **Release**: `dotnet-package-release.yml` - Builds and publishes NuGet packages
-- **Testing**: `dotnet-package-tests.yml` - Runs .NET unit tests
-- **Formatting**: `dotnet-package-format.yml` - Formats C# code
+### Package Workflows
+- **Release**: `package-release.yml` - Builds and publishes NuGet packages for both .NET and Godot projects
+- **Testing**: `package-tests.yml` - Runs .NET unit tests with support for multiple project types
+- **Formatting**: `package-format.yml` - Formats C# code for .NET and Godot projects
+
+These unified workflows use optional inputs to support:
+- Simple .NET packages (using `project`/`test-project` inputs)
+- Complex Godot packages (using `core-project`/`godot-project`/`godot-addon` inputs)
+- Mixed scenarios with any combination of the above
 
 ## Version Management
 
@@ -75,10 +81,38 @@ Workflows depend on custom actions from the `grovegs/actions` repository:
 - Publishing actions: `publish-firebase`, `publish-github`, `publish-nuget`, `publish-testflight`
 - Utility actions: `bump-version`, `generate-changelog`, `format-dotnet`
 
+## Usage Examples
+
+### Using Package Workflows
+
+For a simple .NET package:
+```yaml
+uses: ./.github/workflows/package-release.yml
+with:
+  name: "My Package"
+  project: "src/MyPackage"
+  version-type: "minor"
+  global-json-file: "global.json"
+```
+
+For a complex Godot package:
+```yaml
+uses: ./.github/workflows/package-release.yml
+with:
+  name: "My Godot Package"
+  core-project: "src/Core"
+  godot-project: "src/Godot"
+  godot-addon: "addons/my-addon"
+  version-type: "patch"
+  global-json-file: "global.json"
+```
+
 ## Development Notes
 
 - All workflows are designed as reusable (`workflow_call`) for use by other repositories
+- Package workflows use conditional job execution - only runs jobs for provided inputs
 - Environment-specific builds support both `Development` and `Production` configurations
 - Caching is enabled for main/develop branches to improve build performance
 - Firebase publishing is only enabled for Development builds
 - GitHub releases include downloadable build artifacts
+- Use `tests.yml` to validate workflow changes against sandbox applications

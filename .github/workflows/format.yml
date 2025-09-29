@@ -25,12 +25,12 @@ jobs:
             - name: 🔧 Setup .NET
               uses: grovegs/actions/.github/actions/setup-dotnet@v0.0.2
               with:
-                  global-json-file: sandbox/ConsoleApp/global.json
+                  global-json-file: sandbox/ConsoleApplication/global.json
 
-            - name: 🎨 Format .NET ConsoleApp
+            - name: 🎨 Format .NET ConsoleApplication
               uses: grovegs/actions/.github/actions/format-dotnet@v0.0.2
               with:
-                  project: sandbox/ConsoleApp
+                  project: sandbox/ConsoleApplication
 
             - name: 🎨 Format .NET GodotApplication
               uses: grovegs/actions/.github/actions/format-dotnet@v0.0.2
