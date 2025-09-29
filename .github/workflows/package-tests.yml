@@ -1,38 +1,38 @@
 name: 🧪 Test Package
 
 on:
-  workflow_call:
-    inputs:
-      dotnet-tests:
-        description: Array of .NET test project paths to test (e.g., ["tests/Core.Tests", "tests/Godot.Tests"])
-        required: false
-        type: string
-        default: "[]"
-      global-json-file:
-        description: The relative path to the `global.json` file to extract .NET version.
-        required: true
-        type: string
+    workflow_call:
+        inputs:
+            dotnet-tests:
+                description: Array of .NET test project paths to test (e.g., ["tests/Core.Tests", "tests/Godot.Tests"])
+                required: false
+                type: string
+                default: "[]"
+            global-json-file:
+                description: The relative path to the `global.json` file to extract .NET version.
+                required: true
+                type: string
 
 jobs:
-  test_dotnet_projects:
-    if: fromJSON(inputs.dotnet-tests)[0] != null
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        project: ${{ fromJSON(inputs.dotnet-tests) }}
+    test_dotnet_projects:
+        if: fromJSON(inputs.dotnet-tests)[0] != null
+        runs-on: ubuntu-latest
+        strategy:
+            matrix:
+                project: ${{ fromJSON(inputs.dotnet-tests) }}
 
-    steps:
-      - name: 📂 Checkout Code
-        uses: actions/checkout@v5
+        steps:
+            - name: 📂 Checkout Code
+              uses: actions/checkout@v5
 
-      - name: ⚙️ Setup Dotnet
-        uses: grovegs/actions/.github/actions/setup-dotnet@v0.0.1
-        with:
-          global-json-file: ${{ inputs.global-json-file }}
-          cache: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop' }}
+            - name: ⚙️ Setup Dotnet
+              uses: grovegs/actions/.github/actions/setup-dotnet@v0.0.1
+              with:
+                  global-json-file: ${{ inputs.global-json-file }}
+                  cache: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop' }}
 
-      - name: ✅ Test .NET Project
-        uses: grovegs/actions/.github/actions/test-dotnet@v0.0.1
-        with:
-          project: ${{ matrix.project }}
-          configuration: Release
+            - name: ✅ Test .NET Project
+              uses: grovegs/actions/.github/actions/test-dotnet@v0.0.1
+              with:
+                  project: ${{ matrix.project }}
+                  configuration: Release

@@ -1,64 +1,64 @@
 name: 🔍 Format Package
 
 on:
-  workflow_call:
-    inputs:
-      dotnet-projects:
-        description: Array of .NET project paths to format (e.g., ["src/Core", "src/Godot"])
-        required: false
-        type: string
-        default: "[]"
-      dotnet-tests:
-        description: Array of .NET test project paths to format (e.g., ["tests/Core.Tests", "tests/Godot.Tests"])
-        required: false
-        type: string
-        default: "[]"
-      global-json-file:
-        description: The relative path to the `global.json` file to extract .NET version.
-        required: true
-        type: string
+    workflow_call:
+        inputs:
+            dotnet-projects:
+                description: Array of .NET project paths to format (e.g., ["src/Core", "src/Godot"])
+                required: false
+                type: string
+                default: "[]"
+            dotnet-tests:
+                description: Array of .NET test project paths to format (e.g., ["tests/Core.Tests", "tests/Godot.Tests"])
+                required: false
+                type: string
+                default: "[]"
+            global-json-file:
+                description: The relative path to the `global.json` file to extract .NET version.
+                required: true
+                type: string
 
 jobs:
-  format_dotnet_projects:
-    if: fromJSON(inputs.dotnet-projects)[0] != null
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        project: ${{ fromJSON(inputs.dotnet-projects) }}
+    format_dotnet_projects:
+        if: fromJSON(inputs.dotnet-projects)[0] != null
+        runs-on: ubuntu-latest
+        strategy:
+            matrix:
+                project: ${{ fromJSON(inputs.dotnet-projects) }}
 
-    steps:
-      - name: 📂 Checkout Code
-        uses: actions/checkout@v5
+        steps:
+            - name: 📂 Checkout Code
+              uses: actions/checkout@v5
 
-      - name: ⚙️ Setup Dotnet
-        uses: grovegs/actions/.github/actions/setup-dotnet@v0.0.1
-        with:
-          global-json-file: ${{ inputs.global-json-file }}
-          cache: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop' }}
+            - name: ⚙️ Setup Dotnet
+              uses: grovegs/actions/.github/actions/setup-dotnet@v0.0.1
+              with:
+                  global-json-file: ${{ inputs.global-json-file }}
+                  cache: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop' }}
 
-      - name: 🔍 Format .NET Project
-        uses: grovegs/actions/.github/actions/format-dotnet@v0.0.1
-        with:
-          project: ${{ matrix.project }}
+            - name: 🔍 Format .NET Project
+              uses: grovegs/actions/.github/actions/format-dotnet@v0.0.1
+              with:
+                  project: ${{ matrix.project }}
 
-  format_dotnet_tests:
-    if: fromJSON(inputs.dotnet-tests)[0] != null
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        project: ${{ fromJSON(inputs.dotnet-tests) }}
+    format_dotnet_tests:
+        if: fromJSON(inputs.dotnet-tests)[0] != null
+        runs-on: ubuntu-latest
+        strategy:
+            matrix:
+                project: ${{ fromJSON(inputs.dotnet-tests) }}
 
-    steps:
-      - name: 📂 Checkout Code
-        uses: actions/checkout@v5
+        steps:
+            - name: 📂 Checkout Code
+              uses: actions/checkout@v5
 
-      - name: ⚙️ Setup Dotnet
-        uses: grovegs/actions/.github/actions/setup-dotnet@v0.0.1
-        with:
-          global-json-file: ${{ inputs.global-json-file }}
-          cache: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop' }}
+            - name: ⚙️ Setup Dotnet
+              uses: grovegs/actions/.github/actions/setup-dotnet@v0.0.1
+              with:
+                  global-json-file: ${{ inputs.global-json-file }}
+                  cache: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop' }}
 
-      - name: 🔍 Format .NET Test Project
-        uses: grovegs/actions/.github/actions/format-dotnet@v0.0.1
-        with:
-          project: ${{ matrix.project }}
+            - name: 🔍 Format .NET Test Project
+              uses: grovegs/actions/.github/actions/format-dotnet@v0.0.1
+              with:
+                  project: ${{ matrix.project }}

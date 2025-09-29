@@ -1,62 +1,62 @@
 name: 🧪 Test Godot Project
 
 on:
-  workflow_call:
-    inputs:
-      project:
-        description: The relative path to the Godot project directory containing the `project.godot` file.
-        required: true
-        type: string
-      test-project:
-        description: The relative path to the .NET Test project directory containing the `csproj` file.
-        required: true
-        type: string
-      global-json-file:
-        description: The relative path to the `global.json` file to extract .NET version.
-        required: true
-        type: string
+    workflow_call:
+        inputs:
+            project:
+                description: The relative path to the Godot project directory containing the `project.godot` file.
+                required: true
+                type: string
+            test-project:
+                description: The relative path to the .NET Test project directory containing the `csproj` file.
+                required: true
+                type: string
+            global-json-file:
+                description: The relative path to the `global.json` file to extract .NET version.
+                required: true
+                type: string
 
 jobs:
-  test_dotnet:
-    runs-on: ubuntu-latest
+    test_dotnet:
+        runs-on: ubuntu-latest
 
-    steps:
-      - name: 📂 Checkout Code
-        uses: actions/checkout@v5
+        steps:
+            - name: 📂 Checkout Code
+              uses: actions/checkout@v5
 
-      - name: ⚙️ Setup Dotnet
-        uses: grovegs/actions/.github/actions/setup-dotnet@v0.0.1
-        with:
-          global-json-file: ${{ inputs.global-json-file }}
-          cache: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop' }}
+            - name: ⚙️ Setup Dotnet
+              uses: grovegs/actions/.github/actions/setup-dotnet@v0.0.1
+              with:
+                  global-json-file: ${{ inputs.global-json-file }}
+                  cache: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop' }}
 
-      - name: ✅ Test Dotnet
-        uses: grovegs/actions/.github/actions/test-dotnet@v0.0.1
-        with:
-          project: ${{ inputs.test-project }}
-          configuration: Release
+            - name: ✅ Test Dotnet
+              uses: grovegs/actions/.github/actions/test-dotnet@v0.0.1
+              with:
+                  project: ${{ inputs.test-project }}
+                  configuration: Release
 
-  test_godot:
-    runs-on: ubuntu-latest
+    test_godot:
+        runs-on: ubuntu-latest
 
-    steps:
-      - name: 📂 Checkout Code
-        uses: actions/checkout@v5
+        steps:
+            - name: 📂 Checkout Code
+              uses: actions/checkout@v5
 
-      - name: 🛠️ Setup Dotnet
-        uses: grovegs/actions/.github/actions/setup-dotnet@v0.0.1
-        with:
-          global-json-file: ${{ inputs.global-json-file }}
-          cache: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop' }}
+            - name: 🛠️ Setup Dotnet
+              uses: grovegs/actions/.github/actions/setup-dotnet@v0.0.1
+              with:
+                  global-json-file: ${{ inputs.global-json-file }}
+                  cache: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop' }}
 
-      - name: 🎮 Setup Godot
-        uses: grovegs/actions/.github/actions/setup-godot@v0.0.1
-        with:
-          global-json-file: ${{ inputs.global-json-file }}
-          cache: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop' }}
+            - name: 🎮 Setup Godot
+              uses: grovegs/actions/.github/actions/setup-godot@v0.0.1
+              with:
+                  global-json-file: ${{ inputs.global-json-file }}
+                  cache: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop' }}
 
-      - name: ✅ Test Godot
-        uses: grovegs/actions/.github/actions/test-godot@v0.0.1
-        with:
-          project: ${{ inputs.project }}
-          global-json-file: ${{ inputs.global-json-file }}
+            - name: ✅ Test Godot
+              uses: grovegs/actions/.github/actions/test-godot@v0.0.1
+              with:
+                  project: ${{ inputs.project }}
+                  global-json-file: ${{ inputs.global-json-file }}
