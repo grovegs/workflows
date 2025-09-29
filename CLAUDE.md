@@ -42,10 +42,10 @@ Key requirements for Godot projects:
 - **Testing**: `package-tests.yml` - Runs .NET unit tests with support for multiple project types
 - **Formatting**: `package-format.yml` - Formats C# code for .NET and Godot projects
 
-These unified workflows use optional inputs to support:
-- Simple .NET packages (using `project`/`test-project` inputs)
-- Complex Godot packages (using `core-project`/`godot-project`/`godot-addon` inputs)
-- Mixed scenarios with any combination of the above
+These unified workflows use array-based inputs to support any number of projects:
+- `dotnet-projects` - Array of .NET project paths to build/format/package
+- `dotnet-tests` - Array of .NET test project paths to test
+- `godot-addons` - Array of Godot addon paths to package
 
 ## Version Management
 
@@ -90,20 +90,27 @@ For a simple .NET package:
 uses: ./.github/workflows/package-release.yml
 with:
   name: "My Package"
-  project: "src/MyPackage"
+  dotnet-projects: '["src/MyPackage"]'
   version-type: "minor"
   global-json-file: "global.json"
 ```
 
-For a complex Godot package:
+For a complex multi-project package:
 ```yaml
 uses: ./.github/workflows/package-release.yml
 with:
   name: "My Godot Package"
-  core-project: "src/Core"
-  godot-project: "src/Godot"
-  godot-addon: "addons/my-addon"
+  dotnet-projects: '["src/Core", "src/Godot", "src/Extensions"]'
+  godot-addons: '["addons/my-plugin", "addons/another-plugin"]'
   version-type: "patch"
+  global-json-file: "global.json"
+```
+
+For testing multiple projects:
+```yaml
+uses: ./.github/workflows/package-tests.yml
+with:
+  dotnet-tests: '["tests/Core.Tests", "tests/Godot.Tests", "tests/Integration.Tests"]'
   global-json-file: "global.json"
 ```
 

@@ -15,22 +15,16 @@ on:
         description: The relative path to the `global.json` file to extract .NET version.
         required: true
         type: string
-      project:
-        description: The relative path to the main .NET project directory containing the `csproj` file.
+      dotnet-projects:
+        description: Array of .NET project paths to build and package (e.g., ["src/Core", "src/Godot"])
         required: false
         type: string
-      core-project:
-        description: The relative path to the Core .NET project directory containing the `csproj` file.
+        default: "[]"
+      godot-addons:
+        description: Array of Godot addon paths to package (e.g., ["addons/plugin1", "addons/plugin2"])
         required: false
         type: string
-      godot-project:
-        description: The relative path to the Godot .NET project directory containing the `csproj` file.
-        required: false
-        type: string
-      godot-addon:
-        description: The relative path to the Godot Addon directory containing the `plugin.cfg` file.
-        required: false
-        type: string
+        default: "[]"
 
     secrets:
       github-token:
@@ -73,12 +67,13 @@ jobs:
           filename=$(echo "${{ inputs.name }}" | sed -E 's/([[:space:]]|_)/-/g; s/([a-z])([A-Z])/\1-\2/g' | tr '[:upper:]' '[:lower:]')-${{ steps.bump_version.outputs.next-version }}
           echo "filename=$filename" >> $GITHUB_OUTPUT
 
-  pack_main:
-    if: inputs.project != ''
+  pack_dotnet_projects:
+    if: fromJSON(inputs.dotnet-projects)[0] != null
     needs: shared
     runs-on: ubuntu-latest
-    outputs:
-      filename: ${{ steps.generate_filename.outputs.filename }}
+    strategy:
+      matrix:
+        project: ${{ fromJSON(inputs.dotnet-projects) }}
 
     steps:
       - name: 📂 Checkout Code
@@ -90,24 +85,29 @@ jobs:
           global-json-file: ${{ inputs.global-json-file }}
           cache: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop' }}
 
-      - name: 🏗️ Build Main Project
+      - name: 🏗️ Build .NET Project
         uses: grovegs/actions/.github/actions/build-dotnet@v0.0.1
         with:
-          project: ${{ inputs.project }}
+          project: ${{ matrix.project }}
           configuration: Release
           version: ${{ needs.shared.outputs.version }}
 
       - name: 📦 Generate Filename
         id: generate_filename
         run: |
-          filename=${{ needs.shared.outputs.filename }}
+          project_name=$(basename "${{ matrix.project }}")
+          if [[ "$project_name" == *"Godot"* ]]; then
+            filename=${{ needs.shared.outputs.filename }}-godot
+          else
+            filename=${{ needs.shared.outputs.filename }}
+          fi
           echo "filename=$filename" >> $GITHUB_OUTPUT
 
       - name: 📦 Pack NuGet
         id: pack_nuget
         uses: grovegs/actions/.github/actions/pack-dotnet@v0.0.1
         with:
-          project: ${{ inputs.project }}
+          project: ${{ matrix.project }}
           configuration: Release
           version: ${{ needs.shared.outputs.version }}
           filename: ${{ steps.generate_filename.outputs.filename }}
@@ -118,102 +118,13 @@ jobs:
           name: ${{ steps.generate_filename.outputs.filename }}
           path: ${{ steps.pack_nuget.outputs.file }}
 
-  pack_core:
-    if: inputs.core-project != ''
-    needs: shared
-    runs-on: ubuntu-latest
-    outputs:
-      filename: ${{ steps.generate_filename.outputs.filename }}
-
-    steps:
-      - name: 📂 Checkout Code
-        uses: actions/checkout@v5
-
-      - name: ⚙️ Setup Dotnet
-        uses: grovegs/actions/.github/actions/setup-dotnet@v0.0.1
-        with:
-          global-json-file: ${{ inputs.global-json-file }}
-          cache: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop' }}
-
-      - name: 🏗️ Build Core Project
-        uses: grovegs/actions/.github/actions/build-dotnet@v0.0.1
-        with:
-          project: ${{ inputs.core-project }}
-          configuration: Release
-          version: ${{ needs.shared.outputs.version }}
-
-      - name: 📦 Generate Filename
-        id: generate_filename
-        run: |
-          filename=${{ needs.shared.outputs.filename }}
-          echo "filename=$filename" >> $GITHUB_OUTPUT
-
-      - name: 📦 Pack NuGet
-        id: pack_nuget
-        uses: grovegs/actions/.github/actions/pack-dotnet@v0.0.1
-        with:
-          project: ${{ inputs.core-project }}
-          configuration: Release
-          version: ${{ needs.shared.outputs.version }}
-          filename: ${{ steps.generate_filename.outputs.filename }}
-
-      - name: 📤 Upload Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: ${{ steps.generate_filename.outputs.filename }}
-          path: ${{ steps.pack_nuget.outputs.file }}
-
-  pack_godot:
-    if: inputs.godot-project != ''
-    needs: shared
-    runs-on: ubuntu-latest
-    outputs:
-      filename: ${{ steps.generate_filename.outputs.filename }}
-
-    steps:
-      - name: 📂 Checkout Code
-        uses: actions/checkout@v5
-
-      - name: ⚙️ Setup Dotnet
-        uses: grovegs/actions/.github/actions/setup-dotnet@v0.0.1
-        with:
-          global-json-file: ${{ inputs.global-json-file }}
-          cache: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop' }}
-
-      - name: 🏗️ Build Godot Project
-        uses: grovegs/actions/.github/actions/build-dotnet@v0.0.1
-        with:
-          project: ${{ inputs.godot-project }}
-          configuration: Release
-          version: ${{ needs.shared.outputs.version }}
-
-      - name: 📦 Generate Filename
-        id: generate_filename
-        run: |
-          filename=${{ needs.shared.outputs.filename }}-godot
-          echo "filename=$filename" >> $GITHUB_OUTPUT
-
-      - name: 📦 Pack NuGet
-        id: pack_nuget
-        uses: grovegs/actions/.github/actions/pack-dotnet@v0.0.1
-        with:
-          project: ${{ inputs.godot-project }}
-          configuration: Release
-          version: ${{ needs.shared.outputs.version }}
-          filename: ${{ steps.generate_filename.outputs.filename }}
-
-      - name: 📤 Upload Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: ${{ steps.generate_filename.outputs.filename }}
-          path: ${{ steps.pack_nuget.outputs.file }}
-
-  pack_godot_addon:
-    if: inputs.godot-addon != ''
+  pack_godot_addons:
+    if: fromJSON(inputs.godot-addons)[0] != null
     needs: shared
     runs-on: macos-latest
-    outputs:
-      filename: ${{ steps.generate_filename.outputs.filename }}
+    strategy:
+      matrix:
+        addon: ${{ fromJSON(inputs.godot-addons) }}
 
     steps:
       - name: 📂 Checkout Code
@@ -222,14 +133,15 @@ jobs:
       - name: 📦 Generate Filename
         id: generate_filename
         run: |
-          filename=${{ needs.shared.outputs.filename }}-godot-addon
+          addon_name=$(basename "${{ matrix.addon }}")
+          filename=${{ needs.shared.outputs.filename }}-$addon_name
           echo "filename=$filename" >> $GITHUB_OUTPUT
 
       - name: 📦 Pack Godot Addon
         id: pack_addon
         uses: grovegs/actions/.github/actions/pack-godot-addon@v0.0.1
         with:
-          addon: ${{ inputs.godot-addon }}
+          addon: ${{ matrix.addon }}
           version: ${{ needs.shared.outputs.version }}
           filename: ${{ steps.generate_filename.outputs.filename }}
 
@@ -239,63 +151,41 @@ jobs:
           name: ${{ steps.generate_filename.outputs.filename }}
           path: ${{ steps.pack_addon.outputs.file }}
 
-  release_main:
-    if: inputs.project != '' && needs.pack_main.result == 'success'
-    needs: [pack_main]
+  release_nuget_packages:
+    if: fromJSON(inputs.dotnet-projects)[0] != null && needs.pack_dotnet_projects.result == 'success'
+    needs: [shared, pack_dotnet_projects]
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        project: ${{ fromJSON(inputs.dotnet-projects) }}
 
     steps:
+      - name: 📦 Generate Filename
+        id: generate_filename
+        run: |
+          project_name=$(basename "${{ matrix.project }}")
+          if [[ "$project_name" == *"Godot"* ]]; then
+            filename=${{ needs.shared.outputs.filename }}-godot
+          else
+            filename=${{ needs.shared.outputs.filename }}
+          fi
+          echo "filename=$filename" >> $GITHUB_OUTPUT
+
       - name: 📥 Download Artifact
         uses: actions/download-artifact@v5
         with:
-          name: ${{ needs.pack_main.outputs.filename }}
+          name: ${{ steps.generate_filename.outputs.filename }}
           path: ~/.artifacts
 
       - name: 🚀 Publish NuGet
         uses: grovegs/actions/.github/actions/publish-nuget@v0.0.1
         with:
-          file: ~/.artifacts/${{ needs.pack_main.outputs.filename }}.nupkg
-          api-key: ${{ secrets.nuget-api-key }}
-
-  release_core:
-    if: inputs.core-project != '' && needs.pack_core.result == 'success'
-    needs: [pack_core]
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: 📥 Download Artifact
-        uses: actions/download-artifact@v5
-        with:
-          name: ${{ needs.pack_core.outputs.filename }}
-          path: ~/.artifacts
-
-      - name: 🚀 Publish NuGet
-        uses: grovegs/actions/.github/actions/publish-nuget@v0.0.1
-        with:
-          file: ~/.artifacts/${{ needs.pack_core.outputs.filename }}.nupkg
-          api-key: ${{ secrets.nuget-api-key }}
-
-  release_godot:
-    if: inputs.godot-project != '' && needs.pack_godot.result == 'success'
-    needs: [pack_godot]
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: 📥 Download Artifact
-        uses: actions/download-artifact@v5
-        with:
-          name: ${{ needs.pack_godot.outputs.filename }}
-          path: ~/.artifacts
-
-      - name: 🚀 Publish NuGet
-        uses: grovegs/actions/.github/actions/publish-nuget@v0.0.1
-        with:
-          file: ~/.artifacts/${{ needs.pack_godot.outputs.filename }}.nupkg
+          file: ~/.artifacts/${{ steps.generate_filename.outputs.filename }}.nupkg
           api-key: ${{ secrets.nuget-api-key }}
 
   release_github:
-    if: always() && needs.shared.result == 'success' && (needs.pack_main.result == 'success' || needs.pack_core.result == 'success' || needs.pack_godot.result == 'success' || needs.pack_godot_addon.result == 'success')
-    needs: [shared, pack_main, pack_core, pack_godot, pack_godot_addon]
+    if: always() && needs.shared.result == 'success' && (needs.pack_dotnet_projects.result == 'success' || needs.pack_godot_addons.result == 'success')
+    needs: [shared, pack_dotnet_projects, pack_godot_addons]
     runs-on: ubuntu-latest
 
     steps:

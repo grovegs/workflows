@@ -3,27 +3,23 @@ name: 🧪 Test Package
 on:
   workflow_call:
     inputs:
-      test-project:
-        description: The relative path to the main .NET Test project directory containing the `csproj` file.
+      dotnet-tests:
+        description: Array of .NET test project paths to test (e.g., ["tests/Core.Tests", "tests/Godot.Tests"])
         required: false
         type: string
-      core-test-project:
-        description: The relative path to the Core .NET Test project directory containing the `csproj` file.
-        required: false
-        type: string
-      godot-test-project:
-        description: The relative path to the Godot .NET Test project directory containing the `csproj` file.
-        required: false
-        type: string
+        default: "[]"
       global-json-file:
         description: The relative path to the `global.json` file to extract .NET version.
         required: true
         type: string
 
 jobs:
-  test_main:
-    if: inputs.test-project != ''
+  test_dotnet_projects:
+    if: fromJSON(inputs.dotnet-tests)[0] != null
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        project: ${{ fromJSON(inputs.dotnet-tests) }}
 
     steps:
       - name: 📂 Checkout Code
@@ -35,48 +31,8 @@ jobs:
           global-json-file: ${{ inputs.global-json-file }}
           cache: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop' }}
 
-      - name: ✅ Test Main Project
+      - name: ✅ Test .NET Project
         uses: grovegs/actions/.github/actions/test-dotnet@v0.0.1
         with:
-          project: ${{ inputs.test-project }}
-          configuration: Release
-
-  test_core:
-    if: inputs.core-test-project != ''
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: 📂 Checkout Code
-        uses: actions/checkout@v5
-
-      - name: ⚙️ Setup Dotnet
-        uses: grovegs/actions/.github/actions/setup-dotnet@v0.0.1
-        with:
-          global-json-file: ${{ inputs.global-json-file }}
-          cache: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop' }}
-
-      - name: ✅ Test Core Project
-        uses: grovegs/actions/.github/actions/test-dotnet@v0.0.1
-        with:
-          project: ${{ inputs.core-test-project }}
-          configuration: Release
-
-  test_godot:
-    if: inputs.godot-test-project != ''
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: 📂 Checkout Code
-        uses: actions/checkout@v5
-
-      - name: ⚙️ Setup Dotnet
-        uses: grovegs/actions/.github/actions/setup-dotnet@v0.0.1
-        with:
-          global-json-file: ${{ inputs.global-json-file }}
-          cache: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop' }}
-
-      - name: ✅ Test Godot Project
-        uses: grovegs/actions/.github/actions/test-dotnet@v0.0.1
-        with:
-          project: ${{ inputs.godot-test-project }}
+          project: ${{ matrix.project }}
           configuration: Release

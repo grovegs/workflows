@@ -25,7 +25,7 @@ jobs:
             - name: 🧪 Test .NET Package
               uses: ./.github/workflows/package-tests.yml
               with:
-                  test-project: sandbox/ConsoleApplication
+                  dotnet-tests: '["sandbox/ConsoleApplication"]'
                   global-json-file: sandbox/ConsoleApplication/global.json
 
     test-godot-project:
@@ -51,17 +51,11 @@ jobs:
             - name: 📂 Checkout Code
               uses: actions/checkout@v5
 
-            - name: 🎨 Test Unified Package Format (.NET)
+            - name: 🎨 Test Package Format (Multiple Projects)
               uses: ./.github/workflows/package-format.yml
               with:
-                  project: sandbox/ConsoleApplication
+                  dotnet-projects: '["sandbox/ConsoleApplication", "sandbox/GodotApplication"]'
                   global-json-file: sandbox/ConsoleApplication/global.json
-
-            - name: 🎨 Test Unified Package Format (Godot)
-              uses: ./.github/workflows/package-format.yml
-              with:
-                  project: sandbox/GodotApplication
-                  global-json-file: sandbox/GodotApplication/global.json
 
             - name: 🎨 Test Godot Project Format
               uses: ./.github/workflows/godot-project-format.yml
