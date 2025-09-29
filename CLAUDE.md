@@ -11,8 +11,7 @@ This is Grove Games' collection of reusable GitHub Actions workflows for buildin
 ### Core Workflows
 
 - `.github/workflows/` - Main reusable workflow definitions
-  - `godot-project-*` - Workflows for Godot Engine projects
-  - `unity-project-*` - Workflows for Unity Engine projects
+  - `project-*` - Unified workflows for Godot and Unity game projects
   - `package-*` - Unified workflows for .NET and Godot packages
   - `release.yml` - Main release orchestration workflow
   - `tests.yml` - Automated testing of workflows using sandbox applications
@@ -24,23 +23,25 @@ This is Grove Games' collection of reusable GitHub Actions workflows for buildin
 
 ## Workflow Types and Commands
 
-### Godot Project Workflows
+### Project Workflows
 
-- **Release**: `godot-project-release.yml` - Builds Android/iOS releases, publishes to Firebase/GitHub
-- **Testing**: `godot-project-tests.yml` - Runs .NET unit tests and Godot-specific tests
-- **Formatting**: `godot-project-format.yml` - Formats C# code using .NET formatting tools
+Unified workflows for both Godot and Unity game projects using array-based inputs:
 
-Key requirements for Godot projects:
+- **Release**: `project-release.yml` - Builds Android/iOS releases for multiple projects, publishes to Firebase/GitHub/TestFlight
+- **Testing**: `project-tests.yml` - Runs .NET unit tests and engine-specific tests for multiple projects
+- **Formatting**: `project-format.yml` - Formats C# code and project files for multiple projects
 
-- `global.json` file with SDK version and Godot.NET.Sdk reference
-- Project structure with `project.godot` file
-- Separate test project for unit tests
+These workflows use array-based inputs to support any number of projects:
 
-### Unity Project Workflows
+- `godot-projects` - Array of Godot project paths containing project.godot files
+- `godot-tests` - Array of Godot test project paths containing .csproj files
+- `unity-projects` - Array of Unity project paths containing ProjectSettings folders
 
-- **Release**: `unity-project-release.yml` - Builds Android/iOS releases with Unity Cloud Build
-- Supports Firebase App Distribution and TestFlight publishing
-- Requires Unity license credentials and platform-specific signing certificates
+Key requirements:
+
+- **Godot projects**: `global.json` file with SDK version and Godot.NET.Sdk reference, `project.godot` file
+- **Unity projects**: Unity license credentials and platform-specific signing certificates
+- Separate test projects for unit testing
 
 ### Package Workflows
 
@@ -94,6 +95,42 @@ Workflows depend on custom actions from the `grovegs/actions` repository:
 
 ## Usage Examples
 
+### Using Project Workflows
+
+For releasing multiple Godot projects:
+
+```yaml
+uses: ./.github/workflows/project-release.yml
+with:
+  name: "My Game Collection"
+  godot-projects: '["games/PuzzleGame", "games/ActionGame"]'
+  version-type: "minor"
+  environment: "Development"
+  global-json-file: "global.json"
+```
+
+For releasing Unity projects:
+
+```yaml
+uses: ./.github/workflows/project-release.yml
+with:
+  name: "My Unity Game"
+  unity-projects: '["projects/MainGame", "projects/DemoLevel"]'
+  version-type: "patch"
+  environment: "Production"
+```
+
+For testing multiple projects:
+
+```yaml
+uses: ./.github/workflows/project-tests.yml
+with:
+  godot-projects: '["games/PuzzleGame", "games/ActionGame"]'
+  godot-tests: '["tests/PuzzleGame.Tests", "tests/ActionGame.Tests"]'
+  unity-projects: '["projects/MainGame"]'
+  global-json-file: "global.json"
+```
+
 ### Using Package Workflows
 
 For a simple .NET package:
@@ -119,7 +156,7 @@ with:
   global-json-file: "global.json"
 ```
 
-For testing multiple projects:
+For testing multiple packages:
 
 ```yaml
 uses: ./.github/workflows/package-tests.yml
@@ -131,9 +168,11 @@ with:
 ## Development Notes
 
 - All workflows are designed as reusable (`workflow_call`) for use by other repositories
-- Package workflows use conditional job execution - only runs jobs for provided inputs
+- Both project and package workflows use array-based inputs with GitHub Actions matrix strategy for scalability
+- Conditional job execution - only runs jobs for provided inputs (e.g., if `godot-projects` array is empty, Godot jobs are skipped)
 - Environment-specific builds support both `Development` and `Production` configurations
 - Caching is enabled for main/develop branches to improve build performance
-- Firebase publishing is only enabled for Development builds
-- GitHub releases include downloadable build artifacts
+- Firebase publishing is only enabled for Development builds, TestFlight for Production
+- GitHub releases include downloadable build artifacts from all successful platform builds
 - Use `tests.yml` to validate workflow changes against sandbox applications
+- Project workflows support mixed engine types (can build both Godot and Unity projects in same release)
