@@ -3,18 +3,8 @@ name: 🔍 Format Project
 on:
     workflow_call:
         inputs:
-            godot-projects:
-                description: Array of Godot project paths containing the .csproj file (e.g., ["projects/GameA", "projects/GameB"])
-                required: false
-                type: string
-                default: "[]"
-            godot-tests:
-                description: Array of Godot test project paths containing the .csproj file (e.g., ["tests/GameA.Tests", "tests/GameB.Tests"])
-                required: false
-                type: string
-                default: "[]"
-            unity-projects:
-                description: Array of Unity project paths containing the ProjectSettings folder (e.g., ["projects/UnityGameA", "projects/UnityGameB"])
+            dotnet-projects:
+                description: Array of .NET project paths to format (e.g., ["src/Core", "src/Godot"])
                 required: false
                 type: string
                 default: "[]"
@@ -24,12 +14,12 @@ on:
                 type: string
 
 jobs:
-    format_godot_projects:
-        if: fromJSON(inputs.godot-projects)[0] != null
+    format_dotnet_projects:
+        if: fromJSON(inputs.dotnet-projects)[0] != null
         runs-on: ubuntu-latest
         strategy:
             matrix:
-                project: ${{ fromJSON(inputs.godot-projects) }}
+                project: ${{ fromJSON(inputs.dotnet-projects) }}
 
         steps:
             - name: 📂 Checkout Code
@@ -43,43 +33,5 @@ jobs:
 
             - name: 🔍 Format .NET Project
               uses: grovegs/actions/.github/actions/format-dotnet@v0.0.1
-              with:
-                  project: ${{ matrix.project }}
-
-    format_godot_tests:
-        if: fromJSON(inputs.godot-tests)[0] != null
-        runs-on: ubuntu-latest
-        strategy:
-            matrix:
-                project: ${{ fromJSON(inputs.godot-tests) }}
-
-        steps:
-            - name: 📂 Checkout Code
-              uses: actions/checkout@v5
-
-            - name: ⚙️ Setup Dotnet
-              uses: grovegs/actions/.github/actions/setup-dotnet@v0.0.1
-              with:
-                  global-json-file: ${{ inputs.global-json-file }}
-                  cache: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop' }}
-
-            - name: 🔍 Format .NET Test Project
-              uses: grovegs/actions/.github/actions/format-dotnet@v0.0.1
-              with:
-                  project: ${{ matrix.project }}
-
-    format_unity_projects:
-        if: fromJSON(inputs.unity-projects)[0] != null
-        runs-on: ubuntu-latest
-        strategy:
-            matrix:
-                project: ${{ fromJSON(inputs.unity-projects) }}
-
-        steps:
-            - name: 📂 Checkout Code
-              uses: actions/checkout@v5
-
-            - name: 🔍 Format Unity Project
-              uses: grovegs/actions/.github/actions/format-unity@v0.0.1
               with:
                   project: ${{ matrix.project }}
