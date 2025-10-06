@@ -93,13 +93,13 @@ jobs:
 
       - name: 🔧 Bump Version
         id: bump_version
-        uses: grovegs/actions/.github/actions/bump-version@v0.0.1
+        uses: grovegs/actions/.github/actions/bump-version@v0.0.2
         with:
           version-type: ${{ inputs.version-type }}
 
       - name: 📝 Generate Changelog
         id: generate_changelog
-        uses: grovegs/actions/.github/actions/generate-changelog@v0.0.1
+        uses: grovegs/actions/.github/actions/generate-changelog@v0.0.2
         with:
           next-version: ${{ steps.bump_version.outputs.next-version }}
 
@@ -130,27 +130,27 @@ jobs:
           packages: platform-tools build-tools;34.0.0 platforms;android-34 cmake;3.10.2.4988404 ndk;23.2.8568313
 
       - name: 🛠️ Setup Dotnet
-        uses: grovegs/actions/.github/actions/setup-dotnet@v0.0.1
+        uses: grovegs/actions/.github/actions/setup-dotnet@v0.0.2
         with:
           global-json-file: ${{ inputs.global-json-file }}
           cache: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop' }}
 
       - name: 🎮 Setup Godot
-        uses: grovegs/actions/.github/actions/setup-godot@v0.0.1
+        uses: grovegs/actions/.github/actions/setup-godot@v0.0.2
         with:
           global-json-file: ${{ inputs.global-json-file }}
           target-platforms: Android
           cache: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop' }}
 
       - name: 🏗️ Build Dotnet
-        uses: grovegs/actions/.github/actions/build-dotnet@v0.0.1
+        uses: grovegs/actions/.github/actions/build-dotnet@v0.0.2
         with:
           project: ${{ inputs.project }}
           configuration: Debug
 
       - name: 🏗️ Build Godot
         id: build_godot
-        uses: grovegs/actions/.github/actions/build-godot@v0.0.1
+        uses: grovegs/actions/.github/actions/build-godot@v0.0.2
         with:
           project: ${{ inputs.project }}
           global-json-file: ${{ inputs.global-json-file }}
@@ -167,7 +167,7 @@ jobs:
 
       - name: 📤 Publish to Firebase
         if: ${{ inputs.environment == 'Development' }}
-        uses: grovegs/actions/.github/actions/publish-firebase@v0.0.1
+        uses: grovegs/actions/.github/actions/publish-firebase@v0.0.2
         with:
           file: ${{ steps.build_godot.outputs.file }}
           app-id: ${{ secrets.firebase-app-id-android }}
@@ -185,27 +185,27 @@ jobs:
         uses: actions/checkout@v5
 
       - name: 🛠️ Setup Dotnet
-        uses: grovegs/actions/.github/actions/setup-dotnet@v0.0.1
+        uses: grovegs/actions/.github/actions/setup-dotnet@v0.0.2
         with:
           global-json-file: ${{ inputs.global-json-file }}
           cache: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop' }}
 
       - name: 🎮 Setup Godot
-        uses: grovegs/actions/.github/actions/setup-godot@v0.0.1
+        uses: grovegs/actions/.github/actions/setup-godot@v0.0.2
         with:
           global-json-file: ${{ inputs.global-json-file }}
           target-platforms: iOS
           cache: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop' }}
 
       - name: 🏗️ Build Dotnet
-        uses: grovegs/actions/.github/actions/build-dotnet@v0.0.1
+        uses: grovegs/actions/.github/actions/build-dotnet@v0.0.2
         with:
           project: ${{ inputs.project }}
           configuration: Debug
 
       - name: 🏗️ Build Project
         id: build_godot
-        uses: grovegs/actions/.github/actions/build-godot@v0.0.1
+        uses: grovegs/actions/.github/actions/build-godot@v0.0.2
         with:
           project: ${{ inputs.project }}
           global-json-file: ${{ inputs.global-json-file }}
@@ -223,7 +223,7 @@ jobs:
 
       - name: 📤 Publish to Firebase
         if: ${{ inputs.environment == 'Development' }}
-        uses: grovegs/actions/.github/actions/publish-firebase@v0.0.1
+        uses: grovegs/actions/.github/actions/publish-firebase@v0.0.2
         with:
           file: ${{ steps.build_godot.outputs.file }}
           app-id: ${{ secrets.firebase-app-id-ios }}
@@ -241,7 +241,7 @@ jobs:
         uses: actions/checkout@v5
 
       - name: 🛠️ Publish to Github
-        uses: grovegs/actions/.github/actions/publish-github@v0.0.1
+        uses: grovegs/actions/.github/actions/publish-github@v0.0.2
         with:
           title: ${{ inputs.name }} ${{ needs.shared.outputs.version }}
           version: ${{ needs.shared.outputs.version }}

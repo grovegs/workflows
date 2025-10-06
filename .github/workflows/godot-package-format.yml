@@ -33,13 +33,13 @@ jobs:
         uses: actions/checkout@v5
 
       - name: ⚙️ Setup Dotnet
-        uses: grovegs/actions/.github/actions/setup-dotnet@v0.0.1
+        uses: grovegs/actions/.github/actions/setup-dotnet@v0.0.2
         with:
           global-json-file: ${{ inputs.global-json-file }}
           cache: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop' }}
 
       - name: 🔍 Format Dotnet
-        uses: grovegs/actions/.github/actions/format-dotnet@v0.0.1
+        uses: grovegs/actions/.github/actions/format-dotnet@v0.0.2
         with:
           project: ${{ inputs.core-project }}
 
@@ -51,13 +51,13 @@ jobs:
         uses: actions/checkout@v5
 
       - name: ⚙️ Setup Dotnet
-        uses: grovegs/actions/.github/actions/setup-dotnet@v0.0.1
+        uses: grovegs/actions/.github/actions/setup-dotnet@v0.0.2
         with:
           global-json-file: ${{ inputs.global-json-file }}
           cache: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop' }}
 
       - name: 🔍 Format Dotnet
-        uses: grovegs/actions/.github/actions/format-dotnet@v0.0.1
+        uses: grovegs/actions/.github/actions/format-dotnet@v0.0.2
         with:
           project: ${{ inputs.godot-project }}
 
@@ -69,13 +69,13 @@ jobs:
         uses: actions/checkout@v5
 
       - name: ⚙️ Setup Dotnet
-        uses: grovegs/actions/.github/actions/setup-dotnet@v0.0.1
+        uses: grovegs/actions/.github/actions/setup-dotnet@v0.0.2
         with:
           global-json-file: ${{ inputs.global-json-file }}
           cache: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop' }}
 
       - name: 🔍 Format Dotnet
-        uses: grovegs/actions/.github/actions/format-dotnet@v0.0.1
+        uses: grovegs/actions/.github/actions/format-dotnet@v0.0.2
         with:
           project: ${{ inputs.core-test-project }}
 
@@ -87,12 +87,12 @@ jobs:
         uses: actions/checkout@v5
 
       - name: ⚙️ Setup Dotnet
-        uses: grovegs/actions/.github/actions/setup-dotnet@v0.0.1
+        uses: grovegs/actions/.github/actions/setup-dotnet@v0.0.2
         with:
           global-json-file: ${{ inputs.global-json-file }}
           cache: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop' }}
 
       - name: 🔍 Format Dotnet
-        uses: grovegs/actions/.github/actions/format-dotnet@v0.0.1
+        uses: grovegs/actions/.github/actions/format-dotnet@v0.0.2
         with:
           project: ${{ inputs.godot-test-project }}

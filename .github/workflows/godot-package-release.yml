@@ -52,13 +52,13 @@ jobs:
 
       - name: 🆙 Bump Version
         id: bump_version
-        uses: grovegs/actions/.github/actions/bump-version@v0.0.1
+        uses: grovegs/actions/.github/actions/bump-version@v0.0.2
         with:
           version-type: ${{ inputs.version-type }}
 
       - name: 📝 Generate Changelog
         id: generate_changelog
-        uses: grovegs/actions/.github/actions/generate-changelog@v0.0.1
+        uses: grovegs/actions/.github/actions/generate-changelog@v0.0.2
         with:
           next-version: ${{ steps.bump_version.outputs.next-version }}
 
@@ -79,13 +79,13 @@ jobs:
         uses: actions/checkout@v5
 
       - name: ⚙️ Setup Dotnet
-        uses: grovegs/actions/.github/actions/setup-dotnet@v0.0.1
+        uses: grovegs/actions/.github/actions/setup-dotnet@v0.0.2
         with:
           global-json-file: ${{ inputs.global-json-file }}
           cache: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop' }}
 
       - name: 🏗️ Build Dotnet
-        uses: grovegs/actions/.github/actions/build-dotnet@v0.0.1
+        uses: grovegs/actions/.github/actions/build-dotnet@v0.0.2
         with:
           project: ${{ inputs.core-project }}
           configuration: Release
@@ -99,7 +99,7 @@ jobs:
 
       - name: 📦 Pack Nuget
         id: pack_nuget
-        uses: grovegs/actions/.github/actions/pack-dotnet@v0.0.1
+        uses: grovegs/actions/.github/actions/pack-dotnet@v0.0.2
         with:
           project: ${{ inputs.core-project }}
           configuration: Release
@@ -123,13 +123,13 @@ jobs:
         uses: actions/checkout@v5
 
       - name: ⚙️ Setup Dotnet
-        uses: grovegs/actions/.github/actions/setup-dotnet@v0.0.1
+        uses: grovegs/actions/.github/actions/setup-dotnet@v0.0.2
         with:
           global-json-file: ${{ inputs.global-json-file }}
           cache: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop' }}
 
       - name: 🏗️ Build Dotnet
-        uses: grovegs/actions/.github/actions/build-dotnet@v0.0.1
+        uses: grovegs/actions/.github/actions/build-dotnet@v0.0.2
         with:
           project: ${{ inputs.godot-project }}
           configuration: Release
@@ -143,7 +143,7 @@ jobs:
 
       - name: 📦 Pack Nuget
         id: pack_nuget
-        uses: grovegs/actions/.github/actions/pack-dotnet@v0.0.1
+        uses: grovegs/actions/.github/actions/pack-dotnet@v0.0.2
         with:
           project: ${{ inputs.godot-project }}
           configuration: Release
@@ -174,7 +174,7 @@ jobs:
 
       - name: 📦 Pack Godot Addon
         id: pack_addon
-        uses: grovegs/actions/.github/actions/pack-godot-addon@v0.0.1
+        uses: grovegs/actions/.github/actions/pack-godot-addon@v0.0.2
         with:
           addon: ${{ inputs.godot-addon }}
           version: ${{ needs.shared.outputs.version }}
@@ -198,7 +198,7 @@ jobs:
           path: ~/.artifacts
 
       - name: 🚀 Publish Nuget
-        uses: grovegs/actions/.github/actions/publish-nuget@v0.0.1
+        uses: grovegs/actions/.github/actions/publish-nuget@v0.0.2
         with:
           file: ~/.artifacts/${{ needs.pack_core.outputs.filename }}.nupkg
           api-key: ${{ secrets.nuget-api-key }}
@@ -215,7 +215,7 @@ jobs:
           path: ~/.artifacts
 
       - name: 🚀 Publish Nuget
-        uses: grovegs/actions/.github/actions/publish-nuget@v0.0.1
+        uses: grovegs/actions/.github/actions/publish-nuget@v0.0.2
         with:
           file: ~/.artifacts/${{ needs.pack_godot.outputs.filename }}.nupkg
           api-key: ${{ secrets.nuget-api-key }}
@@ -240,7 +240,7 @@ jobs:
           echo "assets=$assets" >> $GITHUB_OUTPUT
 
       - name: 🚀 Publish to Github
-        uses: grovegs/actions/.github/actions/publish-github@v0.0.1
+        uses: grovegs/actions/.github/actions/publish-github@v0.0.2
         with:
           title: ${{ inputs.name }} ${{ needs.shared.outputs.version }}
           version: ${{ needs.shared.outputs.version }}
