@@ -37,11 +37,6 @@ jobs:
               with:
                   project: sandbox/GodotApplication
 
-            - name: 🎨 Format .NET UnityApplication
-              uses: grovegs/actions/.github/actions/format-dotnet@v0.0.4
-              with:
-                  project: sandbox/UnityApplication
-
     format-files:
         name: Format Files
         runs-on: ubuntu-latest
