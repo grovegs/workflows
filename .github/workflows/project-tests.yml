@@ -91,7 +91,6 @@ jobs:
               uses: grovegs/actions/.github/actions/setup-unity@v0.0.4
               with:
                   project: ${{ matrix.project }}
-                  unity-modules: android
                   cache: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop' }}
 
             - name: ✅ Test Unity Project
