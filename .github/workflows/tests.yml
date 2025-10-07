@@ -28,20 +28,24 @@ jobs:
                   dotnet-tests: '["sandbox/ConsoleApplication"]'
                   global-json-file: sandbox/ConsoleApplication/global.json
 
-    test-godot-project:
-        name: Test Godot Project Workflow
-        runs-on: ubuntu-latest
+    test-project-workflows:
+        name: Test Project Workflows
+        runs-on: macos-latest
 
         steps:
             - name: 📂 Checkout Code
               uses: actions/checkout@v5
 
             - name: 🧪 Test Godot Project
-              uses: ./.github/workflows/godot-project-tests.yml
+              uses: ./.github/workflows/project-tests.yml
               with:
-                  project: sandbox/GodotApplication
-                  test-project: sandbox/GodotApplication
+                  godot-projects: '["sandbox/GodotApplication"]'
                   global-json-file: sandbox/GodotApplication/global.json
+
+            - name: 🧪 Test Unity Project
+              uses: ./.github/workflows/project-tests.yml
+              with:
+                  unity-projects: '["sandbox/UnityApplication"]'
 
     test-format-workflows:
         name: Test Format Workflows
@@ -58,8 +62,12 @@ jobs:
                   global-json-file: sandbox/ConsoleApplication/global.json
 
             - name: 🎨 Test Godot Project Format
-              uses: ./.github/workflows/godot-project-format.yml
+              uses: ./.github/workflows/project-format.yml
               with:
-                  project: sandbox/GodotApplication
-                  test-project: sandbox/GodotApplication
+                  dotnet-projects: '["sandbox/GodotApplication"]'
                   global-json-file: sandbox/GodotApplication/global.json
+
+            - name: 🎨 Test Unity Project Format
+              uses: ./.github/workflows/project-format.yml
+              with:
+                  dotnet-projects: '["sandbox/UnityApplication"]'
