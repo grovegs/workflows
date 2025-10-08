@@ -25,6 +25,11 @@ on:
                 required: false
                 type: string
                 default: "[]"
+            unity-packages:
+                description: Array of Unity package paths to package (e.g., ["Packages/com.example.package1", "Packages/com.example.package2"])
+                required: false
+                type: string
+                default: "[]"
 
         secrets:
             github-token:
@@ -151,6 +156,39 @@ jobs:
                   name: ${{ steps.generate_filename.outputs.filename }}
                   path: ${{ steps.pack_addon.outputs.file }}
 
+    pack_unity_packages:
+        if: fromJSON(inputs.unity-packages)[0] != null
+        needs: shared
+        runs-on: ubuntu-latest
+        strategy:
+            matrix:
+                package: ${{ fromJSON(inputs.unity-packages) }}
+
+        steps:
+            - name: 📂 Checkout Code
+              uses: actions/checkout@v5
+
+            - name: 📦 Generate Filename
+              id: generate_filename
+              run: |
+                  package_name=$(basename "${{ matrix.package }}")
+                  filename=${{ needs.shared.outputs.filename }}-$package_name
+                  echo "filename=$filename" >> $GITHUB_OUTPUT
+
+            - name: 📦 Pack Unity Package
+              id: pack_package
+              uses: grovegs/actions/.github/actions/pack-unity-package@v0.0.4
+              with:
+                  package: ${{ matrix.package }}
+                  version: ${{ needs.shared.outputs.version }}
+                  filename: ${{ steps.generate_filename.outputs.filename }}
+
+            - name: 📤 Upload Artifact
+              uses: actions/upload-artifact@v4
+              with:
+                  name: ${{ steps.generate_filename.outputs.filename }}
+                  path: ${{ steps.pack_package.outputs.file }}
+
     release_nuget_packages:
         if: fromJSON(inputs.dotnet-projects)[0] != null && needs.pack_dotnet_projects.result == 'success'
         needs: [shared, pack_dotnet_projects]
@@ -184,8 +222,14 @@ jobs:
                   api-key: ${{ secrets.nuget-api-key }}
 
     release_github:
-        if: always() && needs.shared.result == 'success' && (needs.pack_dotnet_projects.result == 'success' || needs.pack_godot_addons.result == 'success')
-        needs: [shared, pack_dotnet_projects, pack_godot_addons]
+        if: always() && needs.shared.result == 'success' && (needs.pack_dotnet_projects.result == 'success' || needs.pack_godot_addons.result == 'success' || needs.pack_unity_packages.result == 'success')
+        needs:
+            [
+                shared,
+                pack_dotnet_projects,
+                pack_godot_addons,
+                pack_unity_packages,
+            ]
         runs-on: ubuntu-latest
 
         steps:
