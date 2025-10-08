@@ -57,3 +57,24 @@ jobs:
                   version: "v${{ needs.shared.outputs.version }}"
                   changelog: ${{ needs.shared.outputs.changelog-markdown }}
                   github-token: ${{ secrets.GITHUB_TOKEN }}
+
+            - name: 📢 Notify Discord Success
+              if: success()
+              uses: ./.github/actions/notify-discord
+              with:
+                  webhook_url: ${{ secrets.DISCORD_WEBHOOK }}
+                  title: "✅ ${{ github.repository }}"
+                  description: |
+                      Version **v${{ needs.shared.outputs.version }}** has been successfully released.
+
+                      ${{ needs.shared.outputs.changelog-markdown }}
+                  color: "3066993"
+
+            - name: 📢 Notify Discord Failure
+              if: failure()
+              uses: ./.github/actions/notify-discord
+              with:
+                  webhook_url: ${{ secrets.DISCORD_WEBHOOK }}
+                  title: "❌ ${{ github.repository }}"
+                  description: "Failed to publish version **v${{ needs.shared.outputs.version }}**."
+                  color: "15158332"
