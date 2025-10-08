@@ -156,6 +156,12 @@ jobs:
                   name: ${{ steps.generate_filename.outputs.filename }}
                   path: ${{ steps.pack_addon.outputs.file }}
 
+            - name: 📤 Upload Modified Version Files
+              uses: actions/upload-artifact@v4
+              with:
+                  name: version-files-godot-${{ matrix.addon }}
+                  path: ${{ matrix.addon }}/
+
     pack_unity_packages:
         if: fromJSON(inputs.unity-packages)[0] != null
         needs: shared
@@ -188,6 +194,12 @@ jobs:
               with:
                   name: ${{ steps.generate_filename.outputs.filename }}
                   path: ${{ steps.pack_package.outputs.file }}
+
+            - name: 📤 Upload Modified Version Files
+              uses: actions/upload-artifact@v4
+              with:
+                  name: version-files-unity-${{ matrix.package }}
+                  path: ${{ matrix.package }}/
 
     release_nuget_packages:
         if: fromJSON(inputs.dotnet-projects)[0] != null && needs.pack_dotnet_projects.result == 'success'
@@ -235,6 +247,40 @@ jobs:
         steps:
             - name: 📂 Checkout Code
               uses: actions/checkout@v5
+
+            - name: 📥 Download Version Files
+              uses: actions/download-artifact@v5
+              with:
+                  pattern: version-files-*
+                  path: ~/.version-files
+
+            - name: 📝 Apply Version Changes
+              run: |
+                  if [ -d ~/.version-files ]; then
+                      for version_dir in ~/.version-files/version-files-godot-*; do
+                          if [ -d "$version_dir" ]; then
+                              addon_path=$(basename "$version_dir" | sed 's/^version-files-godot-//')
+                              echo "Applying version changes for Godot addon: $addon_path"
+                              cp -r "$version_dir"/* "$addon_path"/
+                          fi
+                      done
+
+                      for version_dir in ~/.version-files/version-files-unity-*; do
+                          if [ -d "$version_dir" ]; then
+                              package_path=$(basename "$version_dir" | sed 's/^version-files-unity-//')
+                              echo "Applying version changes for Unity package: $package_path"
+                              cp -r "$version_dir"/* "$package_path"/
+                          fi
+                      done
+                  fi
+
+            - name: 💾 Commit Version Changes
+              run: |
+                  git config user.name "github-actions[bot]"
+                  git config user.email "github-actions[bot]@users.noreply.github.com"
+                  git checkout --detach HEAD
+                  git add .
+                  git diff --cached --quiet || git commit -m "chore: release version ${{ needs.shared.outputs.version }}"
 
             - name: 📥 Download All Artifacts
               uses: actions/download-artifact@v5
