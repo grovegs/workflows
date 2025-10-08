@@ -252,12 +252,14 @@ jobs:
               uses: actions/checkout@v5
 
             - name: 📥 Download Version Files
+              if: needs.pack_godot_addons.result == 'success' || needs.pack_unity_packages.result == 'success'
               uses: actions/download-artifact@v5
               with:
                   pattern: version-files-*
                   path: ~/.version-files
 
             - name: 📝 Apply Version Changes
+              if: needs.pack_godot_addons.result == 'success' || needs.pack_unity_packages.result == 'success'
               run: |
                   if [ -d ~/.version-files ]; then
                       for version_dir in ~/.version-files/version-files-godot-*; do
@@ -278,6 +280,7 @@ jobs:
                   fi
 
             - name: 💾 Commit Version Changes
+              if: needs.pack_godot_addons.result == 'success' || needs.pack_unity_packages.result == 'success'
               run: |
                   git config user.name "github-actions[bot]"
                   git config user.email "github-actions[bot]@users.noreply.github.com"
@@ -288,12 +291,18 @@ jobs:
             - name: 📥 Download All Artifacts
               uses: actions/download-artifact@v5
               with:
+                  pattern: ${{ needs.shared.outputs.filename }}*
                   path: ~/.artifacts
+                  merge-multiple: true
 
             - name: 🔍 Find Assets
               id: find_assets
               run: |
-                  assets=$(find ~/.artifacts -type f 2>/dev/null | tr '\n' ' ' || echo "")
+                  if [ -d ~/.artifacts ]; then
+                    assets=$(find ~/.artifacts -type f \( -name "*.nupkg" -o -name "*.zip" \) 2>/dev/null | tr '\n' ' ' || echo "")
+                  else
+                    assets=""
+                  fi
                   echo "assets=$assets" >> $GITHUB_OUTPUT
                   echo "Found assets: $assets"
 
