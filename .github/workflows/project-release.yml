@@ -471,29 +471,21 @@ jobs:
             - name: 📥 Download All Artifacts
               uses: actions/download-artifact@v5
               with:
+                  pattern: ${{ needs.shared.outputs.filename }}*
                   path: ./builds/
+                  merge-multiple: true
 
             - name: 📦 Collect Build Files
               id: collect_files
               run: |
-                  files=()
                   if [ -d "./builds" ]; then
-                    for dir in ./builds/*/; do
-                      for file in "$dir"*; do
-                        if [ -f "$file" ]; then
-                          files+=("$file")
-                        fi
-                      done
-                    done
+                    assets=$(find ./builds -type f \( -name "*.apk" -o -name "*.aab" -o -name "*.ipa" \) 2>/dev/null | tr '\n' ' ' || echo "")
+                  else
+                    assets=""
                   fi
 
-                  assets_string=""
-                  for file in "${files[@]}"; do
-                    assets_string="$assets_string $file"
-                  done
-
-                  echo "assets=$assets_string" >> $GITHUB_OUTPUT
-                  echo "Found build files: $assets_string"
+                  echo "assets=$assets" >> $GITHUB_OUTPUT
+                  echo "Found build files: $assets"
 
             - name: 🛠️ Publish to GitHub
               uses: grovegs/actions/.github/actions/publish-github@v0.1.2
