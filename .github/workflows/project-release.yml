@@ -48,6 +48,9 @@ on:
             github-token:
                 description: The GitHub token for authentication.
                 required: true
+            discord-webhook:
+                description: Discord webhook URL for sending notifications.
+                required: false
             unity-email:
                 description: "The Unity account email address."
                 required: false
@@ -500,3 +503,27 @@ jobs:
                   changelog: ${{ needs.shared.outputs.changelog-markdown }}
                   github-token: ${{ secrets.github-token }}
                   assets: ${{ steps.collect_files.outputs.assets }}
+
+            - name: 📢 Notify Discord Success
+              if: success()
+              uses: grovegs/actions/.github/actions/notify-discord@v0.1.2
+              with:
+                  webhook_url: ${{ secrets.discord-webhook }}
+                  title: "✅ ${{ github.event.repository.name }} v${{ needs.shared.outputs.version }}"
+                  description: |
+                      ${{ needs.shared.outputs.changelog-markdown }}
+
+                      [View Release](${{ github.server_url }}/${{ github.repository }}/releases/tag/v${{ needs.shared.outputs.version }})
+                  color: "3066993"
+
+            - name: 📢 Notify Discord Failure
+              if: failure()
+              uses: grovegs/actions/.github/actions/notify-discord@v0.1.2
+              with:
+                  webhook_url: ${{ secrets.discord-webhook }}
+                  title: "❌ ${{ github.event.repository.name }} v${{ needs.shared.outputs.version }}"
+                  description: |
+                      Release publication failed.
+
+                      [View Workflow Run](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
+                  color: "15158332"
