@@ -107,7 +107,6 @@ jobs:
                   base_filename="${{ needs.shared.outputs.filename }}"
                   path="${{ matrix.project }}"
                   item_name=$(basename "$path")
-
                   dot_count=$(echo "$item_name" | tr -cd '.' | wc -c)
 
                   if [ "$dot_count" -ge 2 ]; then
@@ -152,7 +151,6 @@ jobs:
                   base_filename="${{ needs.shared.outputs.filename }}"
                   path="${{ matrix.addon }}"
                   item_name=$(basename "$path")
-
                   dot_count=$(echo "$item_name" | tr -cd '.' | wc -c)
 
                   if [ "$dot_count" -ge 2 ]; then
@@ -178,11 +176,14 @@ jobs:
                   name: ${{ steps.generate_filename.outputs.filename }}
                   path: ${{ steps.pack_addon.outputs.file }}
 
-            - name: 📤 Upload Modified Version Files
+            - name: 📤 Upload Modified Files
               uses: actions/upload-artifact@v4
               with:
-                  name: version-files-godot-${{ matrix.addon }}
-                  path: ${{ matrix.addon }}/
+                  name: modified-godot-${{ matrix.addon }}
+                  path: |
+                      ${{ matrix.addon }}/
+                      README*
+                      LICENSE*
 
     pack_unity_packages:
         if: fromJSON(inputs.unity-packages)[0] != null
@@ -202,7 +203,6 @@ jobs:
                   base_filename="${{ needs.shared.outputs.filename }}"
                   path="${{ matrix.package }}"
                   item_name=$(basename "$path")
-
                   dot_count=$(echo "$item_name" | tr -cd '.' | wc -c)
 
                   if [ "$dot_count" -ge 2 ]; then
@@ -228,11 +228,14 @@ jobs:
                   name: ${{ steps.generate_filename.outputs.filename }}
                   path: ${{ steps.pack_package.outputs.file }}
 
-            - name: 📤 Upload Modified Version Files
+            - name: 📤 Upload Modified Files
               uses: actions/upload-artifact@v4
               with:
-                  name: version-files-unity-${{ matrix.package }}
-                  path: ${{ matrix.package }}/
+                  name: modified-unity-${{ matrix.package }}
+                  path: |
+                      ${{ matrix.package }}/
+                      README*
+                      LICENSE*
 
     release_nuget_packages:
         if: fromJSON(inputs.dotnet-projects)[0] != null && needs.pack_dotnet_projects.result == 'success'
@@ -249,7 +252,6 @@ jobs:
                   base_filename="${{ needs.shared.outputs.filename }}"
                   path="${{ matrix.project }}"
                   item_name=$(basename "$path")
-
                   dot_count=$(echo "$item_name" | tr -cd '.' | wc -c)
 
                   if [ "$dot_count" -ge 2 ]; then
@@ -288,35 +290,35 @@ jobs:
             - name: 📂 Checkout Code
               uses: actions/checkout@v5
 
-            - name: 📥 Download Version Files
+            - name: 📥 Download Modified Files
               if: needs.pack_godot_addons.result == 'success' || needs.pack_unity_packages.result == 'success'
               uses: actions/download-artifact@v5
               with:
-                  pattern: version-files-*
-                  path: ~/.version-files
+                  pattern: modified-*
+                  path: ~/.modified-files
 
-            - name: 📝 Apply Version Changes
+            - name: 📝 Apply Modified Files
               if: needs.pack_godot_addons.result == 'success' || needs.pack_unity_packages.result == 'success'
               run: |
-                  if [ -d ~/.version-files ]; then
-                      for version_dir in ~/.version-files/version-files-godot-*; do
-                          if [ -d "$version_dir" ]; then
-                              addon_path=$(basename "$version_dir" | sed 's/^version-files-godot-//')
-                              echo "Applying version changes for Godot addon: $addon_path"
-                              cp -r "$version_dir"/* "$addon_path"/
-                          fi
-                      done
+                  if [ -d ~/.modified-files ]; then
+                      for modified_dir in ~/.modified-files/modified-*; do
+                          if [ -d "$modified_dir" ]; then
+                              dir_name=$(basename "$modified_dir")
+                              platform=$(echo "$dir_name" | cut -d'-' -f2)
+                              item_path=$(echo "$dir_name" | cut -d'-' -f3-)
 
-                      for version_dir in ~/.version-files/version-files-unity-*; do
-                          if [ -d "$version_dir" ]; then
-                              package_path=$(basename "$version_dir" | sed 's/^version-files-unity-//')
-                              echo "Applying version changes for Unity package: $package_path"
-                              cp -r "$version_dir"/* "$package_path"/
+                              echo "Applying changes for $platform: $item_path"
+
+                              if [ -d "$modified_dir/$item_path" ]; then
+                                  cp -r "$modified_dir/$item_path"/* "$item_path"/
+                              fi
+
+                              find "$modified_dir" -maxdepth 1 -type f \( -name "README*" -o -name "LICENSE*" \) -exec cp {} . \;
                           fi
                       done
                   fi
 
-            - name: 💾 Commit Version Changes
+            - name: 💾 Commit Modified Files
               if: needs.pack_godot_addons.result == 'success' || needs.pack_unity_packages.result == 'success'
               run: |
                   git config user.name "github-actions[bot]"
