@@ -15,8 +15,9 @@ on:
                 default: "[]"
             global-json-file:
                 description: The relative path to the `global.json` file to extract .NET version.
-                required: true
+                required: false
                 type: string
+                default: ""
 
 jobs:
     format_files:

@@ -29,6 +29,7 @@ on:
                 description: The relative path to the `global.json` file to extract .NET and Godot version.
                 required: false
                 type: string
+                default: ""
             tester-groups:
                 description: Comma-separated list of tester groups to receive the build.
                 required: false

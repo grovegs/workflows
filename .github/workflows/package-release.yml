@@ -11,10 +11,6 @@ on:
                 description: Specifies the version type (e.g., major, minor, patch) for the build.
                 required: true
                 type: string
-            global-json-file:
-                description: The relative path to the `global.json` file to extract .NET version.
-                required: true
-                type: string
             dotnet-projects:
                 description: Array of .NET project paths to build and package (e.g., ["src/Core", "src/Godot"])
                 required: false
@@ -30,6 +26,11 @@ on:
                 required: false
                 type: string
                 default: "[]"
+            global-json-file:
+                description: The relative path to the `global.json` file to extract .NET version.
+                required: false
+                type: string
+                default: ""
 
         secrets:
             github-token:
