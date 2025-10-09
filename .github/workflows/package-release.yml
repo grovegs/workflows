@@ -104,12 +104,19 @@ jobs:
             - name: 📦 Generate Filename
               id: generate_filename
               run: |
-                  project_name=$(basename "${{ matrix.project }}")
-                  if [[ "$project_name" == *"Godot"* ]]; then
-                    filename=${{ needs.shared.outputs.filename }}-godot
+                  base_filename="${{ needs.shared.outputs.filename }}"
+                  path="${{ matrix.project }}"
+                  item_name=$(basename "$path")
+
+                  dot_count=$(echo "$item_name" | tr -cd '.' | wc -c)
+
+                  if [ "$dot_count" -ge 2 ]; then
+                      platform=$(echo "$item_name" | sed 's/.*\.//' | tr '[:upper:]' '[:lower:]')
+                      filename="${base_filename}-${platform}"
                   else
-                    filename=${{ needs.shared.outputs.filename }}
+                      filename="${base_filename}"
                   fi
+
                   echo "filename=$filename" >> $GITHUB_OUTPUT
 
             - name: 📦 Pack NuGet
@@ -142,8 +149,19 @@ jobs:
             - name: 📦 Generate Filename
               id: generate_filename
               run: |
-                  addon_name=$(basename "${{ matrix.addon }}")
-                  filename=${{ needs.shared.outputs.filename }}-$addon_name
+                  base_filename="${{ needs.shared.outputs.filename }}"
+                  path="${{ matrix.addon }}"
+                  item_name=$(basename "$path")
+
+                  dot_count=$(echo "$item_name" | tr -cd '.' | wc -c)
+
+                  if [ "$dot_count" -ge 2 ]; then
+                      platform=$(echo "$item_name" | sed 's/.*\.//' | tr '[:upper:]' '[:lower:]')
+                      filename="${base_filename}-${platform}"
+                  else
+                      filename="${base_filename}"
+                  fi
+
                   echo "filename=$filename" >> $GITHUB_OUTPUT
 
             - name: 📦 Pack Godot Addon
@@ -181,8 +199,19 @@ jobs:
             - name: 📦 Generate Filename
               id: generate_filename
               run: |
-                  package_name=$(basename "${{ matrix.package }}")
-                  filename=${{ needs.shared.outputs.filename }}-$package_name
+                  base_filename="${{ needs.shared.outputs.filename }}"
+                  path="${{ matrix.package }}"
+                  item_name=$(basename "$path")
+
+                  dot_count=$(echo "$item_name" | tr -cd '.' | wc -c)
+
+                  if [ "$dot_count" -ge 2 ]; then
+                      platform=$(echo "$item_name" | sed 's/.*\.//' | tr '[:upper:]' '[:lower:]')
+                      filename="${base_filename}-${platform}"
+                  else
+                      filename="${base_filename}"
+                  fi
+
                   echo "filename=$filename" >> $GITHUB_OUTPUT
 
             - name: 📦 Pack Unity Package
@@ -217,12 +246,19 @@ jobs:
             - name: 📦 Generate Filename
               id: generate_filename
               run: |
-                  project_name=$(basename "${{ matrix.project }}")
-                  if [[ "$project_name" == *"Godot"* ]]; then
-                    filename=${{ needs.shared.outputs.filename }}-godot
+                  base_filename="${{ needs.shared.outputs.filename }}"
+                  path="${{ matrix.project }}"
+                  item_name=$(basename "$path")
+
+                  dot_count=$(echo "$item_name" | tr -cd '.' | wc -c)
+
+                  if [ "$dot_count" -ge 2 ]; then
+                      platform=$(echo "$item_name" | sed 's/.*\.//' | tr '[:upper:]' '[:lower:]')
+                      filename="${base_filename}-${platform}"
                   else
-                    filename=${{ needs.shared.outputs.filename }}
+                      filename="${base_filename}"
                   fi
+
                   echo "filename=$filename" >> $GITHUB_OUTPUT
 
             - name: 📥 Download Artifact
@@ -321,7 +357,7 @@ jobs:
               uses: grovegs/actions/.github/actions/notify-discord@v0.1.2
               with:
                   webhook_url: ${{ secrets.discord-webhook }}
-                  title: "✅ ${{ github.event.repository.name }} v${{ needs.shared.outputs.version }}"
+                  title: "✅ ${{ github.event.repository.name }}"
                   description: |
                       ${{ needs.shared.outputs.changelog-markdown }}
 
@@ -333,7 +369,7 @@ jobs:
               uses: grovegs/actions/.github/actions/notify-discord@v0.1.2
               with:
                   webhook_url: ${{ secrets.discord-webhook }}
-                  title: "❌ ${{ github.event.repository.name }} v${{ needs.shared.outputs.version }}"
+                  title: "❌ ${{ github.event.repository.name }}"
                   description: |
                       Release publication failed.
 

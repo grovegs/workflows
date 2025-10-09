@@ -63,7 +63,7 @@ jobs:
               uses: grovegs/actions/.github/actions/notify-discord@v0.1.2
               with:
                   webhook_url: ${{ secrets.DISCORD_WEBHOOK }}
-                  title: "✅ ${{ github.event.repository.name }} v${{ needs.shared.outputs.version }}"
+                  title: "✅ ${{ github.event.repository.name }}"
                   description: |
                       ${{ needs.shared.outputs.changelog-markdown }}
 
@@ -75,7 +75,7 @@ jobs:
               uses: grovegs/actions/.github/actions/notify-discord@v0.1.2
               with:
                   webhook_url: ${{ secrets.DISCORD_WEBHOOK }}
-                  title: "❌ ${{ github.event.repository.name }} v${{ needs.shared.outputs.version }}"
+                  title: "❌ ${{ github.event.repository.name }}"
                   description: |
                       Release publication failed.
 

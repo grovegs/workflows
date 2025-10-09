@@ -170,7 +170,7 @@ jobs:
             - name: 🎮 Setup Godot
               uses: grovegs/actions/.github/actions/setup-godot@v0.1.2
               with:
-                  global-json-file: ${{ inputs.global-json-file || '' }}
+                  global-json-file: ${{ inputs.global-json-file }}
                   target-platforms: Android
                   cache: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop' }}
 
@@ -184,8 +184,20 @@ jobs:
             - name: 📦 Generate Project Filename
               id: generate_project_filename
               run: |
-                  project_name=$(basename "${{ matrix.project }}")
-                  filename=${{ needs.shared.outputs.filename }}-$(echo "$project_name" | sed -E 's/([[:space:]]|_)/-/g; s/([a-z])([A-Z])/\1-\2/g' | tr '[:upper:]' '[:lower:]')
+                  base_filename="${{ needs.shared.outputs.filename }}"
+                  path="${{ matrix.project }}"
+                  item_name=$(basename "$path")
+
+                  dot_count=$(echo "$item_name" | tr -cd '.' | wc -c)
+
+                  if [ "$dot_count" -ge 2 ]; then
+                      platform=$(echo "$item_name" | sed 's/.*\.//' | tr '[:upper:]' '[:lower:]')
+                      project_suffix="${platform}"
+                  else
+                      project_suffix=$(echo "$item_name" | sed -E 's/([[:space:]]|_)/-/g; s/([a-z])([A-Z])/\1-\2/g' | tr '[:upper:]' '[:lower:]')
+                  fi
+
+                  filename="${base_filename}-${project_suffix}"
                   echo "filename=$filename" >> $GITHUB_OUTPUT
 
             - name: 🏗️ Build Godot
@@ -193,7 +205,7 @@ jobs:
               uses: grovegs/actions/.github/actions/build-godot@v0.1.2
               with:
                   project: ${{ matrix.project }}
-                  global-json-file: ${{ inputs.global-json-file || '' }}
+                  global-json-file: ${{ inputs.global-json-file }}
                   version: ${{ needs.shared.outputs.version }}
                   platform: Android
                   preset: Android ${{ inputs.environment }}
@@ -246,7 +258,7 @@ jobs:
             - name: 🎮 Setup Godot
               uses: grovegs/actions/.github/actions/setup-godot@v0.1.2
               with:
-                  global-json-file: ${{ inputs.global-json-file || '' }}
+                  global-json-file: ${{ inputs.global-json-file }}
                   target-platforms: iOS
                   cache: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop' }}
 
@@ -260,8 +272,20 @@ jobs:
             - name: 📦 Generate Project Filename
               id: generate_project_filename
               run: |
-                  project_name=$(basename "${{ matrix.project }}")
-                  filename=${{ needs.shared.outputs.filename }}-$(echo "$project_name" | sed -E 's/([[:space:]]|_)/-/g; s/([a-z])([A-Z])/\1-\2/g' | tr '[:upper:]' '[:lower:]')
+                  base_filename="${{ needs.shared.outputs.filename }}"
+                  path="${{ matrix.project }}"
+                  item_name=$(basename "$path")
+
+                  dot_count=$(echo "$item_name" | tr -cd '.' | wc -c)
+
+                  if [ "$dot_count" -ge 2 ]; then
+                      platform=$(echo "$item_name" | sed 's/.*\.//' | tr '[:upper:]' '[:lower:]')
+                      project_suffix="${platform}"
+                  else
+                      project_suffix=$(echo "$item_name" | sed -E 's/([[:space:]]|_)/-/g; s/([a-z])([A-Z])/\1-\2/g' | tr '[:upper:]' '[:lower:]')
+                  fi
+
+                  filename="${base_filename}-${project_suffix}"
                   echo "filename=$filename" >> $GITHUB_OUTPUT
 
             - name: 🏗️ Build Project
@@ -269,7 +293,7 @@ jobs:
               uses: grovegs/actions/.github/actions/build-godot@v0.1.2
               with:
                   project: ${{ matrix.project }}
-                  global-json-file: ${{ inputs.global-json-file || '' }}
+                  global-json-file: ${{ inputs.global-json-file }}
                   version: ${{ needs.shared.outputs.version }}
                   platform: iOS
                   preset: iOS ${{ inputs.environment }}
@@ -330,8 +354,20 @@ jobs:
             - name: 📦 Generate Project Filename
               id: generate_project_filename
               run: |
-                  project_name=$(basename "${{ matrix.project }}")
-                  filename=${{ needs.shared.outputs.filename }}-$(echo "$project_name" | sed -E 's/([[:space:]]|_)/-/g; s/([a-z])([A-Z])/\1-\2/g' | tr '[:upper:]' '[:lower:]')
+                  base_filename="${{ needs.shared.outputs.filename }}"
+                  path="${{ matrix.project }}"
+                  item_name=$(basename "$path")
+
+                  dot_count=$(echo "$item_name" | tr -cd '.' | wc -c)
+
+                  if [ "$dot_count" -ge 2 ]; then
+                      platform=$(echo "$item_name" | sed 's/.*\.//' | tr '[:upper:]' '[:lower:]')
+                      project_suffix="${platform}"
+                  else
+                      project_suffix=$(echo "$item_name" | sed -E 's/([[:space:]]|_)/-/g; s/([a-z])([A-Z])/\1-\2/g' | tr '[:upper:]' '[:lower:]')
+                  fi
+
+                  filename="${base_filename}-${project_suffix}"
                   echo "filename=$filename" >> $GITHUB_OUTPUT
 
             - name: 🏗️ Build Unity
@@ -399,8 +435,20 @@ jobs:
             - name: 📦 Generate Project Filename
               id: generate_project_filename
               run: |
-                  project_name=$(basename "${{ matrix.project }}")
-                  filename=${{ needs.shared.outputs.filename }}-$(echo "$project_name" | sed -E 's/([[:space:]]|_)/-/g; s/([a-z])([A-Z])/\1-\2/g' | tr '[:upper:]' '[:lower:]')
+                  base_filename="${{ needs.shared.outputs.filename }}"
+                  path="${{ matrix.project }}"
+                  item_name=$(basename "$path")
+
+                  dot_count=$(echo "$item_name" | tr -cd '.' | wc -c)
+
+                  if [ "$dot_count" -ge 2 ]; then
+                      platform=$(echo "$item_name" | sed 's/.*\.//' | tr '[:upper:]' '[:lower:]')
+                      project_suffix="${platform}"
+                  else
+                      project_suffix=$(echo "$item_name" | sed -E 's/([[:space:]]|_)/-/g; s/([a-z])([A-Z])/\1-\2/g' | tr '[:upper:]' '[:lower:]')
+                  fi
+
+                  filename="${base_filename}-${project_suffix}"
                   echo "filename=$filename" >> $GITHUB_OUTPUT
 
             - name: 🏗️ Build Unity
@@ -502,7 +550,7 @@ jobs:
               uses: grovegs/actions/.github/actions/notify-discord@v0.1.2
               with:
                   webhook_url: ${{ secrets.discord-webhook }}
-                  title: "✅ ${{ github.event.repository.name }} v${{ needs.shared.outputs.version }}"
+                  title: "✅ ${{ github.event.repository.name }}"
                   description: |
                       ${{ needs.shared.outputs.changelog-markdown }}
 
@@ -514,7 +562,7 @@ jobs:
               uses: grovegs/actions/.github/actions/notify-discord@v0.1.2
               with:
                   webhook_url: ${{ secrets.discord-webhook }}
-                  title: "❌ ${{ github.event.repository.name }} v${{ needs.shared.outputs.version }}"
+                  title: "❌ ${{ github.event.repository.name }}"
                   description: |
                       Release publication failed.
 
