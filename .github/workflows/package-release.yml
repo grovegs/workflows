@@ -31,6 +31,21 @@ on:
                 required: false
                 type: string
                 default: ""
+            publish-github:
+                description: If true, publish release to GitHub.
+                required: false
+                type: boolean
+                default: true
+            publish-nuget:
+                description: If true, publish packages to NuGet.
+                required: false
+                type: boolean
+                default: true
+            publish-discord:
+                description: If true, send Discord notifications.
+                required: false
+                type: boolean
+                default: true
 
         secrets:
             github-token:
@@ -250,7 +265,7 @@ jobs:
                       LICENSE*
 
     release_nuget_packages:
-        if: fromJSON(inputs.dotnet-projects)[0] != null && needs.pack_dotnet_projects.result == 'success'
+        if: fromJSON(inputs.dotnet-projects)[0] != null && needs.pack_dotnet_projects.result == 'success' && inputs.publish-nuget
         needs: [shared, pack_dotnet_projects]
         runs-on: ubuntu-latest
         strategy:
@@ -304,6 +319,7 @@ jobs:
 
             - name: 📥 Download Modified Files
               uses: actions/download-artifact@v5
+              continue-on-error: true
               with:
                   pattern: modified-*
                   path: ~/.modified-files
@@ -339,6 +355,7 @@ jobs:
                   git diff --cached --quiet || git commit -m "chore: release version ${{ needs.shared.outputs.version }}"
 
             - name: 📥 Download All Artifacts
+              if: inputs.publish-github
               uses: actions/download-artifact@v5
               with:
                   pattern: ${{ needs.shared.outputs.filename }}*
@@ -346,6 +363,7 @@ jobs:
                   merge-multiple: true
 
             - name: 🔍 Find Assets
+              if: inputs.publish-github
               id: find_assets
               run: |
                   if [ -d ~/.artifacts ]; then
@@ -357,6 +375,7 @@ jobs:
                   echo "Found assets: $assets"
 
             - name: 🚀 Publish to GitHub
+              if: inputs.publish-github
               uses: grovegs/actions/.github/actions/publish-github@v0.1.3
               with:
                   title: ${{ inputs.name }} ${{ needs.shared.outputs.version }}
@@ -366,7 +385,7 @@ jobs:
                   assets: ${{ steps.find_assets.outputs.assets }}
 
             - name: 📢 Notify Discord Success
-              if: success()
+              if: success() && inputs.publish-discord
               uses: grovegs/actions/.github/actions/notify-discord@v0.1.3
               with:
                   webhook_url: ${{ secrets.discord-webhook }}
@@ -378,7 +397,7 @@ jobs:
                   color: "3066993"
 
             - name: 📢 Notify Discord Failure
-              if: failure()
+              if: failure() && inputs.publish-discord
               uses: grovegs/actions/.github/actions/notify-discord@v0.1.3
               with:
                   webhook_url: ${{ secrets.discord-webhook }}
