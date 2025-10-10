@@ -48,3 +48,38 @@ jobs:
         with:
             dotnet-projects: '["sandbox/ConsoleApplication"]'
             global-json-file: sandbox/ConsoleApplication/global.json
+
+    test-release-package:
+        name: Test Release Package
+        uses: ./.github/workflows/package-release.yml
+        with:
+            name: Test Package
+            version-type: patch
+            dotnet-projects: '["sandbox/ConsoleApplication"]'
+            godot-addons: '["sandbox/GodotApplication/addons/TestAddon"]'
+            unity-packages: '["sandbox/UnityApplication/Packages/com.test.package"]'
+            global-json-file: sandbox/ConsoleApplication/global.json
+            publish-github: false
+            publish-nuget: false
+            publish-discord: false
+        secrets:
+            github-token: ${{ secrets.GITHUB_TOKEN }}
+
+    test-release-project:
+        name: Test Release Project
+        uses: ./.github/workflows/project-release.yml
+        with:
+            name: Test Project
+            version-type: patch
+            environment: Development
+            godot-projects: '["sandbox/GodotApplication"]'
+            unity-projects: '["sandbox/UnityApplication"]'
+            global-json-file: sandbox/GodotApplication/global.json
+            release-android: false
+            release-ios: false
+            publish-github: false
+            publish-firebase: false
+            publish-testflight: false
+            publish-discord: false
+        secrets:
+            github-token: ${{ secrets.GITHUB_TOKEN }}

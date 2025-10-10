@@ -1,0 +1,11 @@
+{
+  "name": "com.test.package",
+  "version": "0.0.0",
+  "displayName": "TestPackage",
+  "description": "Test package.",
+  "unity": "2021.3",
+  "author": {
+    "name": "Grove Games",
+    "url": "https://github.com/grovegs"
+  }
+}
