@@ -91,6 +91,21 @@ jobs:
                   filename=$(echo "${{ inputs.name }}" | sed -E 's/([[:space:]]|_)/-/g; s/([a-z])([A-Z])/\1-\2/g' | tr '[:upper:]' '[:lower:]')-${{ steps.bump_version.outputs.next-version }}
                   echo "filename=$filename" >> $GITHUB_OUTPUT
 
+            - name: 📝 Store Path Metadata for Directory.Build.props
+              if: fromJSON(inputs.dotnet-projects)[0] != null
+              run: |
+                  mkdir -p .artifact-meta
+                  echo "Directory.Build.props" > .artifact-meta/path.txt
+
+            - name: 📤 Upload Directory.Build.props
+              if: fromJSON(inputs.dotnet-projects)[0] != null
+              uses: actions/upload-artifact@v4
+              with:
+                  name: modified-dotnet-version
+                  path: |
+                      Directory.Build.props
+                      .artifact-meta/path.txt
+
     pack_dotnet_projects:
         if: fromJSON(inputs.dotnet-projects)[0] != null
         needs: shared
@@ -151,25 +166,6 @@ jobs:
               with:
                   name: ${{ steps.generate_filename.outputs.artifact_name }}
                   path: ${{ steps.pack_nuget.outputs.file }}
-
-            - name: 📦 Generate Modified Artifact Name
-              id: modified_artifact_name
-              run: |
-                  artifact_name=$(echo "modified-${{ matrix.project }}" | tr '/' '-' | tr '[:upper:]' '[:lower:]')
-                  echo "name=$artifact_name" >> $GITHUB_OUTPUT
-
-            - name: 📝 Store Path Metadata
-              run: |
-                  mkdir -p .artifact-meta
-                  echo "${{ matrix.project }}" > .artifact-meta/path.txt
-
-            - name: 📤 Upload Modified Files
-              uses: actions/upload-artifact@v4
-              with:
-                  name: ${{ steps.modified_artifact_name.outputs.name }}
-                  path: |
-                      ${{ matrix.project }}/*.csproj
-                      .artifact-meta/path.txt
 
     pack_godot_addons:
         if: fromJSON(inputs.godot-addons)[0] != null
