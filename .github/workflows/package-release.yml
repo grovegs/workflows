@@ -121,15 +121,9 @@ jobs:
               run: |
                   base_filename="${{ needs.shared.outputs.filename }}"
                   path="${{ matrix.project }}"
-                  item_name=$(basename "$path")
-                  dot_count=$(echo "$item_name" | tr -cd '.' | wc -c)
 
-                  if [ "$dot_count" -ge 2 ]; then
-                      platform=$(echo "$item_name" | sed 's/.*\.//' | tr '[:upper:]' '[:lower:]')
-                      filename="${base_filename}-${platform}"
-                  else
-                      filename="${base_filename}"
-                  fi
+                  sanitized_path=$(echo "$path" | tr '/' '-' | tr '[:upper:]' '[:lower:]')
+                  filename="${base_filename}-${sanitized_path}"
 
                   echo "filename=$filename" >> $GITHUB_OUTPUT
 
@@ -165,15 +159,9 @@ jobs:
               run: |
                   base_filename="${{ needs.shared.outputs.filename }}"
                   path="${{ matrix.addon }}"
-                  item_name=$(basename "$path")
-                  dot_count=$(echo "$item_name" | tr -cd '.' | wc -c)
 
-                  if [ "$dot_count" -ge 2 ]; then
-                      platform=$(echo "$item_name" | sed 's/.*\.//' | tr '[:upper:]' '[:lower:]')
-                      filename="${base_filename}-${platform}"
-                  else
-                      filename="${base_filename}"
-                  fi
+                  sanitized_path=$(echo "$path" | tr '/' '-' | tr '[:upper:]' '[:lower:]')
+                  filename="${base_filename}-${sanitized_path}"
 
                   echo "filename=$filename" >> $GITHUB_OUTPUT
 
@@ -223,15 +211,9 @@ jobs:
               run: |
                   base_filename="${{ needs.shared.outputs.filename }}"
                   path="${{ matrix.package }}"
-                  item_name=$(basename "$path")
-                  dot_count=$(echo "$item_name" | tr -cd '.' | wc -c)
 
-                  if [ "$dot_count" -ge 2 ]; then
-                      platform=$(echo "$item_name" | sed 's/.*\.//' | tr '[:upper:]' '[:lower:]')
-                      filename="${base_filename}-${platform}"
-                  else
-                      filename="${base_filename}"
-                  fi
+                  sanitized_path=$(echo "$path" | tr '/' '-' | tr '[:upper:]' '[:lower:]')
+                  filename="${base_filename}-${sanitized_path}"
 
                   echo "filename=$filename" >> $GITHUB_OUTPUT
 
@@ -278,15 +260,9 @@ jobs:
               run: |
                   base_filename="${{ needs.shared.outputs.filename }}"
                   path="${{ matrix.project }}"
-                  item_name=$(basename "$path")
-                  dot_count=$(echo "$item_name" | tr -cd '.' | wc -c)
 
-                  if [ "$dot_count" -ge 2 ]; then
-                      platform=$(echo "$item_name" | sed 's/.*\.//' | tr '[:upper:]' '[:lower:]')
-                      filename="${base_filename}-${platform}"
-                  else
-                      filename="${base_filename}"
-                  fi
+                  sanitized_path=$(echo "$path" | tr '/' '-' | tr '[:upper:]' '[:lower:]')
+                  filename="${base_filename}-${sanitized_path}"
 
                   echo "filename=$filename" >> $GITHUB_OUTPUT
 
