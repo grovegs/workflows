@@ -158,11 +158,18 @@ jobs:
                   artifact_name=$(echo "modified-${{ matrix.project }}" | tr '/' '-' | tr '[:upper:]' '[:lower:]')
                   echo "name=$artifact_name" >> $GITHUB_OUTPUT
 
+            - name: 📝 Store Path Metadata
+              run: |
+                  mkdir -p .artifact-meta
+                  echo "${{ matrix.project }}" > .artifact-meta/path.txt
+
             - name: 📤 Upload Modified Files
               uses: actions/upload-artifact@v4
               with:
                   name: ${{ steps.modified_artifact_name.outputs.name }}
-                  path: ${{ matrix.project }}/*.csproj
+                  path: |
+                      ${{ matrix.project }}/*.csproj
+                      .artifact-meta/path.txt
 
     pack_godot_addons:
         if: fromJSON(inputs.godot-addons)[0] != null
@@ -211,11 +218,18 @@ jobs:
                   artifact_name=$(echo "modified-${{ matrix.addon }}" | tr '/' '-' | tr '[:upper:]' '[:lower:]')
                   echo "name=$artifact_name" >> $GITHUB_OUTPUT
 
+            - name: 📝 Store Path Metadata
+              run: |
+                  mkdir -p .artifact-meta
+                  echo "${{ matrix.addon }}" > .artifact-meta/path.txt
+
             - name: 📤 Upload Modified Files
               uses: actions/upload-artifact@v4
               with:
                   name: ${{ steps.modified_artifact_name.outputs.name }}
-                  path: ${{ matrix.addon }}/plugin.cfg
+                  path: |
+                      ${{ matrix.addon }}/plugin.cfg
+                      .artifact-meta/path.txt
 
     pack_unity_packages:
         if: fromJSON(inputs.unity-packages)[0] != null
@@ -264,11 +278,18 @@ jobs:
                   artifact_name=$(echo "modified-${{ matrix.package }}" | tr '/' '-' | tr '[:upper:]' '[:lower:]')
                   echo "name=$artifact_name" >> $GITHUB_OUTPUT
 
+            - name: 📝 Store Path Metadata
+              run: |
+                  mkdir -p .artifact-meta
+                  echo "${{ matrix.package }}" > .artifact-meta/path.txt
+
             - name: 📤 Upload Modified Files
               uses: actions/upload-artifact@v4
               with:
                   name: ${{ steps.modified_artifact_name.outputs.name }}
-                  path: ${{ matrix.package }}/package.json
+                  path: |
+                      ${{ matrix.package }}/package.json
+                      .artifact-meta/path.txt
 
     release_nuget_packages:
         if: fromJSON(inputs.dotnet-projects)[0] != null && needs.pack_dotnet_projects.result == 'success' && inputs.publish-nuget
@@ -338,9 +359,19 @@ jobs:
               run: |
                   if [ -d ~/.modified-files ]; then
                       for modified_dir in ~/.modified-files/modified-*; do
-                          if [ -d "$modified_dir" ]; then
-                              echo "Processing $(basename "$modified_dir")"
-                              cp -r "$modified_dir"/* . 2>/dev/null || true
+                          if [ -d "$modified_dir" ] && [ -f "$modified_dir/.artifact-meta/path.txt" ]; then
+                              original_path=$(cat "$modified_dir/.artifact-meta/path.txt")
+                              echo "Processing: $original_path"
+
+                              for file in "$modified_dir"/*; do
+                                  if [ -f "$file" ] && [ "$(basename "$file")" != ".artifact-meta" ]; then
+                                      filename=$(basename "$file")
+                                      target="$original_path/$filename"
+                                      echo "Restoring $filename to $target"
+                                      mkdir -p "$(dirname "$target")"
+                                      cp "$file" "$target"
+                                  fi
+                              done
                           fi
                       done
                   fi
