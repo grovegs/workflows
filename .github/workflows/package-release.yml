@@ -162,7 +162,7 @@ jobs:
               uses: actions/upload-artifact@v4
               with:
                   name: ${{ steps.modified_artifact_name.outputs.name }}
-                  path: ${{ matrix.project }}/**/*.csproj
+                  path: ${{ matrix.project }}/*.csproj
 
     pack_godot_addons:
         if: fromJSON(inputs.godot-addons)[0] != null
@@ -340,20 +340,7 @@ jobs:
                       for modified_dir in ~/.modified-files/modified-*; do
                           if [ -d "$modified_dir" ]; then
                               echo "Processing $(basename "$modified_dir")"
-
-                              for item in "$modified_dir"/*; do
-                                  if [ -e "$item" ]; then
-                                      relative_path="${item#$modified_dir/}"
-                                      echo "Copying $relative_path"
-
-                                      if [ -d "$item" ]; then
-                                          mkdir -p "$(dirname "$relative_path")"
-                                          cp -r "$item" "$(dirname "$relative_path")/"
-                                      else
-                                          cp "$item" "$relative_path"
-                                      fi
-                                  fi
-                              done
+                              cp -r "$modified_dir"/* . 2>/dev/null || true
                           fi
                       done
                   fi
