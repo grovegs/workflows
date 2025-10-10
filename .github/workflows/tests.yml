@@ -75,7 +75,7 @@ jobs:
             godot-projects: '["sandbox/GodotApplication"]'
             unity-projects: '["sandbox/UnityApplication"]'
             global-json-file: sandbox/GodotApplication/global.json
-            release-android: true
+            release-android: false
             release-ios: false
             publish-github: false
             publish-firebase: false
