@@ -66,7 +66,7 @@ jobs:
         with:
             name: Test Package
             version-type: patch
-            godot-addons: '["sandbox/addons/test-plugin"]'
+            godot-addons: '["sandbox/GodotApplication/addons/TestAddon"]'
         secrets:
             github-token: ${{ secrets.GITHUB_TOKEN }}
 
@@ -76,7 +76,7 @@ jobs:
         with:
             name: Test Package
             version-type: patch
-            unity-packages: '["sandbox/Packages/com.test.package"]'
+            unity-packages: '["sandbox/UnityApplication/Packages/com.test.package"]'
         secrets:
             github-token: ${{ secrets.GITHUB_TOKEN }}
 
@@ -87,8 +87,8 @@ jobs:
             name: Test Package
             version-type: patch
             dotnet-projects: '["sandbox/ConsoleApplication"]'
-            godot-addons: '["sandbox/addons/test-plugin"]'
-            unity-packages: '["sandbox/Packages/com.test.package"]'
+            godot-addons: '["sandbox/GodotApplication/addons/TestAddon"]'
+            unity-packages: '["sandbox/UnityApplication/Packages/com.test.package"]'
             global-json-file: sandbox/ConsoleApplication/global.json
         secrets:
             github-token: ${{ secrets.GITHUB_TOKEN }}
