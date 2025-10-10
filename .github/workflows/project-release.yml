@@ -433,18 +433,10 @@ jobs:
               run: |
                   base_filename="${{ needs.shared.outputs.filename }}"
                   path="${{ matrix.project }}"
-                  item_name=$(basename "$path")
 
-                  dot_count=$(echo "$item_name" | tr -cd '.' | wc -c)
+                  sanitized_path=$(echo "$path" | tr '/' '-' | tr '[:upper:]' '[:lower:]')
+                  filename="${base_filename}-${sanitized_path}"
 
-                  if [ "$dot_count" -ge 2 ]; then
-                      platform=$(echo "$item_name" | sed 's/.*\.//' | tr '[:upper:]' '[:lower:]')
-                      project_suffix="${platform}"
-                  else
-                      project_suffix=$(echo "$item_name" | sed -E 's/([[:space:]]|_)/-/g; s/([a-z])([A-Z])/\1-\2/g' | tr '[:upper:]' '[:lower:]')
-                  fi
-
-                  filename=$(echo "${base_filename}-${project_suffix}" | tr '/' '-')
                   echo "filename=$filename" >> $GITHUB_OUTPUT
 
             - name: 🏗️ Build Unity
