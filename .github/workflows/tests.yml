@@ -49,48 +49,8 @@ jobs:
             dotnet-projects: '["sandbox/ConsoleApplication"]'
             global-json-file: sandbox/ConsoleApplication/global.json
 
-    test-release-package-dotnet:
-        name: Test Release Package - .NET
-        uses: ./.github/workflows/package-release.yml
-        with:
-            name: Test Package
-            version-type: patch
-            dotnet-projects: '["sandbox/ConsoleApplication"]'
-            global-json-file: sandbox/ConsoleApplication/global.json
-            publish-github: false
-            publish-nuget: false
-            publish-discord: false
-        secrets:
-            github-token: ${{ secrets.GITHUB_TOKEN }}
-
-    test-release-package-godot:
-        name: Test Release Package - Godot
-        uses: ./.github/workflows/package-release.yml
-        with:
-            name: Test Package
-            version-type: patch
-            godot-addons: '["sandbox/GodotApplication/addons/TestAddon"]'
-            publish-github: false
-            publish-nuget: false
-            publish-discord: false
-        secrets:
-            github-token: ${{ secrets.GITHUB_TOKEN }}
-
-    test-release-package-unity:
-        name: Test Release Package - Unity
-        uses: ./.github/workflows/package-release.yml
-        with:
-            name: Test Package
-            version-type: patch
-            unity-packages: '["sandbox/UnityApplication/Packages/com.test.package"]'
-            publish-github: false
-            publish-nuget: false
-            publish-discord: false
-        secrets:
-            github-token: ${{ secrets.GITHUB_TOKEN }}
-
-    test-release-package-combined:
-        name: Test Release Package - Combined
+    test-release-package:
+        name: Test Release Package
         uses: ./.github/workflows/package-release.yml
         with:
             name: Test Package
@@ -105,43 +65,8 @@ jobs:
         secrets:
             github-token: ${{ secrets.GITHUB_TOKEN }}
 
-    test-release-project-godot:
-        name: Test Release Project - Godot
-        uses: ./.github/workflows/project-release.yml
-        with:
-            name: Test Project
-            version-type: patch
-            environment: Development
-            godot-projects: '["sandbox/GodotApplication"]'
-            global-json-file: sandbox/GodotApplication/global.json
-            release-android: true
-            release-ios: false
-            publish-github: false
-            publish-firebase: false
-            publish-testflight: false
-            publish-discord: false
-        secrets:
-            github-token: ${{ secrets.GITHUB_TOKEN }}
-
-    test-release-project-unity:
-        name: Test Release Project - Unity
-        uses: ./.github/workflows/project-release.yml
-        with:
-            name: Test Project
-            version-type: patch
-            environment: Development
-            unity-projects: '["sandbox/UnityApplication"]'
-            release-android: true
-            release-ios: false
-            publish-github: false
-            publish-firebase: false
-            publish-testflight: false
-            publish-discord: false
-        secrets:
-            github-token: ${{ secrets.GITHUB_TOKEN }}
-
-    test-release-project-combined:
-        name: Test Release Project - Combined
+    test-release-project:
+        name: Test Release Project
         uses: ./.github/workflows/project-release.yml
         with:
             name: Test Project
