@@ -152,6 +152,18 @@ jobs:
                   name: ${{ steps.generate_filename.outputs.artifact_name }}
                   path: ${{ steps.pack_nuget.outputs.file }}
 
+            - name: 📦 Generate Modified Artifact Name
+              id: modified_artifact_name
+              run: |
+                  artifact_name=$(echo "modified-${{ matrix.project }}" | tr '/' '-' | tr '[:upper:]' '[:lower:]')
+                  echo "name=$artifact_name" >> $GITHUB_OUTPUT
+
+            - name: 📤 Upload Modified Files
+              uses: actions/upload-artifact@v4
+              with:
+                  name: ${{ steps.modified_artifact_name.outputs.name }}
+                  path: ${{ matrix.project }}/**/*.csproj
+
     pack_godot_addons:
         if: fromJSON(inputs.godot-addons)[0] != null
         needs: shared
@@ -203,7 +215,7 @@ jobs:
               uses: actions/upload-artifact@v4
               with:
                   name: ${{ steps.modified_artifact_name.outputs.name }}
-                  path: ${{ matrix.addon }}/
+                  path: ${{ matrix.addon }}/plugin.cfg
 
     pack_unity_packages:
         if: fromJSON(inputs.unity-packages)[0] != null
@@ -256,7 +268,7 @@ jobs:
               uses: actions/upload-artifact@v4
               with:
                   name: ${{ steps.modified_artifact_name.outputs.name }}
-                  path: ${{ matrix.package }}/
+                  path: ${{ matrix.package }}/package.json
 
     release_nuget_packages:
         if: fromJSON(inputs.dotnet-projects)[0] != null && needs.pack_dotnet_projects.result == 'success' && inputs.publish-nuget
@@ -329,12 +341,18 @@ jobs:
                           if [ -d "$modified_dir" ]; then
                               echo "Processing $(basename "$modified_dir")"
 
-                              find "$modified_dir" -mindepth 1 -maxdepth 2 -type d | while read -r source_dir; do
-                                  relative_path="${source_dir#$modified_dir/}"
+                              for item in "$modified_dir"/*; do
+                                  if [ -e "$item" ]; then
+                                      relative_path="${item#$modified_dir/}"
+                                      echo "Copying $relative_path"
 
-                                  echo "Copying $relative_path"
-                                  mkdir -p "$(dirname "$relative_path")"
-                                  cp -r "$source_dir" "$(dirname "$relative_path")/"
+                                      if [ -d "$item" ]; then
+                                          mkdir -p "$(dirname "$relative_path")"
+                                          cp -r "$item" "$(dirname "$relative_path")/"
+                                      else
+                                          cp "$item" "$relative_path"
+                                      fi
+                                  fi
                               done
                           fi
                       done
