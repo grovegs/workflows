@@ -176,10 +176,16 @@ jobs:
                   name: ${{ steps.generate_filename.outputs.filename }}
                   path: ${{ steps.pack_addon.outputs.file }}
 
+            - name: 📦 Generate Modified Artifact Name
+              id: modified_artifact_name
+              run: |
+                  artifact_name=$(echo "modified-${{ matrix.addon }}" | tr '/' '-' | tr '[:upper:]' '[:lower:]')
+                  echo "name=$artifact_name" >> $GITHUB_OUTPUT
+
             - name: 📤 Upload Modified Files
               uses: actions/upload-artifact@v4
               with:
-                  name: modified-godot-${{ matrix.addon }}
+                  name: ${{ steps.modified_artifact_name.outputs.name }}
                   path: |
                       ${{ matrix.addon }}/
                       README*
@@ -228,10 +234,16 @@ jobs:
                   name: ${{ steps.generate_filename.outputs.filename }}
                   path: ${{ steps.pack_package.outputs.file }}
 
+            - name: 📦 Generate Modified Artifact Name
+              id: modified_artifact_name
+              run: |
+                  artifact_name=$(echo "modified-${{ matrix.package }}" | tr '/' '-' | tr '[:upper:]' '[:lower:]')
+                  echo "name=$artifact_name" >> $GITHUB_OUTPUT
+
             - name: 📤 Upload Modified Files
               uses: actions/upload-artifact@v4
               with:
-                  name: modified-unity-${{ matrix.package }}
+                  name: ${{ steps.modified_artifact_name.outputs.name }}
                   path: |
                       ${{ matrix.package }}/
                       README*
@@ -291,27 +303,27 @@ jobs:
               uses: actions/checkout@v5
 
             - name: 📥 Download Modified Files
-              if: needs.pack_godot_addons.result == 'success' || needs.pack_unity_packages.result == 'success'
               uses: actions/download-artifact@v5
               with:
                   pattern: modified-*
                   path: ~/.modified-files
 
             - name: 📝 Apply Modified Files
-              if: needs.pack_godot_addons.result == 'success' || needs.pack_unity_packages.result == 'success'
               run: |
                   if [ -d ~/.modified-files ]; then
                       for modified_dir in ~/.modified-files/modified-*; do
                           if [ -d "$modified_dir" ]; then
-                              dir_name=$(basename "$modified_dir")
-                              platform=$(echo "$dir_name" | cut -d'-' -f2)
-                              item_path=$(echo "$dir_name" | cut -d'-' -f3-)
+                              echo "Processing $(basename "$modified_dir")"
 
-                              echo "Applying changes for $platform: $item_path"
+                              find "$modified_dir" -mindepth 1 -maxdepth 2 -type d | while read -r source_dir; do
+                                  relative_path="${source_dir#$modified_dir/}"
 
-                              if [ -d "$modified_dir/$item_path" ]; then
-                                  cp -r "$modified_dir/$item_path"/* "$item_path"/
-                              fi
+                                  if [[ "$relative_path" != "README"* && "$relative_path" != "LICENSE"* ]]; then
+                                      echo "Copying $relative_path"
+                                      mkdir -p "$(dirname "$relative_path")"
+                                      cp -r "$source_dir" "$(dirname "$relative_path")/"
+                                  fi
+                              done
 
                               find "$modified_dir" -maxdepth 1 -type f \( -name "README*" -o -name "LICENSE*" \) -exec cp {} . \;
                           fi
@@ -319,7 +331,6 @@ jobs:
                   fi
 
             - name: 💾 Commit Modified Files
-              if: needs.pack_godot_addons.result == 'success' || needs.pack_unity_packages.result == 'success'
               run: |
                   git config user.name "github-actions[bot]"
                   git config user.email "github-actions[bot]@users.noreply.github.com"
