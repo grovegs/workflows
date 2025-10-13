@@ -80,25 +80,34 @@ jobs:
 
             - name: 🆙 Bump Version
               id: bump_version
-              uses: grovegs/actions/.github/actions/bump-version@v0.1.3
+              uses: grovegs/actions/.github/actions/bump-version@v0.1.4
               with:
                   version-type: ${{ inputs.version-type }}
 
             - name: 📝 Generate Changelog
               id: generate_changelog
-              uses: grovegs/actions/.github/actions/generate-changelog@v0.1.3
+              uses: grovegs/actions/.github/actions/generate-changelog@v0.1.4
               with:
                   next-version: ${{ steps.bump_version.outputs.next-version }}
 
             - name: 📦 Generate Filename
               id: generate_filename
+              shell: bash
               run: |
-                  filename=$(echo "${{ inputs.name }}" | sed -E 's/([[:space:]]|_)/-/g; s/([a-z])([A-Z])/\1-\2/g' | tr '[:upper:]' '[:lower:]')-${{ steps.bump_version.outputs.next-version }}
-                  echo "filename=$filename" >> $GITHUB_OUTPUT
+                  #!/usr/bin/env bash
+                  set -euo pipefail
+
+                  filename=$(echo "${{ inputs.name }}" | sed -E 's/([[:space:]]|_)/-/g; s/([a-z])([A-Z])/\1-\2/g' | tr '[:upper:]' '[:lower:]')
+                  filename="${filename}-${{ steps.bump_version.outputs.next-version }}"
+                  echo "filename=$filename" >> "$GITHUB_OUTPUT"
 
             - name: 🔧 Update Directory.Build.props Version
               if: fromJSON(inputs.dotnet-projects)[0] != null && inputs.directory-build-props != ''
+              shell: bash
               run: |
+                  #!/usr/bin/env bash
+                  set -euo pipefail
+
                   file="${{ inputs.directory-build-props }}"
                   version="${{ steps.bump_version.outputs.next-version }}"
 
@@ -112,20 +121,13 @@ jobs:
                       echo "Warning: $file not found"
                   fi
 
-            - name: 📝 Store Path Metadata for Directory.Build.props
-              if: fromJSON(inputs.dotnet-projects)[0] != null && inputs.directory-build-props != ''
-              run: |
-                  mkdir -p .artifact-meta
-                  echo "${{ inputs.directory-build-props }}" > .artifact-meta/path.txt
-
             - name: 📤 Upload Directory.Build.props
               if: fromJSON(inputs.dotnet-projects)[0] != null && inputs.directory-build-props != ''
-              uses: actions/upload-artifact@v4
+              uses: grovegs/actions/.github/actions/upload-artifact@v0.1.4
               with:
                   name: modified-dotnet-version
-                  path: |
-                      ${{ inputs.directory-build-props }}
-                      .artifact-meta/path.txt
+                  path: ${{ inputs.directory-build-props }}
+                  retention-days: 1
 
     pack_dotnet_projects:
         if: fromJSON(inputs.dotnet-projects)[0] != null
@@ -141,33 +143,18 @@ jobs:
 
             - name: 📥 Download Directory.Build.props
               if: inputs.directory-build-props != ''
-              uses: actions/download-artifact@v5
+              uses: grovegs/actions/.github/actions/download-artifact@v0.1.4
               with:
                   name: modified-dotnet-version
-                  path: ~/.modified-version
-
-            - name: 📝 Apply Directory.Build.props
-              if: inputs.directory-build-props != ''
-              run: |
-                  if [ -f ~/.modified-version/.artifact-meta/path.txt ]; then
-                      original_path=$(cat ~/.modified-version/.artifact-meta/path.txt)
-                      filename=$(basename "$original_path")
-
-                      if [ -f ~/.modified-version/$filename ]; then
-                          echo "Restoring $filename to $original_path"
-                          mkdir -p "$(dirname "$original_path")"
-                          cp ~/.modified-version/$filename "$original_path"
-                      fi
-                  fi
 
             - name: ⚙️ Setup Dotnet
-              uses: grovegs/actions/.github/actions/setup-dotnet@v0.1.3
+              uses: grovegs/actions/.github/actions/setup-dotnet@v0.1.4
               with:
                   global-json-file: ${{ inputs.global-json-file }}
                   cache: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop' }}
 
             - name: 🏗️ Build .NET Project
-              uses: grovegs/actions/.github/actions/build-dotnet@v0.1.3
+              uses: grovegs/actions/.github/actions/build-dotnet@v0.1.4
               with:
                   project: ${{ matrix.project }}
                   configuration: Release
@@ -175,7 +162,11 @@ jobs:
 
             - name: 📦 Generate Filename
               id: generate_filename
+              shell: bash
               run: |
+                  #!/usr/bin/env bash
+                  set -euo pipefail
+
                   base_filename="${{ needs.shared.outputs.filename }}"
                   path="${{ matrix.project }}"
                   item_name=$(basename "$path")
@@ -191,12 +182,12 @@ jobs:
                       package_name="${base_filename}"
                   fi
 
-                  echo "artifact_name=$artifact_name" >> $GITHUB_OUTPUT
-                  echo "package_name=$package_name" >> $GITHUB_OUTPUT
+                  echo "artifact_name=$artifact_name" >> "$GITHUB_OUTPUT"
+                  echo "package_name=$package_name" >> "$GITHUB_OUTPUT"
 
             - name: 📦 Pack NuGet
               id: pack_nuget
-              uses: grovegs/actions/.github/actions/pack-dotnet@v0.1.3
+              uses: grovegs/actions/.github/actions/pack-dotnet@v0.1.4
               with:
                   project: ${{ matrix.project }}
                   configuration: Release
@@ -204,10 +195,11 @@ jobs:
                   filename: ${{ steps.generate_filename.outputs.package_name }}
 
             - name: 📤 Upload Artifact
-              uses: actions/upload-artifact@v4
+              uses: grovegs/actions/.github/actions/upload-artifact@v0.1.4
               with:
                   name: ${{ steps.generate_filename.outputs.artifact_name }}
                   path: ${{ steps.pack_nuget.outputs.file }}
+                  retention-days: 7
 
     pack_godot_addons:
         if: fromJSON(inputs.godot-addons)[0] != null
@@ -223,51 +215,52 @@ jobs:
 
             - name: 📦 Generate Filename
               id: generate_filename
+              shell: bash
               run: |
+                  #!/usr/bin/env bash
+                  set -euo pipefail
+
                   base_filename="${{ needs.shared.outputs.filename }}"
                   path="${{ matrix.addon }}"
-                  item_name=$(basename "$path")
 
                   sanitized_path=$(echo "$path" | tr '/' '-' | tr '[:upper:]' '[:lower:]')
                   artifact_name="${base_filename}-${sanitized_path}"
-
                   package_name="${base_filename}-godot-addon"
 
-                  echo "artifact_name=$artifact_name" >> $GITHUB_OUTPUT
-                  echo "package_name=$package_name" >> $GITHUB_OUTPUT
+                  echo "artifact_name=$artifact_name" >> "$GITHUB_OUTPUT"
+                  echo "package_name=$package_name" >> "$GITHUB_OUTPUT"
 
             - name: 📦 Pack Godot Addon
               id: pack_addon
-              uses: grovegs/actions/.github/actions/pack-godot-addon@v0.1.3
+              uses: grovegs/actions/.github/actions/pack-godot-addon@v0.1.4
               with:
                   addon: ${{ matrix.addon }}
                   version: ${{ needs.shared.outputs.version }}
                   filename: ${{ steps.generate_filename.outputs.package_name }}
 
             - name: 📤 Upload Artifact
-              uses: actions/upload-artifact@v4
+              uses: grovegs/actions/.github/actions/upload-artifact@v0.1.4
               with:
                   name: ${{ steps.generate_filename.outputs.artifact_name }}
                   path: ${{ steps.pack_addon.outputs.file }}
+                  retention-days: 7
 
             - name: 📦 Generate Modified Artifact Name
               id: modified_artifact_name
+              shell: bash
               run: |
-                  artifact_name=$(echo "modified-${{ matrix.addon }}" | tr '/' '-' | tr '[:upper:]' '[:lower:]')
-                  echo "name=$artifact_name" >> $GITHUB_OUTPUT
+                  #!/usr/bin/env bash
+                  set -euo pipefail
 
-            - name: 📝 Store Path Metadata
-              run: |
-                  mkdir -p .artifact-meta
-                  echo "${{ matrix.addon }}" > .artifact-meta/path.txt
+                  artifact_name=$(echo "modified-${{ matrix.addon }}" | tr '/' '-' | tr '[:upper:]' '[:lower:]')
+                  echo "name=$artifact_name" >> "$GITHUB_OUTPUT"
 
             - name: 📤 Upload Modified Files
-              uses: actions/upload-artifact@v4
+              uses: grovegs/actions/.github/actions/upload-artifact@v0.1.4
               with:
                   name: ${{ steps.modified_artifact_name.outputs.name }}
-                  path: |
-                      ${{ matrix.addon }}/plugin.cfg
-                      .artifact-meta/path.txt
+                  path: ${{ matrix.addon }}/plugin.cfg
+                  retention-days: 1
 
     pack_unity_packages:
         if: fromJSON(inputs.unity-packages)[0] != null
@@ -283,51 +276,52 @@ jobs:
 
             - name: 📦 Generate Filename
               id: generate_filename
+              shell: bash
               run: |
+                  #!/usr/bin/env bash
+                  set -euo pipefail
+
                   base_filename="${{ needs.shared.outputs.filename }}"
                   path="${{ matrix.package }}"
-                  item_name=$(basename "$path")
 
                   sanitized_path=$(echo "$path" | tr '/' '-' | tr '[:upper:]' '[:lower:]')
                   artifact_name="${base_filename}-${sanitized_path}"
-
                   package_name="${base_filename}-unity-package"
 
-                  echo "artifact_name=$artifact_name" >> $GITHUB_OUTPUT
-                  echo "package_name=$package_name" >> $GITHUB_OUTPUT
+                  echo "artifact_name=$artifact_name" >> "$GITHUB_OUTPUT"
+                  echo "package_name=$package_name" >> "$GITHUB_OUTPUT"
 
             - name: 📦 Pack Unity Package
               id: pack_package
-              uses: grovegs/actions/.github/actions/pack-unity-package@v0.1.3
+              uses: grovegs/actions/.github/actions/pack-unity-package@v0.1.4
               with:
                   package: ${{ matrix.package }}
                   version: ${{ needs.shared.outputs.version }}
                   filename: ${{ steps.generate_filename.outputs.package_name }}
 
             - name: 📤 Upload Artifact
-              uses: actions/upload-artifact@v4
+              uses: grovegs/actions/.github/actions/upload-artifact@v0.1.4
               with:
                   name: ${{ steps.generate_filename.outputs.artifact_name }}
                   path: ${{ steps.pack_package.outputs.file }}
+                  retention-days: 7
 
             - name: 📦 Generate Modified Artifact Name
               id: modified_artifact_name
+              shell: bash
               run: |
-                  artifact_name=$(echo "modified-${{ matrix.package }}" | tr '/' '-' | tr '[:upper:]' '[:lower:]')
-                  echo "name=$artifact_name" >> $GITHUB_OUTPUT
+                  #!/usr/bin/env bash
+                  set -euo pipefail
 
-            - name: 📝 Store Path Metadata
-              run: |
-                  mkdir -p .artifact-meta
-                  echo "${{ matrix.package }}" > .artifact-meta/path.txt
+                  artifact_name=$(echo "modified-${{ matrix.package }}" | tr '/' '-' | tr '[:upper:]' '[:lower:]')
+                  echo "name=$artifact_name" >> "$GITHUB_OUTPUT"
 
             - name: 📤 Upload Modified Files
-              uses: actions/upload-artifact@v4
+              uses: grovegs/actions/.github/actions/upload-artifact@v0.1.4
               with:
                   name: ${{ steps.modified_artifact_name.outputs.name }}
-                  path: |
-                      ${{ matrix.package }}/package.json
-                      .artifact-meta/path.txt
+                  path: ${{ matrix.package }}/package.json
+                  retention-days: 1
 
     release_nuget_packages:
         if: fromJSON(inputs.dotnet-projects)[0] != null && needs.pack_dotnet_projects.result == 'success' && inputs.publish-nuget
@@ -340,7 +334,11 @@ jobs:
         steps:
             - name: 📦 Generate Filename
               id: generate_filename
+              shell: bash
               run: |
+                  #!/usr/bin/env bash
+                  set -euo pipefail
+
                   base_filename="${{ needs.shared.outputs.filename }}"
                   path="${{ matrix.project }}"
                   item_name=$(basename "$path")
@@ -356,17 +354,17 @@ jobs:
                       package_name="${base_filename}"
                   fi
 
-                  echo "artifact_name=$artifact_name" >> $GITHUB_OUTPUT
-                  echo "package_name=$package_name" >> $GITHUB_OUTPUT
+                  echo "artifact_name=$artifact_name" >> "$GITHUB_OUTPUT"
+                  echo "package_name=$package_name" >> "$GITHUB_OUTPUT"
 
             - name: 📥 Download Artifact
-              uses: actions/download-artifact@v5
+              uses: grovegs/actions/.github/actions/download-artifact@v0.1.4
               with:
                   name: ${{ steps.generate_filename.outputs.artifact_name }}
                   path: ~/.artifacts
 
             - name: 🚀 Publish NuGet
-              uses: grovegs/actions/.github/actions/publish-nuget@v0.1.3
+              uses: grovegs/actions/.github/actions/publish-nuget@v0.1.4
               with:
                   file: ~/.artifacts/${{ steps.generate_filename.outputs.package_name }}.nupkg
                   api-key: ${{ secrets.nuget-api-key }}
@@ -387,74 +385,59 @@ jobs:
               uses: actions/checkout@v5
 
             - name: 📥 Download Modified Files
-              uses: actions/download-artifact@v5
+              uses: grovegs/actions/.github/actions/download-artifact@v0.1.4
               continue-on-error: true
               with:
-                  pattern: modified-*
-                  path: ~/.modified-files
-
-            - name: 📝 Apply Modified Files
-              run: |
-                  if [ -d ~/.modified-files ]; then
-                      for modified_dir in ~/.modified-files/modified-*; do
-                          if [ -d "$modified_dir" ] && [ -f "$modified_dir/.artifact-meta/path.txt" ]; then
-                              original_path=$(cat "$modified_dir/.artifact-meta/path.txt")
-                              echo "Processing: $original_path"
-
-                              for file in "$modified_dir"/*; do
-                                  if [ -f "$file" ] && [ "$(basename "$(dirname "$file")")" != ".artifact-meta" ]; then
-                                      filename=$(basename "$file")
-                                      if [ "$filename" != "path.txt" ]; then
-                                          target="$original_path/$filename"
-                                          echo "Restoring $filename to $target"
-                                          mkdir -p "$(dirname "$target")"
-                                          cp "$file" "$target"
-                                      fi
-                                  fi
-                              done
-                          fi
-                      done
-                  fi
+                  name: modified-*
 
             - name: 💾 Commit and Push Version Changes
               if: inputs.publish-github
               id: commit_changes
+              shell: bash
               run: |
+                  #!/usr/bin/env bash
+                  set -euo pipefail
+
                   git config user.name "github-actions[bot]"
                   git config user.email "github-actions[bot]@users.noreply.github.com"
                   git add .
 
                   if git diff --cached --quiet; then
-                      echo "has_changes=false" >> $GITHUB_OUTPUT
+                      echo "has_changes=false" >> "$GITHUB_OUTPUT"
                   else
                       git commit -m "chore: release version ${{ needs.shared.outputs.version }} [skip ci]"
-                      git push origin HEAD:${{ github.ref_name }}
-                      echo "has_changes=true" >> $GITHUB_OUTPUT
+                      git push origin HEAD:"${{ github.ref_name }}"
+                      echo "has_changes=true" >> "$GITHUB_OUTPUT"
                   fi
 
             - name: 📥 Download All Artifacts
               if: inputs.publish-github
-              uses: actions/download-artifact@v5
+              uses: grovegs/actions/.github/actions/download-artifact@v0.1.4
               with:
-                  pattern: ${{ needs.shared.outputs.filename }}*
+                  name: ${{ needs.shared.outputs.filename }}*
                   path: ~/.artifacts
-                  merge-multiple: true
 
             - name: 🔍 Find Assets
               if: inputs.publish-github
               id: find_assets
+              shell: bash
               run: |
+                  #!/usr/bin/env bash
+                  set -euo pipefail
+
                   if [ -d ~/.artifacts ]; then
+                    shopt -s nullglob
                     assets=$(find ~/.artifacts -type f \( -name "*.nupkg" -o -name "*.zip" -o -name "*.tgz" \) 2>/dev/null | tr '\n' ' ' || echo "")
+                    shopt -u nullglob
                   else
                     assets=""
                   fi
-                  echo "assets=$assets" >> $GITHUB_OUTPUT
+                  echo "assets=$assets" >> "$GITHUB_OUTPUT"
                   echo "Found assets: $assets"
 
             - name: 🚀 Publish to GitHub
               if: inputs.publish-github
-              uses: grovegs/actions/.github/actions/publish-github@v0.1.3
+              uses: grovegs/actions/.github/actions/publish-github@v0.1.4
               with:
                   title: ${{ inputs.name }} ${{ needs.shared.outputs.version }}
                   version: ${{ needs.shared.outputs.version }}
@@ -464,7 +447,7 @@ jobs:
 
             - name: 📢 Notify Discord Success
               if: success() && inputs.publish-discord
-              uses: grovegs/actions/.github/actions/notify-discord@v0.1.3
+              uses: grovegs/actions/.github/actions/notify-discord@v0.1.4
               with:
                   webhook_url: ${{ secrets.discord-webhook }}
                   title: "✅ ${{ github.event.repository.name }}"
@@ -476,7 +459,7 @@ jobs:
 
             - name: 📢 Notify Discord Failure
               if: failure() && inputs.publish-discord
-              uses: grovegs/actions/.github/actions/notify-discord@v0.1.3
+              uses: grovegs/actions/.github/actions/notify-discord@v0.1.4
               with:
                   webhook_url: ${{ secrets.discord-webhook }}
                   title: "❌ ${{ github.event.repository.name }}"
