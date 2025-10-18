@@ -30,7 +30,7 @@ jobs:
               uses: actions/checkout@v5
 
             - name: 🎨 Format Files
-              uses: grovegs/actions/.github/actions/format-files@v1.0.0
+              uses: grovegs/actions/.github/actions/format-files@v1.0.1
               with:
                   files: ${{ inputs.files }}
 
@@ -47,12 +47,12 @@ jobs:
               uses: actions/checkout@v5
 
             - name: 🔧 Setup .NET
-              uses: grovegs/actions/.github/actions/setup-dotnet@v1.0.0
+              uses: grovegs/actions/.github/actions/setup-dotnet@v1.0.1
               with:
                   global-json-file: ${{ inputs.global-json-file }}
                   cache: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop' }}
 
             - name: 🎨 Format .NET Project
-              uses: grovegs/actions/.github/actions/format-dotnet@v1.0.0
+              uses: grovegs/actions/.github/actions/format-dotnet@v1.0.1
               with:
                   project: ${{ matrix.project }}
