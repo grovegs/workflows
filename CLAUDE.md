@@ -176,3 +176,349 @@ with:
 - GitHub releases include downloadable build artifacts from all successful platform builds
 - Use `tests.yml` to validate workflow changes against sandbox applications
 - Project workflows support mixed engine types (can build both Godot and Unity projects in same release)
+
+## Cross-Platform Compatibility
+
+### macOS bash Compatibility
+
+GitHub Actions macOS runners use bash 3.2.x (from 2006), which lacks many modern bash features. Always write scripts compatible with bash 3.2+.
+
+#### Critical Compatibility Issues
+
+#### ❌ mapfile (bash 4.0+) - NOT available on macOS
+
+```bash
+# ❌ WRONG - Will fail on macOS
+mapfile -t ARRAY <<< "${INPUT}"
+
+# ✅ CORRECT - Works on both Linux and macOS
+declare -a ARRAY
+while IFS= read -r line; do
+  ARRAY+=("${line}")
+done <<< "${INPUT}"
+```
+
+#### ❌ readarray (bash 4.0+) - NOT available on macOS
+
+```bash
+# ❌ WRONG - Will fail on macOS
+readarray -t ARRAY <<< "${INPUT}"
+
+# ✅ CORRECT - Use while-read loop instead
+declare -a ARRAY
+while IFS= read -r line; do
+  ARRAY+=("${line}")
+done <<< "${INPUT}"
+```
+
+#### ❌ Associative arrays (bash 4.0+) - NOT available on macOS
+
+```bash
+# ❌ WRONG - Will fail on macOS
+declare -A MAP
+MAP["key"]="value"
+
+# ✅ CORRECT - Use indexed arrays or alternative approaches
+declare -a KEYS
+declare -a VALUES
+KEYS+=("key")
+VALUES+=("value")
+```
+
+#### ❌ shopt nullglob (bash 4.0+) - NOT available on macOS
+
+```bash
+# ❌ WRONG - Will fail on macOS
+shopt -s nullglob
+files=(*.txt)
+shopt -u nullglob
+
+# ✅ CORRECT - Use find with explicit handling
+files=$(find . -maxdepth 1 -name "*.txt" 2>/dev/null | tr '\n' ' ' || echo "")
+files=$(echo "${files}" | sed 's/[[:space:]]*$//')
+```
+
+#### ❌ ${var@Q} (bash 4.4+) - NOT available on macOS
+
+```bash
+# ❌ WRONG - Will fail on macOS
+echo "${VAR@Q}"
+
+# ✅ CORRECT - Use printf for quoting
+printf '%q\n' "${VAR}"
+```
+
+#### Safe bash 3.2+ Features
+
+#### ✅ Indexed arrays - SAFE to use
+
+```bash
+declare -a ITEMS
+ITEMS+=("item1")
+ITEMS+=("item2")
+echo "${ITEMS[0]}"
+echo "${#ITEMS[@]}"
+```
+
+#### ✅ Command substitution - SAFE to use
+
+```bash
+RESULT=$(command)
+RESULT=`command`  # older style, but works
+```
+
+#### ✅ Parameter expansion - SAFE to use
+
+```bash
+${VAR:-default}
+${VAR#pattern}
+${VAR%pattern}
+${VAR/pattern/replacement}
+${VAR/#pattern/replacement}  # Replace at beginning
+```
+
+#### ✅ Process substitution - SAFE to use
+
+```bash
+while IFS= read -r line; do
+  echo "${line}"
+done < <(command)
+```
+
+### Path Handling Best Practices
+
+#### Using HOME vs Tilde
+
+#### In Shell Scripts - Use `${HOME}`
+
+```bash
+#!/usr/bin/env bash
+
+# ✅ RECOMMENDED - Explicit and reliable
+CACHE_DIR="${HOME}/.cache"
+BUILD_DIR="${HOME}/.local/build"
+
+# ❌ AVOID - Context-dependent expansion
+CACHE_DIR="~/.cache"
+```
+
+#### In YAML Action Inputs - Use `~`
+
+```yaml
+# ✅ CORRECT - Action will expand tilde internally
+- uses: ./.github/actions/upload-artifact
+  with:
+    path: |
+      workspace-files/**
+      ~/.nupkgs/package.nupkg
+```
+
+#### Expanding Tilde in Scripts
+
+```bash
+# When receiving path from user input, expand tilde immediately
+USER_PATH="${USER_INPUT:-}"
+USER_PATH="${USER_PATH/#\~/$HOME}"
+```
+
+#### Why Use ${HOME} in Scripts
+
+1. **Explicit and Clear**: `"${HOME}/.nupkgs"` is immediately obvious
+2. **Consistent Expansion**: Works in all contexts (quotes, assignments, etc.)
+3. **Variable Substitution Safe**: Works with parameter expansion
+4. **POSIX Compliant**: Defined in POSIX standard
+5. **No Context Surprises**: Always expands, regardless of quoting
+
+### Workspace Path Handling
+
+Actions must handle files both inside and outside the workspace properly.
+
+#### Understanding Workspace Boundaries
+
+#### Inside workspace
+
+- Files in `${GITHUB_WORKSPACE}` and subdirectories
+- Source code, configuration files
+- Can use relative paths for metadata tracking
+
+#### Outside workspace
+
+- Build artifacts in `${HOME}/.nupkgs`, `${HOME}/.godot/addons`, `${HOME}/.unity/packages`
+- Temporary files in `${RUNNER_TEMP}`
+- Cached dependencies in `${HOME}/.cache`, `${HOME}/.nuget`
+- Must use absolute paths, no metadata tracking needed
+
+#### Correct Path Handling Pattern
+
+```bash
+#!/usr/bin/env bash
+set -euo pipefail
+
+WORKSPACE="${GITHUB_WORKSPACE}"
+STAGING_DIR="${WORKSPACE}/.staging"
+
+# Expand tilde if present
+path_pattern="${path_pattern/#\~/$HOME}"
+
+for item in ${path_pattern}; do
+  if [ -f "${item}" ]; then
+    ITEM_DIR=$(cd "$(dirname "${item}")" && pwd)
+    ITEM_NAME=$(basename "${item}")
+    ABS_PATH="${ITEM_DIR}/${ITEM_NAME}"
+  elif [ -d "${item}" ]; then
+    ABS_PATH=$(cd "${item}" && pwd)
+  else
+    continue
+  fi
+
+  # Check if file is inside workspace
+  if [[ "${ABS_PATH}" == "${WORKSPACE}"* ]]; then
+    # Inside workspace - preserve directory structure
+    REL_PATH="${ABS_PATH#"${WORKSPACE}"/}"
+    TARGET_DIR="${STAGING_DIR}/$(dirname "${REL_PATH}")"
+    mkdir -p "${TARGET_DIR}"
+    cp -p "${ABS_PATH}" "${STAGING_DIR}/${REL_PATH}"
+    echo "Copied (workspace): ${REL_PATH}"
+  else
+    # Outside workspace - copy to staging root with filename only
+    FILENAME=$(basename "${ABS_PATH}")
+    cp -p "${ABS_PATH}" "${STAGING_DIR}/${FILENAME}"
+    echo "Copied (external): ${FILENAME}"
+  fi
+done
+```
+
+#### Why This Matters
+
+#### Package/Build Actions
+
+- Create artifacts outside workspace (`${HOME}/.nupkgs`, `${HOME}/.godot/addons`, etc.)
+- Keeps workspace clean and prevents accidental commits
+- Artifacts are meant to be uploaded, not tracked in git
+
+#### Upload/Download Actions
+
+- Must handle both workspace and external files
+- Workspace files need path restoration (for modified source files)
+- External files are uploaded as-is (packages, builds)
+
+### Platform-Specific Commands
+
+#### File Statistics
+
+```bash
+# ❌ WRONG - Linux-specific
+FILE_SIZE=$(stat -c%s "${FILE}")
+
+# ✅ CORRECT - Cross-platform
+FILE_SIZE=$(stat -f%z "${FILE}" 2>/dev/null || stat -c%s "${FILE}" 2>/dev/null || echo "unknown")
+```
+
+#### Date Commands
+
+```bash
+# ❌ WRONG - GNU date specific
+DATE=$(date -d "yesterday" +%Y-%m-%d)
+
+# ✅ CORRECT - POSIX compatible
+DATE=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+```
+
+#### sed In-Place Editing
+
+```bash
+# ✅ CORRECT - Portable across Linux and macOS
+sed -i.bak "s/old/new/g" "${FILE}"
+rm -f "${FILE}.bak"
+```
+
+### Testing Compatibility
+
+#### Always test scripts on the target platform
+
+```yaml
+jobs:
+  test-linux:
+    runs-on: ubuntu-latest
+    steps:
+      - run: ./scripts/my_script.sh
+
+  test-macos:
+    runs-on: macos-latest
+    steps:
+      - run: ./scripts/my_script.sh
+```
+
+#### Use shellcheck with POSIX mode
+
+```bash
+# Check for POSIX compatibility issues
+shellcheck -s bash -e SC2039 script.sh
+
+# Or check for bash 3.2 compatibility
+shellcheck -s bash script.sh
+```
+
+### Compatibility Checklist
+
+- [ ] No `mapfile` or `readarray` commands
+- [ ] No associative arrays (`declare -A`)
+- [ ] No `shopt` commands (especially `shopt -s nullglob`)
+- [ ] No bash 4+ features (check with `shellcheck`)
+- [ ] Use `while read` loop for array population
+- [ ] Use `"${HOME}"` in shell scripts, not `~`
+- [ ] Expand tilde from inputs: `path="${path/#\~/$HOME}"`
+- [ ] Handle files both inside and outside workspace
+- [ ] Use portable `stat` command with fallback
+- [ ] Use portable `sed -i.bak` with cleanup
+- [ ] Test on both Ubuntu and macOS runners
+- [ ] Use `#!/usr/bin/env bash` not `#!/bin/bash`
+- [ ] Quote all variables: `"${VAR}"` not `$VAR`
+
+### Common Compatibility Errors and Solutions
+
+| Error                                            | Cause                           | Solution                                         |
+| ------------------------------------------------ | ------------------------------- | ------------------------------------------------ |
+| `mapfile: command not found`                     | bash 3.2 on macOS               | Use `while read` loop                            |
+| `declare: -A: invalid option`                    | Associative arrays (bash 4+)    | Use indexed arrays                               |
+| `shopt: command not found`                       | bash 3.2 on macOS               | Use `find` with explicit handling                |
+| `Skipping item outside workspace`                | File path validation too strict | Handle external paths separately                 |
+| `stat: illegal option -- c`                      | GNU stat on macOS               | Add fallback: `stat -f%z ... \|\| stat -c%s ...` |
+| `line 31: local: can only be used in a function` | `local` at script level         | Use `declare` instead                            |
+| `~: No such file or directory`                   | Tilde not expanded              | Use `"${HOME}"` or expand: `${var/#\~/$HOME}`    |
+
+### Reference: bash Version Features
+
+#### bash 3.2 (macOS default)
+
+- Indexed arrays
+- Basic parameter expansion
+- Process substitution
+- Command substitution
+- Functions with `local` variables
+
+#### bash 4.0+ (NOT on macOS)
+
+- `mapfile`/`readarray`
+- Associative arrays
+- `shopt -s nullglob`
+- `;&` and `;;&` in case statements
+- `**` globstar
+
+#### bash 4.4+ (NOT on macOS)
+
+- `${var@Q}` quoting
+- Enhanced `mapfile` options
+- Parameter transformation operators
+
+**Always target bash 3.2 for maximum compatibility.**
+
+### Summary: Path Handling Quick Reference
+
+| Context                | Best Practice           | Example                         |
+| ---------------------- | ----------------------- | ------------------------------- |
+| Shell script variables | `"${HOME}"`             | `BUILD_DIR="${HOME}/.cache"`    |
+| YAML action inputs     | `~`                     | `path: ~/.nupkgs/package.nupkg` |
+| Expanding input paths  | `${var/#\~/$HOME}`      | `path="${path/#\~/$HOME}"`      |
+| Workspace paths        | `"${GITHUB_WORKSPACE}"` | `SRC="${GITHUB_WORKSPACE}/src"` |
+| Temp paths             | `"${RUNNER_TEMP}"`      | `TMP="${RUNNER_TEMP}/build"`    |
