@@ -4,73 +4,74 @@ on:
     workflow_call:
         inputs:
             name:
-                description: The name of package.
+                description: The name of package
                 required: true
                 type: string
             version-type:
-                description: Specifies the version type (e.g., major, minor, patch) for the build.
+                description: Specifies the version type such as major, minor, or patch for the build
                 required: true
                 type: string
             dotnet-projects:
-                description: Array of .NET project paths to build and package (e.g., ["src/Core", "src/Godot"])
+                description: Array of .NET project paths to build and package such as ["src/Core", "src/Godot"]
                 required: false
                 type: string
                 default: "[]"
             godot-addons:
-                description: Array of Godot addon paths to package (e.g., ["addons/plugin1", "addons/plugin2"])
+                description: Array of Godot addon paths to package such as ["addons/plugin1", "addons/plugin2"]
                 required: false
                 type: string
                 default: "[]"
             unity-packages:
-                description: Array of Unity package paths to package (e.g., ["Packages/com.example.package1", "Packages/com.example.package2"])
+                description: Array of Unity package paths to package such as ["Packages/com.example.package1", "Packages/com.example.package2"]
                 required: false
                 type: string
                 default: "[]"
             global-json-file:
-                description: The relative path to the `global.json` file to extract .NET version.
+                description: The relative path to the global.json file to extract .NET version
                 required: false
                 type: string
                 default: ""
             directory-build-props:
-                description: The relative path to the `Directory.Build.props` file to set version.
+                description: The relative path to the Directory.Build.props file to set version
                 required: false
                 type: string
                 default: ""
             publish-github:
-                description: If true, publish release to GitHub.
+                description: If true, publish release to GitHub
                 required: false
                 type: boolean
                 default: true
             publish-nuget:
-                description: If true, publish packages to NuGet.
+                description: If true, publish packages to NuGet
                 required: false
                 type: boolean
                 default: true
             publish-discord:
-                description: If true, send Discord notifications.
+                description: If true, send Discord notifications
                 required: false
                 type: boolean
                 default: true
 
         secrets:
             github-token:
-                description: The GitHub token for authentication.
+                description: The GitHub token for authentication
                 required: true
             nuget-api-key:
-                description: NuGet API key used for authenticating and publishing the package.
+                description: NuGet API key used for authenticating and publishing the package
                 required: false
             discord-webhook:
-                description: Discord webhook URL for sending notifications.
+                description: Discord webhook URL for sending notifications
                 required: false
 
 jobs:
     shared:
+        name: Prepare Release
         runs-on: ubuntu-latest
         outputs:
-            version: ${{ steps.bump_version.outputs.next-version }}
-            changelog-plain: ${{ steps.generate_changelog.outputs.changelog-plain }}
-            changelog-markdown: ${{ steps.generate_changelog.outputs.changelog-markdown }}
-            filename: ${{ steps.generate_filename.outputs.filename }}
+            version: ${{ steps.bump-version.outputs.next-version }}
+            changelog-plain: ${{ steps.generate-changelog.outputs.changelog-plain }}
+            changelog-markdown: ${{ steps.generate-changelog.outputs.changelog-markdown }}
+            filename: ${{ steps.generate-filename.outputs.filename }}
 
         steps:
             - name: 📂 Checkout Code
@@ -79,57 +80,30 @@ jobs:
                   fetch-depth: 0
 
             - name: 🆙 Bump Version
-              id: bump_version
-              uses: grovegs/actions/.github/actions/bump-version@v0.1.6
+              id: bump-version
+              uses: grovegs/actions/.github/actions/bump-version@v1.0.1
               with:
                   version-type: ${{ inputs.version-type }}
 
             - name: 📝 Generate Changelog
-              id: generate_changelog
-              uses: grovegs/actions/.github/actions/generate-changelog@v0.1.6
+              id: generate-changelog
+              uses: grovegs/actions/.github/actions/generate-changelog@v1.0.1
               with:
-                  next-version: ${{ steps.bump_version.outputs.next-version }}
+                  next-version: ${{ steps.bump-version.outputs.next-version }}
 
             - name: 📦 Generate Filename
-              id: generate_filename
+              id: generate-filename
               shell: bash
               run: |
                   #!/usr/bin/env bash
                   set -euo pipefail
 
                   filename=$(echo "${{ inputs.name }}" | sed -E 's/([[:space:]]|_)/-/g; s/([a-z])([A-Z])/\1-\2/g' | tr '[:upper:]' '[:lower:]')
-                  filename="${filename}-${{ steps.bump_version.outputs.next-version }}"
-                  echo "filename=$filename" >> "$GITHUB_OUTPUT"
+                  filename="${filename}-${{ steps.bump-version.outputs.next-version }}"
+                  echo "filename=${filename}" >> "${GITHUB_OUTPUT}"
 
-            - name: 🔧 Update Directory.Build.props Version
-              if: fromJSON(inputs.dotnet-projects)[0] != null && inputs.directory-build-props != ''
-              shell: bash
-              run: |
-                  #!/usr/bin/env bash
-                  set -euo pipefail
-
-                  file="${{ inputs.directory-build-props }}"
-                  version="${{ steps.bump_version.outputs.next-version }}"
-
-                  if [ -f "$file" ]; then
-                      sed -i.bak "s|<Version>.*</Version>|<Version>$version</Version>|g" "$file"
-                      sed -i.bak "s|<AssemblyVersion>.*</AssemblyVersion>|<AssemblyVersion>$version</AssemblyVersion>|g" "$file"
-                      sed -i.bak "s|<FileVersion>.*</FileVersion>|<FileVersion>$version</FileVersion>|g" "$file"
-                      rm -f "$file.bak"
-                      echo "Updated version in $file to $version"
-                  else
-                      echo "Warning: $file not found"
-                  fi
-
-            - name: 📤 Upload Directory.Build.props
-              if: fromJSON(inputs.dotnet-projects)[0] != null && inputs.directory-build-props != ''
-              uses: grovegs/actions/.github/actions/upload-artifact@v0.1.6
-              with:
-                  name: modified-dotnet-version
-                  path: ${{ inputs.directory-build-props }}
-                  retention-days: 1
-
-    pack_dotnet_projects:
+    pack-dotnet-projects:
+        name: Pack .NET Project
         if: fromJSON(inputs.dotnet-projects)[0] != null
         needs: shared
         runs-on: ubuntu-latest
@@ -141,27 +115,21 @@ jobs:
             - name: 📂 Checkout Code
               uses: actions/checkout@v5
 
-            - name: 📥 Download Directory.Build.props
-              if: inputs.directory-build-props != ''
-              uses: grovegs/actions/.github/actions/download-artifact@v0.1.6
-              with:
-                  name: modified-dotnet-version
-
-            - name: ⚙️ Setup Dotnet
-              uses: grovegs/actions/.github/actions/setup-dotnet@v0.1.6
+            - name: 🔧 Setup .NET
+              uses: grovegs/actions/.github/actions/setup-dotnet@v1.0.1
               with:
                   global-json-file: ${{ inputs.global-json-file }}
                   cache: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop' }}
 
             - name: 🏗️ Build .NET Project
-              uses: grovegs/actions/.github/actions/build-dotnet@v0.1.6
+              uses: grovegs/actions/.github/actions/build-dotnet@v1.0.1
               with:
                   project: ${{ matrix.project }}
                   configuration: Release
                   version: ${{ needs.shared.outputs.version }}
 
             - name: 📦 Generate Filename
-              id: generate_filename
+              id: generate-filename
               shell: bash
               run: |
                   #!/usr/bin/env bash
@@ -169,39 +137,49 @@ jobs:
 
                   base_filename="${{ needs.shared.outputs.filename }}"
                   path="${{ matrix.project }}"
-                  item_name=$(basename "$path")
+                  item_name=$(basename "${path}")
 
-                  sanitized_path=$(echo "$path" | tr '/' '-' | tr '[:upper:]' '[:lower:]')
+                  sanitized_path=$(echo "${path}" | tr '/' '-' | tr '[:upper:]' '[:lower:]')
                   artifact_name="${base_filename}-${sanitized_path}"
 
-                  dot_count=$(echo "$item_name" | tr -cd '.' | wc -c)
-                  if [ "$dot_count" -ge 2 ]; then
-                      platform=$(echo "$item_name" | sed 's/.*\.//' | tr '[:upper:]' '[:lower:]')
+                  dot_count=$(echo "${item_name}" | tr -cd '.' | wc -c)
+                  if [ "${dot_count}" -ge 2 ]; then
+                      platform=$(echo "${item_name}" | sed 's/.*\.//' | tr '[:upper:]' '[:lower:]')
                       package_name="${base_filename}-${platform}"
                   else
                       package_name="${base_filename}"
                   fi
 
-                  echo "artifact_name=$artifact_name" >> "$GITHUB_OUTPUT"
-                  echo "package_name=$package_name" >> "$GITHUB_OUTPUT"
+                  echo "artifact_name=${artifact_name}" >> "${GITHUB_OUTPUT}"
+                  echo "package_name=${package_name}" >> "${GITHUB_OUTPUT}"
 
             - name: 📦 Pack NuGet
-              id: pack_nuget
-              uses: grovegs/actions/.github/actions/pack-dotnet@v0.1.6
+              id: pack-nuget
+              uses: grovegs/actions/.github/actions/pack-dotnet@v1.0.1
               with:
                   project: ${{ matrix.project }}
                   configuration: Release
                   version: ${{ needs.shared.outputs.version }}
-                  filename: ${{ steps.generate_filename.outputs.package_name }}
+                  name: ${{ steps.generate-filename.outputs.package_name }}
+                  directory-build-props: ${{ inputs.directory-build-props }}
 
             - name: 📤 Upload Artifact
-              uses: grovegs/actions/.github/actions/upload-artifact@v0.1.6
+              uses: grovegs/actions/.github/actions/upload-artifact@v1.0.1
               with:
-                  name: ${{ steps.generate_filename.outputs.artifact_name }}
-                  path: ${{ steps.pack_nuget.outputs.file }}
+                  name: ${{ steps.generate-filename.outputs.artifact_name }}
+                  path: ${{ steps.pack-nuget.outputs.package }}
                   retention-days: 7
 
-    pack_godot_addons:
+            - name: 📤 Upload Modified Files
+              if: steps.pack-nuget.outputs.modified-files != ''
+              uses: grovegs/actions/.github/actions/upload-artifact@v1.0.1
+              with:
+                  name: modified-${{ steps.generate-filename.outputs.artifact_name }}
+                  path: ${{ steps.pack-nuget.outputs.modified-files }}
+                  retention-days: 1
+
+    pack-godot-addons:
+        name: Pack Godot Addon
         if: fromJSON(inputs.godot-addons)[0] != null
         needs: shared
         runs-on: macos-latest
@@ -214,7 +192,7 @@ jobs:
               uses: actions/checkout@v5
 
             - name: 📦 Generate Filename
-              id: generate_filename
+              id: generate-filename
               shell: bash
               run: |
                   #!/usr/bin/env bash
@@ -223,46 +201,37 @@ jobs:
                   base_filename="${{ needs.shared.outputs.filename }}"
                   path="${{ matrix.addon }}"
 
-                  sanitized_path=$(echo "$path" | tr '/' '-' | tr '[:upper:]' '[:lower:]')
+                  sanitized_path=$(echo "${path}" | tr '/' '-' | tr '[:upper:]' '[:lower:]')
                   artifact_name="${base_filename}-${sanitized_path}"
                   package_name="${base_filename}-godot-addon"
 
-                  echo "artifact_name=$artifact_name" >> "$GITHUB_OUTPUT"
-                  echo "package_name=$package_name" >> "$GITHUB_OUTPUT"
+                  echo "artifact_name=${artifact_name}" >> "${GITHUB_OUTPUT}"
+                  echo "package_name=${package_name}" >> "${GITHUB_OUTPUT}"
 
             - name: 📦 Pack Godot Addon
-              id: pack_addon
-              uses: grovegs/actions/.github/actions/pack-godot-addon@v0.1.6
+              id: pack-addon
+              uses: grovegs/actions/.github/actions/pack-godot-addon@v1.0.1
               with:
                   addon: ${{ matrix.addon }}
                   version: ${{ needs.shared.outputs.version }}
-                  filename: ${{ steps.generate_filename.outputs.package_name }}
+                  filename: ${{ steps.generate-filename.outputs.package_name }}
 
             - name: 📤 Upload Artifact
-              uses: grovegs/actions/.github/actions/upload-artifact@v0.1.6
+              uses: grovegs/actions/.github/actions/upload-artifact@v1.0.1
               with:
-                  name: ${{ steps.generate_filename.outputs.artifact_name }}
-                  path: ${{ steps.pack_addon.outputs.file }}
+                  name: ${{ steps.generate-filename.outputs.artifact_name }}
+                  path: ${{ steps.pack-addon.outputs.package }}
                   retention-days: 7
 
-            - name: 📦 Generate Modified Artifact Name
-              id: modified_artifact_name
-              shell: bash
-              run: |
-                  #!/usr/bin/env bash
-                  set -euo pipefail
-
-                  artifact_name=$(echo "modified-${{ matrix.addon }}" | tr '/' '-' | tr '[:upper:]' '[:lower:]')
-                  echo "name=$artifact_name" >> "$GITHUB_OUTPUT"
-
             - name: 📤 Upload Modified Files
-              uses: grovegs/actions/.github/actions/upload-artifact@v0.1.6
+              uses: grovegs/actions/.github/actions/upload-artifact@v1.0.1
               with:
-                  name: ${{ steps.modified_artifact_name.outputs.name }}
-                  path: ${{ matrix.addon }}/plugin.cfg
+                  name: modified-${{ steps.generate-filename.outputs.artifact_name }}
+                  path: ${{ steps.pack-addon.outputs.modified-files }}
                   retention-days: 1
 
-    pack_unity_packages:
+    pack-unity-packages:
+        name: Pack Unity Package
         if: fromJSON(inputs.unity-packages)[0] != null
         needs: shared
         runs-on: ubuntu-latest
@@ -275,7 +244,7 @@ jobs:
               uses: actions/checkout@v5
 
             - name: 📦 Generate Filename
-              id: generate_filename
+              id: generate-filename
               shell: bash
               run: |
                   #!/usr/bin/env bash
@@ -284,48 +253,39 @@ jobs:
                   base_filename="${{ needs.shared.outputs.filename }}"
                   path="${{ matrix.package }}"
 
-                  sanitized_path=$(echo "$path" | tr '/' '-' | tr '[:upper:]' '[:lower:]')
+                  sanitized_path=$(echo "${path}" | tr '/' '-' | tr '[:upper:]' '[:lower:]')
                   artifact_name="${base_filename}-${sanitized_path}"
                   package_name="${base_filename}-unity-package"
 
-                  echo "artifact_name=$artifact_name" >> "$GITHUB_OUTPUT"
-                  echo "package_name=$package_name" >> "$GITHUB_OUTPUT"
+                  echo "artifact_name=${artifact_name}" >> "${GITHUB_OUTPUT}"
+                  echo "package_name=${package_name}" >> "${GITHUB_OUTPUT}"
 
             - name: 📦 Pack Unity Package
-              id: pack_package
-              uses: grovegs/actions/.github/actions/pack-unity-package@v0.1.6
+              id: pack-package
+              uses: grovegs/actions/.github/actions/pack-unity-package@v1.0.1
               with:
                   package: ${{ matrix.package }}
                   version: ${{ needs.shared.outputs.version }}
-                  filename: ${{ steps.generate_filename.outputs.package_name }}
+                  filename: ${{ steps.generate-filename.outputs.package_name }}
 
             - name: 📤 Upload Artifact
-              uses: grovegs/actions/.github/actions/upload-artifact@v0.1.6
+              uses: grovegs/actions/.github/actions/upload-artifact@v1.0.1
               with:
-                  name: ${{ steps.generate_filename.outputs.artifact_name }}
-                  path: ${{ steps.pack_package.outputs.file }}
+                  name: ${{ steps.generate-filename.outputs.artifact_name }}
+                  path: ${{ steps.pack-package.outputs.package }}
                   retention-days: 7
 
-            - name: 📦 Generate Modified Artifact Name
-              id: modified_artifact_name
-              shell: bash
-              run: |
-                  #!/usr/bin/env bash
-                  set -euo pipefail
-
-                  artifact_name=$(echo "modified-${{ matrix.package }}" | tr '/' '-' | tr '[:upper:]' '[:lower:]')
-                  echo "name=$artifact_name" >> "$GITHUB_OUTPUT"
-
             - name: 📤 Upload Modified Files
-              uses: grovegs/actions/.github/actions/upload-artifact@v0.1.6
+              uses: grovegs/actions/.github/actions/upload-artifact@v1.0.1
               with:
-                  name: ${{ steps.modified_artifact_name.outputs.name }}
-                  path: ${{ matrix.package }}/package.json
+                  name: modified-${{ steps.generate-filename.outputs.artifact_name }}
+                  path: ${{ steps.pack-package.outputs.modified-files }}
                   retention-days: 1
 
-    release_nuget_packages:
-        if: fromJSON(inputs.dotnet-projects)[0] != null && needs.pack_dotnet_projects.result == 'success' && inputs.publish-nuget
-        needs: [shared, pack_dotnet_projects]
+    release-nuget-packages:
+        name: Publish to NuGet
+        if: fromJSON(inputs.dotnet-projects)[0] != null && needs.pack-dotnet-projects.result == 'success' && inputs.publish-nuget
+        needs: [shared, pack-dotnet-projects]
         runs-on: ubuntu-latest
         strategy:
             matrix:
@@ -333,7 +293,7 @@ jobs:
 
         steps:
             - name: 📦 Generate Filename
-              id: generate_filename
+              id: generate-filename
               shell: bash
               run: |
                   #!/usr/bin/env bash
@@ -341,42 +301,43 @@ jobs:
 
                   base_filename="${{ needs.shared.outputs.filename }}"
                   path="${{ matrix.project }}"
-                  item_name=$(basename "$path")
+                  item_name=$(basename "${path}")
 
-                  sanitized_path=$(echo "$path" | tr '/' '-' | tr '[:upper:]' '[:lower:]')
+                  sanitized_path=$(echo "${path}" | tr '/' '-' | tr '[:upper:]' '[:lower:]')
                   artifact_name="${base_filename}-${sanitized_path}"
 
-                  dot_count=$(echo "$item_name" | tr -cd '.' | wc -c)
-                  if [ "$dot_count" -ge 2 ]; then
-                      platform=$(echo "$item_name" | sed 's/.*\.//' | tr '[:upper:]' '[:lower:]')
+                  dot_count=$(echo "${item_name}" | tr -cd '.' | wc -c)
+                  if [ "${dot_count}" -ge 2 ]; then
+                      platform=$(echo "${item_name}" | sed 's/.*\.//' | tr '[:upper:]' '[:lower:]')
                       package_name="${base_filename}-${platform}"
                   else
                       package_name="${base_filename}"
                   fi
 
-                  echo "artifact_name=$artifact_name" >> "$GITHUB_OUTPUT"
-                  echo "package_name=$package_name" >> "$GITHUB_OUTPUT"
+                  echo "artifact_name=${artifact_name}" >> "${GITHUB_OUTPUT}"
+                  echo "package_name=${package_name}" >> "${GITHUB_OUTPUT}"
 
             - name: 📥 Download Artifact
-              uses: grovegs/actions/.github/actions/download-artifact@v0.1.6
+              uses: grovegs/actions/.github/actions/download-artifact@v1.0.1
               with:
-                  name: ${{ steps.generate_filename.outputs.artifact_name }}
-                  path: ~/.artifacts
+                  name: ${{ steps.generate-filename.outputs.artifact_name }}
+                  path: packages
 
             - name: 🚀 Publish NuGet
-              uses: grovegs/actions/.github/actions/publish-nuget@v0.1.6
+              uses: grovegs/actions/.github/actions/publish-nuget@v1.0.1
               with:
-                  file: ~/.artifacts/${{ steps.generate_filename.outputs.package_name }}.nupkg
+                  file: packages/${{ steps.generate-filename.outputs.package_name }}.nupkg
                   api-key: ${{ secrets.nuget-api-key }}
 
-    release_github:
-        if: always() && needs.shared.result == 'success' && (needs.pack_dotnet_projects.result == 'success' || needs.pack_godot_addons.result == 'success' || needs.pack_unity_packages.result == 'success')
+    release-github:
+        name: Publish to GitHub
+        if: always() && needs.shared.result == 'success' && (needs.pack-dotnet-projects.result == 'success' || needs.pack-godot-addons.result == 'success' || needs.pack-unity-packages.result == 'success')
         needs:
             [
                 shared,
-                pack_dotnet_projects,
-                pack_godot_addons,
-                pack_unity_packages,
+                pack-dotnet-projects,
+                pack-godot-addons,
+                pack-unity-packages,
             ]
         runs-on: ubuntu-latest
 
@@ -385,14 +346,14 @@ jobs:
               uses: actions/checkout@v5
 
             - name: 📥 Download Modified Files
-              uses: grovegs/actions/.github/actions/download-artifact@v0.1.6
+              uses: grovegs/actions/.github/actions/download-artifact@v1.0.1
               continue-on-error: true
               with:
-                  name: modified-*
+                  pattern: modified-*
 
             - name: 💾 Commit and Push Version Changes
               if: inputs.publish-github
-              id: commit_changes
+              id: commit-changes
               shell: bash
               run: |
                   #!/usr/bin/env bash
@@ -403,54 +364,53 @@ jobs:
                   git add .
 
                   if git diff --cached --quiet; then
-                      echo "has_changes=false" >> "$GITHUB_OUTPUT"
+                      echo "has_changes=false" >> "${GITHUB_OUTPUT}"
                   else
                       git commit -m "chore: release version ${{ needs.shared.outputs.version }} [skip ci]"
                       git push origin HEAD:"${{ github.ref_name }}"
-                      echo "has_changes=true" >> "$GITHUB_OUTPUT"
+                      echo "has_changes=true" >> "${GITHUB_OUTPUT}"
                   fi
 
             - name: 📥 Download All Artifacts
               if: inputs.publish-github
-              uses: grovegs/actions/.github/actions/download-artifact@v0.1.6
+              uses: grovegs/actions/.github/actions/download-artifact@v1.0.1
               with:
-                  name: ${{ needs.shared.outputs.filename }}*
-                  path: ~/.artifacts
+                  pattern: ${{ needs.shared.outputs.filename }}*
+                  path: packages
 
             - name: 🔍 Find Assets
               if: inputs.publish-github
-              id: find_assets
+              id: find-assets
               shell: bash
               run: |
                   #!/usr/bin/env bash
                   set -euo pipefail
 
-                  if [ -d ~/.artifacts ]; then
-                    shopt -s nullglob
-                    assets=$(find ~/.artifacts -type f \( -name "*.nupkg" -o -name "*.zip" -o -name "*.tgz" \) 2>/dev/null | tr '\n' ' ' || echo "")
-                    shopt -u nullglob
+                  if [ -d packages ]; then
+                    assets=$(find packages -type f \( -name "*.nupkg" -o -name "*.zip" -o -name "*.tgz" \) 2>/dev/null | tr '\n' ' ' || echo "")
+                    assets=$(echo "${assets}" | sed 's/[[:space:]]*$//')
                   else
                     assets=""
                   fi
-                  echo "assets=$assets" >> "$GITHUB_OUTPUT"
-                  echo "Found assets: $assets"
+                  echo "assets=${assets}" >> "${GITHUB_OUTPUT}"
+                  echo "Found assets: ${assets}"
 
             - name: 🚀 Publish to GitHub
               if: inputs.publish-github
-              uses: grovegs/actions/.github/actions/publish-github@v0.1.6
+              uses: grovegs/actions/.github/actions/publish-github@v1.0.1
               with:
                   title: ${{ inputs.name }} ${{ needs.shared.outputs.version }}
                   version: ${{ needs.shared.outputs.version }}
                   changelog: ${{ needs.shared.outputs.changelog-markdown }}
                   github-token: ${{ secrets.github-token }}
-                  assets: ${{ steps.find_assets.outputs.assets }}
+                  assets: ${{ steps.find-assets.outputs.assets }}
 
             - name: 📢 Notify Discord Success
               if: success() && inputs.publish-discord
-              uses: grovegs/actions/.github/actions/notify-discord@v0.1.6
+              uses: grovegs/actions/.github/actions/notify-discord@v1.0.1
               with:
-                  webhook_url: ${{ secrets.discord-webhook }}
-                  title: "✅ ${{ github.event.repository.name }}"
+                  webhook-url: ${{ secrets.discord-webhook }}
+                  title: ✅ ${{ github.event.repository.name }}
                   description: |
                       ${{ needs.shared.outputs.changelog-markdown }}
 
@@ -459,10 +419,10 @@ jobs:
 
             - name: 📢 Notify Discord Failure
               if: failure() && inputs.publish-discord
-              uses: grovegs/actions/.github/actions/notify-discord@v0.1.6
+              uses: grovegs/actions/.github/actions/notify-discord@v1.0.1
               with:
-                  webhook_url: ${{ secrets.discord-webhook }}
-                  title: "❌ ${{ github.event.repository.name }}"
+                  webhook-url: ${{ secrets.discord-webhook }}
+                  title: ❌ ${{ github.event.repository.name }}
                   description: |
                       Release publication failed.
 

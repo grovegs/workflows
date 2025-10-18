@@ -3,37 +3,38 @@ name: 🧪 Test Package
 on:
     workflow_call:
         inputs:
-            dotnet-tests:
-                description: Array of .NET test project paths to test (e.g., ["tests/Core.Tests", "tests/Godot.Tests"])
+            dotnet-projects:
+                description: Array of .NET test project paths to test such as ["tests/Core.Tests", "tests/Godot.Tests"]
                 required: false
                 type: string
                 default: "[]"
             global-json-file:
-                description: The relative path to the `global.json` file to extract .NET version.
+                description: The relative path to the global.json file to extract .NET version
                 required: false
                 type: string
                 default: ""
 
 jobs:
-    test_dotnet_projects:
-        if: fromJSON(inputs.dotnet-tests)[0] != null
+    test-dotnet-projects:
+        name: Test .NET Project
+        if: fromJSON(inputs.dotnet-projects)[0] != null
         runs-on: ubuntu-latest
         strategy:
             matrix:
-                project: ${{ fromJSON(inputs.dotnet-tests) }}
+                project: ${{ fromJSON(inputs.dotnet-projects) }}
 
         steps:
             - name: 📂 Checkout Code
               uses: actions/checkout@v5
 
-            - name: ⚙️ Setup Dotnet
-              uses: grovegs/actions/.github/actions/setup-dotnet@v0.1.3
+            - name: 🔧 Setup .NET
+              uses: grovegs/actions/.github/actions/setup-dotnet@v1.0.1
               with:
                   global-json-file: ${{ inputs.global-json-file }}
                   cache: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop' }}
 
-            - name: ✅ Test .NET Project
-              uses: grovegs/actions/.github/actions/test-dotnet@v0.1.3
+            - name: 🧪 Test .NET Project
+              uses: grovegs/actions/.github/actions/test-dotnet@v1.0.1
               with:
                   project: ${{ matrix.project }}
                   configuration: Release

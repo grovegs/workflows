@@ -1,26 +1,27 @@
-name: 🔍 Format Project
+name: 🎨 Format Project
 
 on:
     workflow_call:
         inputs:
             files:
-                description: File patterns to format using Prettier (e.g., "**/*.{yml,yaml,json,md,js,ts,css,html,sh}")
+                description: File patterns to format using Prettier such as **/*.{yml,yaml,json,md,sh}
                 required: false
                 type: string
                 default: ""
             dotnet-projects:
-                description: Array of .NET project paths to format (e.g., ["src/Core", "src/Godot"])
+                description: Array of .NET project paths to format such as ["src/Core", "src/Godot"]
                 required: false
                 type: string
                 default: "[]"
             global-json-file:
-                description: The relative path to the `global.json` file to extract .NET version.
+                description: The relative path to the global.json file to extract .NET version
                 required: false
                 type: string
                 default: ""
 
 jobs:
-    format_files:
+    format-files:
+        name: Format Files
         if: inputs.files != ''
         runs-on: ubuntu-latest
 
@@ -28,12 +29,13 @@ jobs:
             - name: 📂 Checkout Code
               uses: actions/checkout@v5
 
-            - name: 🔍 Format Files
-              uses: grovegs/actions/.github/actions/format-files@v0.1.3
+            - name: 🎨 Format Files
+              uses: grovegs/actions/.github/actions/format-files@v1.0.1
               with:
                   files: ${{ inputs.files }}
 
-    format_dotnet_projects:
+    format-dotnet-projects:
+        name: Format .NET Project
         if: fromJSON(inputs.dotnet-projects)[0] != null
         runs-on: ubuntu-latest
         strategy:
@@ -44,13 +46,13 @@ jobs:
             - name: 📂 Checkout Code
               uses: actions/checkout@v5
 
-            - name: ⚙️ Setup Dotnet
-              uses: grovegs/actions/.github/actions/setup-dotnet@v0.1.3
+            - name: 🔧 Setup .NET
+              uses: grovegs/actions/.github/actions/setup-dotnet@v1.0.1
               with:
                   global-json-file: ${{ inputs.global-json-file }}
                   cache: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop' }}
 
-            - name: 🔍 Format .NET Project
-              uses: grovegs/actions/.github/actions/format-dotnet@v0.1.3
+            - name: 🎨 Format .NET Project
+              uses: grovegs/actions/.github/actions/format-dotnet@v1.0.1
               with:
                   project: ${{ matrix.project }}
