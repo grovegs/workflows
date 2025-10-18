@@ -387,9 +387,8 @@ jobs:
                   set -euo pipefail
 
                   if [ -d packages ]; then
-                    shopt -s nullglob
                     assets=$(find packages -type f \( -name "*.nupkg" -o -name "*.zip" -o -name "*.tgz" \) 2>/dev/null | tr '\n' ' ' || echo "")
-                    shopt -u nullglob
+                    assets=$(echo "${assets}" | sed 's/[[:space:]]*$//')
                   else
                     assets=""
                   fi
