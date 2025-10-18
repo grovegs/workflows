@@ -18,7 +18,7 @@ jobs:
         name: Test Package Workflows
         uses: ./.github/workflows/package-tests.yml
         with:
-            dotnet-tests: '["sandbox/ConsoleApplication"]'
+            dotnet-projects: '["sandbox/ConsoleApplication"]'
             global-json-file: sandbox/ConsoleApplication/global.json
 
     test-godot-project-tests:
@@ -33,7 +33,6 @@ jobs:
         uses: ./.github/workflows/project-tests.yml
         with:
             unity-projects: '["sandbox/UnityApplication"]'
-            global-json-file: sandbox/UnityApplication/global.json
 
     test-package-format:
         name: Test Package Format
@@ -43,7 +42,7 @@ jobs:
             global-json-file: sandbox/ConsoleApplication/global.json
 
     test-project-format:
-        name: Test Godot Project Format
+        name: Test Project Format
         uses: ./.github/workflows/project-format.yml
         with:
             dotnet-projects: '["sandbox/ConsoleApplication"]'
