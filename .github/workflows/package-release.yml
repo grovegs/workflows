@@ -40,17 +40,17 @@ on:
                 description: If true, publish release to GitHub
                 required: false
                 type: boolean
-                default: true
+                default: false
             publish-nuget:
                 description: If true, publish packages to NuGet
                 required: false
                 type: boolean
-                default: true
+                default: false
             publish-discord:
                 description: If true, send Discord notifications
                 required: false
                 type: boolean
-                default: true
+                default: false
 
         secrets:
             github-token:

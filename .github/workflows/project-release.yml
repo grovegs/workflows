@@ -49,22 +49,22 @@ on:
                 description: If true, publish release to GitHub
                 required: false
                 type: boolean
-                default: true
+                default: false
             publish-firebase:
                 description: If true, publish builds to Firebase
                 required: false
                 type: boolean
-                default: true
+                default: false
             publish-testflight:
                 description: If true, publish iOS builds to TestFlight
                 required: false
                 type: boolean
-                default: true
+                default: false
             publish-discord:
                 description: If true, send Discord notifications
                 required: false
                 type: boolean
-                default: true
+                default: false
         secrets:
             github-token:
                 description: The GitHub token for authentication
