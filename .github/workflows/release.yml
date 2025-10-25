@@ -17,7 +17,7 @@ permissions:
     contents: write
 
 jobs:
-    shared:
+    prepare:
         name: Prepare Release
         runs-on: ubuntu-latest
         outputs:
@@ -44,7 +44,7 @@ jobs:
 
     release-github:
         name: Publish to GitHub
-        needs: [shared]
+        needs: [prepare]
         runs-on: ubuntu-latest
 
         steps:
@@ -54,9 +54,9 @@ jobs:
             - name: 🚀 Publish to GitHub
               uses: grovegs/actions/.github/actions/publish-github@v1.0.1
               with:
-                  title: Release v${{ needs.shared.outputs.version }}
-                  version: v${{ needs.shared.outputs.version }}
-                  changelog: ${{ needs.shared.outputs.changelog-markdown }}
+                  title: Release v${{ needs.prepare.outputs.version }}
+                  version: v${{ needs.prepare.outputs.version }}
+                  changelog: ${{ needs.prepare.outputs.changelog-markdown }}
                   github-token: ${{ secrets.GITHUB_TOKEN }}
 
             - name: 📢 Notify Discord Success
@@ -66,9 +66,9 @@ jobs:
                   webhook-url: ${{ secrets.DISCORD_WEBHOOK }}
                   title: ✅ ${{ github.event.repository.name }}
                   description: |
-                      ${{ needs.shared.outputs.changelog-markdown }}
+                      ${{ needs.prepare.outputs.changelog-markdown }}
 
-                      [View Release](${{ github.server_url }}/${{ github.repository }}/releases/tag/v${{ needs.shared.outputs.version }})
+                      [View Release](${{ github.server_url }}/${{ github.repository }}/releases/tag/v${{ needs.prepare.outputs.version }})
                   color: "3066993"
 
             - name: 📢 Notify Discord Failure
