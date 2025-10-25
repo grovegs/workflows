@@ -11,6 +11,11 @@ on:
                 description: Specifies the version type such as major, minor, or patch for the build
                 required: true
                 type: string
+            global-json-file:
+                description: The relative path to the global.json file to extract .NET and Godot version
+                required: false
+                type: string
+                default: ""
             godot-project:
                 description: Path to the Godot project containing the project.godot file
                 required: false
@@ -21,11 +26,6 @@ on:
                 required: false
                 type: string
                 default: "Default"
-            global-json-file:
-                description: The relative path to the global.json file to extract .NET and Godot version
-                required: false
-                type: string
-                default: ""
             unity-project:
                 description: Path to the Unity project containing the ProjectSettings folder
                 required: false
@@ -36,6 +36,11 @@ on:
                 required: false
                 type: string
                 default: "Default"
+            ios-export-method:
+                description: The iOS export method (app-store, ad-hoc, development, enterprise)
+                required: false
+                type: string
+                default: "ad-hoc"
             build-android:
                 description: Flag to enable or disable the Android build
                 required: false
@@ -46,11 +51,6 @@ on:
                 required: false
                 default: true
                 type: boolean
-            ios-export-method:
-                description: The iOS export method (app-store, ad-hoc, development, enterprise)
-                required: false
-                type: string
-                default: "ad-hoc"
             publish-github:
                 description: If true, publish release to GitHub
                 required: false
