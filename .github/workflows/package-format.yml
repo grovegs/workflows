@@ -13,6 +13,11 @@ on:
                 required: false
                 type: string
                 default: ""
+            dotnet-test-project:
+                description: Path to the .NET test project to format such as "tests/Core.Tests"
+                required: false
+                type: string
+                default: ""
             global-json-file:
                 description: The relative path to the global.json file to extract .NET version
                 required: false
@@ -53,3 +58,23 @@ jobs:
               uses: grovegs/actions/.github/actions/format-dotnet@v1.0.1
               with:
                   project: ${{ inputs.dotnet-project }}
+
+    format-dotnet-test:
+        name: Format .NET Test
+        if: inputs.dotnet-test-project != ''
+        runs-on: ubuntu-latest
+
+        steps:
+            - name: 📂 Checkout Code
+              uses: actions/checkout@v5
+
+            - name: 🔧 Setup .NET
+              uses: grovegs/actions/.github/actions/setup-dotnet@v1.0.1
+              with:
+                  global-json-file: ${{ inputs.global-json-file }}
+                  cache: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop' }}
+
+            - name: 🎨 Format .NET Test Project
+              uses: grovegs/actions/.github/actions/format-dotnet@v1.0.1
+              with:
+                  project: ${{ inputs.dotnet-test-project }}
