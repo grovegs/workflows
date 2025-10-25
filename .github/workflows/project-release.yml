@@ -399,6 +399,25 @@ jobs:
                   echo "Found Android file: ${android_file}"
                   echo "Found iOS file: ${ios_file}"
 
+            - name: 🏷️ Create and Push Tag
+              shell: bash
+              run: |
+                  #!/usr/bin/env bash
+                  set -euo pipefail
+
+                  git config user.name "github-actions[bot]"
+                  git config user.email "github-actions[bot]@users.noreply.github.com"
+
+                  tag="v${{ needs.prepare.outputs.version }}"
+
+                  if git rev-parse "${tag}" >/dev/null 2>&1; then
+                      echo "Tag ${tag} already exists, skipping creation"
+                  else
+                      git tag -a "${tag}" -m "Release ${tag}"
+                      git push origin "${tag}"
+                      echo "Created and pushed tag ${tag}"
+                  fi
+
             - name: 🚀 Publish to GitHub
               if: inputs.publish-github && steps.find-build-files.outputs.all-files != ''
               uses: grovegs/actions/.github/actions/publish-github@v1.0.1
