@@ -8,6 +8,11 @@ on:
                 required: false
                 type: string
                 default: ""
+            global-json-file:
+                description: The relative path to the global.json file to extract .NET and Godot version
+                required: false
+                type: string
+                default: ""
             godot-project:
                 description: Path to the Godot project containing the project.godot file such as "projects/Game"
                 required: false
@@ -15,11 +20,6 @@ on:
                 default: ""
             unity-project:
                 description: Path to the Unity project containing the ProjectSettings folder such as "projects/UnityGame"
-                required: false
-                type: string
-                default: ""
-            global-json-file:
-                description: The relative path to the global.json file to extract .NET and Godot version
                 required: false
                 type: string
                 default: ""
