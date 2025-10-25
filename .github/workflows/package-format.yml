@@ -8,11 +8,11 @@ on:
                 required: false
                 type: string
                 default: ""
-            dotnet-projects:
-                description: Array of .NET project paths to format such as ["src/Core", "src/Godot"]
+            dotnet-project:
+                description: Path to the .NET project to format such as "src/Core"
                 required: false
                 type: string
-                default: "[]"
+                default: ""
             global-json-file:
                 description: The relative path to the global.json file to extract .NET version
                 required: false
@@ -34,13 +34,10 @@ jobs:
               with:
                   files: ${{ inputs.files }}
 
-    format-dotnet-projects:
-        name: Format .NET Project
-        if: fromJSON(inputs.dotnet-projects)[0] != null
+    format-dotnet:
+        name: Format .NET
+        if: inputs.dotnet-project != ''
         runs-on: ubuntu-latest
-        strategy:
-            matrix:
-                project: ${{ fromJSON(inputs.dotnet-projects) }}
 
         steps:
             - name: 📂 Checkout Code
@@ -55,4 +52,4 @@ jobs:
             - name: 🎨 Format .NET Project
               uses: grovegs/actions/.github/actions/format-dotnet@v1.0.1
               with:
-                  project: ${{ matrix.project }}
+                  project: ${{ inputs.dotnet-project }}

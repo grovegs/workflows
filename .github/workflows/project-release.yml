@@ -11,37 +11,48 @@ on:
                 description: Specifies the version type such as major, minor, or patch for the build
                 required: true
                 type: string
-            environment:
-                description: The build environment such as Development or Production
-                required: true
-                type: string
-            godot-projects:
-                description: Array of Godot project paths containing the project.godot file such as ["projects/GameA", "projects/GameB"]
+            unity-project:
+                description: Path to the Unity project containing the ProjectSettings folder
                 required: false
                 type: string
-                default: "[]"
-            unity-projects:
-                description: Array of Unity project paths containing the ProjectSettings folder such as ["projects/UnityGameA", "projects/UnityGameB"]
+                default: ""
+            godot-project:
+                description: Path to the Godot project containing the project.godot file
                 required: false
                 type: string
-                default: "[]"
+                default: ""
             global-json-file:
                 description: The relative path to the global.json file to extract .NET and Godot version
                 required: false
                 type: string
                 default: ""
+            unity-profile-name:
+                description: The Unity build profile name to use for the build
+                required: false
+                type: string
+                default: "Default"
+            godot-profile-name:
+                description: The Godot export preset name to use for the build
+                required: false
+                type: string
+                default: "Default"
+            ios-export-method:
+                description: The iOS export method (app-store, ad-hoc, development, enterprise)
+                required: false
+                type: string
+                default: "ad-hoc"
             tester-groups:
                 description: Comma-separated list of tester groups to receive the build
                 required: false
                 default: ""
                 type: string
-            release-android:
-                description: Flag to enable or disable the Android release job
+            build-android:
+                description: Flag to enable or disable the Android build
                 required: false
                 default: true
                 type: boolean
-            release-ios:
-                description: Flag to enable or disable the iOS release job
+            build-ios:
+                description: Flag to enable or disable the iOS build
                 required: false
                 default: true
                 type: boolean
@@ -125,7 +136,7 @@ on:
                 required: false
 
 jobs:
-    shared:
+    prepare:
         name: Prepare Release
         runs-on: ubuntu-latest
         outputs:
@@ -159,17 +170,16 @@ jobs:
                   #!/usr/bin/env bash
                   set -euo pipefail
 
+                  # Convert project name to kebab-case and append version
                   filename=$(echo "${{ inputs.name }}" | sed -E 's/([[:space:]]|_)/-/g; s/([a-z])([A-Z])/\1-\2/g' | tr '[:upper:]' '[:lower:]')
+                  filename="${filename}-${{ steps.bump-version.outputs.next-version }}"
                   echo "filename=${filename}" >> "${GITHUB_OUTPUT}"
 
-    release-godot-android:
-        name: Build Godot Android
-        if: fromJSON(inputs.godot-projects)[0] != null && inputs.release-android
-        needs: shared
+    build-android:
+        name: Build Android
+        if: inputs.build-android && (inputs.unity-project != '' || inputs.godot-project != '')
+        needs: prepare
         runs-on: macos-latest
-        strategy:
-            matrix:
-                project: ${{ fromJSON(inputs.godot-projects) }}
 
         steps:
             - name: 📂 Checkout Code
@@ -178,260 +188,73 @@ jobs:
             - name: ☕ Setup JDK
               uses: actions/setup-java@v5
               with:
-                  java-version: "17"
-                  distribution: temurin
-
-            - name: 🤖 Setup Android SDK
-              uses: android-actions/setup-android@v3
-              with:
-                  packages: platform-tools build-tools;34.0.0 platforms;android-34 cmake;3.10.2.4988404 ndk;23.2.8568313
-
-            - name: 🔧 Setup .NET
-              if: inputs.global-json-file != ''
-              uses: grovegs/actions/.github/actions/setup-dotnet@v1.0.1
-              with:
-                  global-json-file: ${{ inputs.global-json-file }}
-                  cache: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop' }}
+                  distribution: "temurin"
+                  java-version: "21"
 
             - name: 🎮 Setup Godot
+              if: inputs.godot-project != ''
               uses: grovegs/actions/.github/actions/setup-godot@v1.0.1
               with:
-                  global-json-file: ${{ inputs.global-json-file }}
-                  target-platforms: Android
-                  cache: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop' }}
-
-            - name: 🏗️ Build .NET
-              if: inputs.global-json-file != ''
-              uses: grovegs/actions/.github/actions/build-dotnet@v1.0.1
-              with:
-                  project: ${{ matrix.project }}
-                  configuration: Debug
-
-            - name: 📦 Generate Project Filename
-              id: generate-project-filename
-              shell: bash
-              run: |
-                  #!/usr/bin/env bash
-                  set -euo pipefail
-
-                  base_filename="${{ needs.shared.outputs.filename }}"
-                  path="${{ matrix.project }}"
-
-                  sanitized_path=$(echo "${path}" | tr '/' '-' | tr '[:upper:]' '[:lower:]')
-                  filename="${base_filename}-${sanitized_path}"
-
-                  echo "filename=${filename}" >> "${GITHUB_OUTPUT}"
-
-            - name: 🏗️ Build Godot
-              id: build-godot
-              uses: grovegs/actions/.github/actions/build-godot@v1.0.1
-              with:
-                  project: ${{ matrix.project }}
-                  global-json-file: ${{ inputs.global-json-file }}
-                  version: ${{ needs.shared.outputs.version }}
-                  platform: Android
-                  preset: Android ${{ inputs.environment }}
-                  configuration: Release
-                  filename: ${{ steps.generate-project-filename.outputs.filename }}
-                  define-symbols: ${{ inputs.environment == 'Development' && 'DEVELOPMENT' || '' }}
-                  android-keystore: ${{ secrets.android-keystore }}
-                  android-keystore-user: ${{ secrets.android-keystore-user }}
-                  android-keystore-password: ${{ secrets.android-keystore-password }}
-                  android-format: ${{ inputs.environment == 'Production' && 'aab' || inputs.environment == 'Development' && 'apk' || '' }}
-
-            - name: 📤 Upload Build Artifact
-              uses: grovegs/actions/.github/actions/upload-artifact@v1.0.1
-              if: steps.build-godot.outputs.file != ''
-              with:
-                  name: ${{ steps.generate-project-filename.outputs.filename }}-android
-                  path: ${{ steps.build-godot.outputs.file }}
-                  retention-days: 7
-
-            - name: 📤 Publish to Firebase
-              if: inputs.environment == 'Development' && inputs.publish-firebase
-              continue-on-error: true
-              uses: grovegs/actions/.github/actions/publish-firebase@v1.0.1
-              with:
-                  file: ${{ steps.build-godot.outputs.file }}
-                  app-id: ${{ secrets.firebase-app-id-android }}
-                  credentials: ${{ secrets.firebase-credentials }}
-                  release-notes: ${{ needs.shared.outputs.changelog-plain }}
-                  tester-groups: ${{ inputs.tester-groups }}
-
-    release-godot-ios:
-        name: Build Godot iOS
-        if: fromJSON(inputs.godot-projects)[0] != null && inputs.release-ios
-        needs: shared
-        runs-on: macos-latest
-        strategy:
-            matrix:
-                project: ${{ fromJSON(inputs.godot-projects) }}
-
-        steps:
-            - name: 📂 Checkout Code
-              uses: actions/checkout@v5
-
-            - name: 🔧 Setup .NET
-              if: inputs.global-json-file != ''
-              uses: grovegs/actions/.github/actions/setup-dotnet@v1.0.1
-              with:
+                  project: ${{ inputs.godot-project }}
                   global-json-file: ${{ inputs.global-json-file }}
                   cache: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop' }}
-
-            - name: 🎮 Setup Godot
-              uses: grovegs/actions/.github/actions/setup-godot@v1.0.1
-              with:
-                  global-json-file: ${{ inputs.global-json-file }}
-                  target-platforms: iOS
-                  cache: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop' }}
-
-            - name: 🏗️ Build .NET
-              if: inputs.global-json-file != ''
-              uses: grovegs/actions/.github/actions/build-dotnet@v1.0.1
-              with:
-                  project: ${{ matrix.project }}
-                  configuration: Debug
-
-            - name: 📦 Generate Project Filename
-              id: generate-project-filename
-              shell: bash
-              run: |
-                  #!/usr/bin/env bash
-                  set -euo pipefail
-
-                  base_filename="${{ needs.shared.outputs.filename }}"
-                  path="${{ matrix.project }}"
-
-                  sanitized_path=$(echo "${path}" | tr '/' '-' | tr '[:upper:]' '[:lower:]')
-                  filename="${base_filename}-${sanitized_path}"
-
-                  echo "filename=${filename}" >> "${GITHUB_OUTPUT}"
-
-            - name: 🏗️ Build Godot
-              id: build-godot
-              uses: grovegs/actions/.github/actions/build-godot@v1.0.1
-              with:
-                  project: ${{ matrix.project }}
-                  global-json-file: ${{ inputs.global-json-file }}
-                  version: ${{ needs.shared.outputs.version }}
-                  platform: iOS
-                  preset: iOS ${{ inputs.environment }}
-                  configuration: Release
-                  filename: ${{ steps.generate-project-filename.outputs.filename }}
-                  define-symbols: ${{ inputs.environment == 'Development' && 'DEVELOPMENT' || '' }}
-                  ios-team-id: ${{ secrets.ios-team-id }}
-                  ios-certificate: ${{ secrets.ios-certificate }}
-                  ios-certificate-password: ${{ secrets.ios-certificate-password }}
-                  ios-provisioning-profile: ${{ secrets.ios-provisioning-profile }}
-                  ios-provisioning-profile-uuid: ${{ secrets.ios-provisioning-profile-uuid }}
-
-            - name: 📤 Upload Build Artifact
-              uses: grovegs/actions/.github/actions/upload-artifact@v1.0.1
-              if: steps.build-godot.outputs.file != ''
-              with:
-                  name: ${{ steps.generate-project-filename.outputs.filename }}-ios
-                  path: ${{ steps.build-godot.outputs.file }}
-                  retention-days: 7
-
-            - name: 📤 Publish to Firebase
-              if: inputs.environment == 'Development' && inputs.publish-firebase
-              continue-on-error: true
-              uses: grovegs/actions/.github/actions/publish-firebase@v1.0.1
-              with:
-                  file: ${{ steps.build-godot.outputs.file }}
-                  app-id: ${{ secrets.firebase-app-id-ios }}
-                  credentials: ${{ secrets.firebase-credentials }}
-                  release-notes: ${{ needs.shared.outputs.changelog-plain }}
-                  tester-groups: ${{ inputs.tester-groups }}
-
-    release-unity-android:
-        name: Build Unity Android
-        if: fromJSON(inputs.unity-projects)[0] != null && inputs.release-android
-        needs: shared
-        runs-on: macos-latest
-        strategy:
-            matrix:
-                project: ${{ fromJSON(inputs.unity-projects) }}
-
-        steps:
-            - name: 📂 Checkout Code
-              uses: actions/checkout@v5
-
-            - name: 🤖 Setup Android
-              uses: grovegs/actions/.github/actions/setup-android@v1.0.1
-              with:
-                  java-version: "17"
-                  java-distribution: temurin
-                  android-packages: platform-tools build-tools;34.0.0 platforms;android-34 cmake;3.22.1 ndk;27.2.12479018
 
             - name: 🎮 Setup Unity
+              if: inputs.unity-project != ''
               uses: grovegs/actions/.github/actions/setup-unity@v1.0.1
               with:
-                  project: ${{ matrix.project }}
+                  project: ${{ inputs.unity-project }}
                   unity-modules: android
                   cache: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop' }}
 
-            - name: 📦 Generate Project Filename
-              id: generate-project-filename
-              shell: bash
-              run: |
-                  #!/usr/bin/env bash
-                  set -euo pipefail
-
-                  base_filename="${{ needs.shared.outputs.filename }}"
-                  path="${{ matrix.project }}"
-
-                  sanitized_path=$(echo "${path}" | tr '/' '-' | tr '[:upper:]' '[:lower:]')
-                  filename="${base_filename}-${sanitized_path}"
-
-                  echo "filename=${filename}" >> "${GITHUB_OUTPUT}"
+            - name: 🏗️ Build Godot
+              if: inputs.godot-project != ''
+              id: build-godot
+              uses: grovegs/actions/.github/actions/build-godot@v1.0.1
+              with:
+                  project: ${{ inputs.godot-project }}
+                  version: ${{ needs.prepare.outputs.version }}
+                  platform: Android
+                  configuration: Release
+                  filename: ${{ needs.prepare.outputs.filename }}
+                  profile-name: ${{ inputs.godot-profile-name }}
+                  android-keystore: ${{ secrets.android-keystore }}
+                  android-keystore-user: ${{ secrets.android-keystore-user }}
+                  android-keystore-password: ${{ secrets.android-keystore-password }}
+                  cache: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop' }}
 
             - name: 🏗️ Build Unity
+              if: inputs.unity-project != ''
               id: build-unity
               uses: grovegs/actions/.github/actions/build-unity@v1.0.1
               with:
-                  project: ${{ matrix.project }}
-                  version: ${{ needs.shared.outputs.version }}
+                  project: ${{ inputs.unity-project }}
+                  version: ${{ needs.prepare.outputs.version }}
                   platform: Android
                   configuration: Release
-                  filename: ${{ steps.generate-project-filename.outputs.filename }}
-                  profile-name: ${{ format('Android {0}', inputs.environment) }}
+                  filename: ${{ needs.prepare.outputs.filename }}
+                  profile-name: ${{ inputs.unity-profile-name }}
                   unity-email: ${{ secrets.unity-email }}
                   unity-password: ${{ secrets.unity-password }}
                   unity-license-key: ${{ secrets.unity-license-key }}
                   android-keystore: ${{ secrets.android-keystore }}
                   android-keystore-user: ${{ secrets.android-keystore-user }}
                   android-keystore-password: ${{ secrets.android-keystore-password }}
-                  android-format: ${{ inputs.environment == 'Production' && 'aab' || inputs.environment == 'Development' && 'apk' || 'apk' }}
                   cache: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop' }}
 
             - name: 📤 Upload Build Artifact
               uses: grovegs/actions/.github/actions/upload-artifact@v1.0.1
-              if: steps.build-unity.outputs.file != ''
+              if: steps.build-godot.outputs.file != '' || steps.build-unity.outputs.file != ''
               with:
-                  name: ${{ steps.generate-project-filename.outputs.filename }}-android
-                  path: ${{ steps.build-unity.outputs.file }}
+                  name: ${{ needs.prepare.outputs.filename }}-android
+                  path: ${{ steps.build-godot.outputs.file || steps.build-unity.outputs.file }}
                   retention-days: 7
 
-            - name: 📤 Publish to Firebase
-              if: inputs.environment == 'Development' && inputs.publish-firebase
-              continue-on-error: true
-              uses: grovegs/actions/.github/actions/publish-firebase@v1.0.1
-              with:
-                  file: ${{ steps.build-unity.outputs.file }}
-                  app-id: ${{ secrets.firebase-app-id-android }}
-                  credentials: ${{ secrets.firebase-credentials }}
-                  release-notes: ${{ needs.shared.outputs.changelog-plain }}
-                  tester-groups: ${{ inputs.tester-groups }}
-
-    release-unity-ios:
-        name: Build Unity iOS
-        if: fromJSON(inputs.unity-projects)[0] != null && inputs.release-ios
-        needs: shared
+    build-ios:
+        name: Build iOS
+        if: inputs.build-ios && (inputs.unity-project != '' || inputs.godot-project != '')
+        needs: prepare
         runs-on: macos-latest
-        strategy:
-            matrix:
-                project: ${{ fromJSON(inputs.unity-projects) }}
 
         steps:
             - name: 📂 Checkout Code
@@ -442,38 +265,52 @@ jobs:
               with:
                   xcode-version: "16.1"
 
+            - name: 🎮 Setup Godot
+              if: inputs.godot-project != ''
+              uses: grovegs/actions/.github/actions/setup-godot@v1.0.1
+              with:
+                  project: ${{ inputs.godot-project }}
+                  global-json-file: ${{ inputs.global-json-file }}
+                  cache: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop' }}
+
             - name: 🎮 Setup Unity
+              if: inputs.unity-project != ''
               uses: grovegs/actions/.github/actions/setup-unity@v1.0.1
               with:
-                  project: ${{ matrix.project }}
+                  project: ${{ inputs.unity-project }}
                   unity-modules: ios
                   cache: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop' }}
 
-            - name: 📦 Generate Project Filename
-              id: generate-project-filename
-              shell: bash
-              run: |
-                  #!/usr/bin/env bash
-                  set -euo pipefail
-
-                  base_filename="${{ needs.shared.outputs.filename }}"
-                  path="${{ matrix.project }}"
-
-                  sanitized_path=$(echo "${path}" | tr '/' '-' | tr '[:upper:]' '[:lower:]')
-                  filename="${base_filename}-${sanitized_path}"
-
-                  echo "filename=${filename}" >> "${GITHUB_OUTPUT}"
+            - name: 🏗️ Build Godot
+              if: inputs.godot-project != ''
+              id: build-godot
+              uses: grovegs/actions/.github/actions/build-godot@v1.0.1
+              with:
+                  project: ${{ inputs.godot-project }}
+                  version: ${{ needs.prepare.outputs.version }}
+                  platform: iOS
+                  configuration: Release
+                  filename: ${{ needs.prepare.outputs.filename }}
+                  profile-name: ${{ inputs.godot-profile-name }}
+                  ios-team-id: ${{ secrets.ios-team-id }}
+                  ios-certificate: ${{ secrets.ios-certificate }}
+                  ios-certificate-password: ${{ secrets.ios-certificate-password }}
+                  ios-provisioning-profile: ${{ secrets.ios-provisioning-profile }}
+                  ios-provisioning-profile-uuid: ${{ secrets.ios-provisioning-profile-uuid }}
+                  ios-export-method: ${{ inputs.ios-export-method }}
+                  cache: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop' }}
 
             - name: 🏗️ Build Unity
+              if: inputs.unity-project != ''
               id: build-unity
               uses: grovegs/actions/.github/actions/build-unity@v1.0.1
               with:
-                  project: ${{ matrix.project }}
-                  version: ${{ needs.shared.outputs.version }}
+                  project: ${{ inputs.unity-project }}
+                  version: ${{ needs.prepare.outputs.version }}
                   platform: iOS
                   configuration: Release
-                  filename: ${{ steps.generate-project-filename.outputs.filename }}
-                  profile-name: ${{ format('iOS {0}', inputs.environment) }}
+                  filename: ${{ needs.prepare.outputs.filename }}
+                  profile-name: ${{ inputs.unity-profile-name }}
                   unity-email: ${{ secrets.unity-email }}
                   unity-password: ${{ secrets.unity-password }}
                   unity-license-key: ${{ secrets.unity-license-key }}
@@ -482,89 +319,118 @@ jobs:
                   ios-certificate-password: ${{ secrets.ios-certificate-password }}
                   ios-provisioning-profile: ${{ secrets.ios-provisioning-profile }}
                   ios-provisioning-profile-uuid: ${{ secrets.ios-provisioning-profile-uuid }}
-                  ios-export-method: ${{ inputs.environment == 'Production' && 'app-store' || inputs.environment == 'Development' && 'ad-hoc' || 'ad-hoc' }}
+                  ios-export-method: ${{ inputs.ios-export-method }}
                   cache: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop' }}
 
             - name: 📤 Upload Build Artifact
               uses: grovegs/actions/.github/actions/upload-artifact@v1.0.1
-              if: steps.build-unity.outputs.file != ''
+              if: steps.build-godot.outputs.file != '' || steps.build-unity.outputs.file != ''
               with:
-                  name: ${{ steps.generate-project-filename.outputs.filename }}-ios
-                  path: ${{ steps.build-unity.outputs.file }}
+                  name: ${{ needs.prepare.outputs.filename }}-ios
+                  path: ${{ steps.build-godot.outputs.file || steps.build-unity.outputs.file }}
                   retention-days: 7
 
-            - name: 📤 Publish to Firebase
-              if: inputs.environment == 'Development' && inputs.publish-firebase
-              continue-on-error: true
-              uses: grovegs/actions/.github/actions/publish-firebase@v1.0.1
-              with:
-                  file: ${{ steps.build-unity.outputs.file }}
-                  app-id: ${{ secrets.firebase-app-id-ios }}
-                  credentials: ${{ secrets.firebase-credentials }}
-                  release-notes: ${{ needs.shared.outputs.changelog-plain }}
-                  tester-groups: ${{ inputs.tester-groups }}
-
-            - name: 📤 Publish to TestFlight
-              if: inputs.environment == 'Production' && inputs.publish-testflight
-              continue-on-error: true
-              uses: grovegs/actions/.github/actions/publish-testflight@v1.0.1
-              with:
-                  file: ${{ steps.build-unity.outputs.file }}
-                  api-key: ${{ secrets.ios-api-key }}
-                  api-key-id: ${{ secrets.ios-api-key-id }}
-                  api-issuer-id: ${{ secrets.ios-api-issuer-id }}
-
-    release-github:
-        name: Publish to GitHub
-        if: always() && needs.shared.result == 'success' && (needs.release-godot-android.result != 'failure' && needs.release-godot-ios.result != 'failure' && needs.release-unity-android.result != 'failure' && needs.release-unity-ios.result != 'failure') && (needs.release-godot-android.result == 'success' || needs.release-godot-ios.result == 'success' || needs.release-unity-android.result == 'success' || needs.release-unity-ios.result == 'success')
-        needs:
-            [
-                shared,
-                release-godot-android,
-                release-godot-ios,
-                release-unity-android,
-                release-unity-ios,
-            ]
+    release:
+        name: Release Platforms
+        if: always() && needs.prepare.result == 'success' && (needs.build-android.result == 'success' || needs.build-ios.result == 'success')
+        needs: [prepare, build-android, build-ios]
         runs-on: ubuntu-latest
 
         steps:
             - name: 📂 Checkout Code
               uses: actions/checkout@v5
 
-            - name: 📥 Download All Artifacts
-              if: inputs.publish-github
+            - name: 📥 Download Android Artifact
+              if: needs.build-android.result == 'success'
+              continue-on-error: true
               uses: grovegs/actions/.github/actions/download-artifact@v1.0.1
               with:
-                  pattern: ${{ needs.shared.outputs.filename }}*
-                  path: builds
+                  name: ${{ needs.prepare.outputs.filename }}-android
+                  path: builds/android
+
+            - name: 📥 Download iOS Artifact
+              if: needs.build-ios.result == 'success'
+              continue-on-error: true
+              uses: grovegs/actions/.github/actions/download-artifact@v1.0.1
+              with:
+                  name: ${{ needs.prepare.outputs.filename }}-ios
+                  path: builds/ios
 
             - name: 🔍 Find Build Files
-              if: inputs.publish-github
               id: find-build-files
               shell: bash
               run: |
                   #!/usr/bin/env bash
                   set -euo pipefail
 
-                  if [ -d builds ]; then
-                    assets=$(find builds -type f \( -name "*.apk" -o -name "*.aab" -o -name "*.ipa" \) 2>/dev/null | tr '\n' ' ' || echo "")
-                    assets=$(echo "${assets}" | sed 's/[[:space:]]*$//')
-                  else
-                    assets=""
+                  all_files=""
+                  android_file=""
+                  ios_file=""
+
+                  # Find Android build files (APK or AAB)
+                  if [ -d builds/android ]; then
+                    android_file=$(find builds/android -type f \( -name "*.apk" -o -name "*.aab" \) 2>/dev/null | head -n 1 || echo "")
+                    [ -n "${android_file}" ] && all_files="${android_file}"
                   fi
 
-                  echo "assets=${assets}" >> "${GITHUB_OUTPUT}"
-                  echo "Found build files: ${assets}"
+                  # Find iOS build files (IPA)
+                  if [ -d builds/ios ]; then
+                    ios_file=$(find builds/ios -type f -name "*.ipa" 2>/dev/null | head -n 1 || echo "")
+                    [ -n "${ios_file}" ] && all_files="${all_files} ${ios_file}"
+                  fi
+
+                  all_files=$(echo "${all_files}" | xargs)
+
+                  # Output results for later steps
+                  echo "all-files=${all_files}" >> "${GITHUB_OUTPUT}"
+                  echo "android-file=${android_file}" >> "${GITHUB_OUTPUT}"
+                  echo "ios-file=${ios_file}" >> "${GITHUB_OUTPUT}"
+
+                  echo "Found all files: ${all_files}"
+                  echo "Found Android file: ${android_file}"
+                  echo "Found iOS file: ${ios_file}"
 
             - name: 🚀 Publish to GitHub
-              if: inputs.publish-github
+              if: inputs.publish-github && steps.find-build-files.outputs.all-files != ''
               uses: grovegs/actions/.github/actions/publish-github@v1.0.1
               with:
-                  title: ${{ inputs.name }} ${{ needs.shared.outputs.version }}
-                  version: ${{ needs.shared.outputs.version }}
-                  changelog: ${{ needs.shared.outputs.changelog-markdown }}
+                  title: ${{ inputs.name }} ${{ needs.prepare.outputs.version }}
+                  version: ${{ needs.prepare.outputs.version }}
+                  changelog: ${{ needs.prepare.outputs.changelog-markdown }}
                   github-token: ${{ secrets.github-token }}
-                  assets: ${{ steps.find-build-files.outputs.assets }}
+                  assets: ${{ steps.find-build-files.outputs.all-files }}
+
+            - name: 📤 Publish Android to Firebase
+              if: inputs.publish-firebase && steps.find-build-files.outputs.android-file != ''
+              continue-on-error: true
+              uses: grovegs/actions/.github/actions/publish-firebase@v1.0.1
+              with:
+                  file: ${{ steps.find-build-files.outputs.android-file }}
+                  app-id: ${{ secrets.firebase-app-id-android }}
+                  credentials: ${{ secrets.firebase-credentials }}
+                  release-notes: ${{ needs.prepare.outputs.changelog-plain }}
+                  tester-groups: ${{ inputs.tester-groups }}
+
+            - name: 📤 Publish iOS to Firebase
+              if: inputs.publish-firebase && steps.find-build-files.outputs.ios-file != ''
+              continue-on-error: true
+              uses: grovegs/actions/.github/actions/publish-firebase@v1.0.1
+              with:
+                  file: ${{ steps.find-build-files.outputs.ios-file }}
+                  app-id: ${{ secrets.firebase-app-id-ios }}
+                  credentials: ${{ secrets.firebase-credentials }}
+                  release-notes: ${{ needs.prepare.outputs.changelog-plain }}
+                  tester-groups: ${{ inputs.tester-groups }}
+
+            - name: 📤 Publish to TestFlight
+              if: inputs.publish-testflight && steps.find-build-files.outputs.ios-file != ''
+              continue-on-error: true
+              uses: grovegs/actions/.github/actions/publish-testflight@v1.0.1
+              with:
+                  file: ${{ steps.find-build-files.outputs.ios-file }}
+                  api-key: ${{ secrets.ios-api-key }}
+                  api-key-id: ${{ secrets.ios-api-key-id }}
+                  api-issuer-id: ${{ secrets.ios-api-issuer-id }}
 
             - name: 📢 Notify Discord Success
               if: success() && inputs.publish-discord
@@ -573,9 +439,9 @@ jobs:
                   webhook-url: ${{ secrets.discord-webhook }}
                   title: ✅ ${{ github.event.repository.name }}
                   description: |
-                      ${{ needs.shared.outputs.changelog-markdown }}
+                      ${{ needs.prepare.outputs.changelog-markdown }}
 
-                      [View Release](${{ github.server_url }}/${{ github.repository }}/releases/tag/v${{ needs.shared.outputs.version }})
+                      [View Release](${{ github.server_url }}/${{ github.repository }}/releases/tag/v${{ needs.prepare.outputs.version }})
                   color: "3066993"
 
             - name: 📢 Notify Discord Failure

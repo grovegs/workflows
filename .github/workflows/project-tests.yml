@@ -3,21 +3,21 @@ name: 🧪 Test Project
 on:
     workflow_call:
         inputs:
-            dotnet-projects:
-                description: Array of .NET test project paths containing the .csproj file such as ["tests/GameA.Tests", "tests/GameB.Tests"]
+            dotnet-project:
+                description: Path to the .NET test project containing the .csproj file such as "tests/Game.Tests"
                 required: false
                 type: string
-                default: "[]"
-            godot-projects:
-                description: Array of Godot project paths containing the project.godot file such as ["projects/GameA", "projects/GameB"]
+                default: ""
+            godot-project:
+                description: Path to the Godot project containing the project.godot file such as "projects/Game"
                 required: false
                 type: string
-                default: "[]"
-            unity-projects:
-                description: Array of Unity project paths containing the ProjectSettings folder such as ["projects/UnityGameA", "projects/UnityGameB"]
+                default: ""
+            unity-project:
+                description: Path to the Unity project containing the ProjectSettings folder such as "projects/UnityGame"
                 required: false
                 type: string
-                default: "[]"
+                default: ""
             global-json-file:
                 description: The relative path to the global.json file to extract .NET and Godot version
                 required: false
@@ -25,13 +25,10 @@ on:
                 default: ""
 
 jobs:
-    test-dotnet-projects:
-        name: Test .NET Project
-        if: fromJSON(inputs.dotnet-projects)[0] != null
+    test-dotnet:
+        name: Test .NET
+        if: inputs.dotnet-project != ''
         runs-on: ubuntu-latest
-        strategy:
-            matrix:
-                project: ${{ fromJSON(inputs.dotnet-projects) }}
 
         steps:
             - name: 📂 Checkout Code
@@ -46,16 +43,13 @@ jobs:
             - name: 🧪 Test .NET Project
               uses: grovegs/actions/.github/actions/test-dotnet@v1.0.1
               with:
-                  project: ${{ matrix.project }}
+                  project: ${{ inputs.dotnet-project }}
                   configuration: Release
 
-    test-godot-projects:
-        name: Test Godot Project
-        if: fromJSON(inputs.godot-projects)[0] != null
+    test-godot:
+        name: Test Godot
+        if: inputs.godot-project != ''
         runs-on: ubuntu-latest
-        strategy:
-            matrix:
-                project: ${{ fromJSON(inputs.godot-projects) }}
 
         steps:
             - name: 📂 Checkout Code
@@ -76,16 +70,13 @@ jobs:
             - name: 🧪 Test Godot Project
               uses: grovegs/actions/.github/actions/test-godot@v1.0.1
               with:
-                  project: ${{ matrix.project }}
+                  project: ${{ inputs.godot-project }}
                   global-json-file: ${{ inputs.global-json-file }}
 
-    test-unity-projects:
-        name: Test Unity Project
-        if: fromJSON(inputs.unity-projects)[0] != null
+    test-unity:
+        name: Test Unity
+        if: inputs.unity-project != ''
         runs-on: macos-latest
-        strategy:
-            matrix:
-                project: ${{ fromJSON(inputs.unity-projects) }}
 
         steps:
             - name: 📂 Checkout Code
@@ -94,10 +85,10 @@ jobs:
             - name: 🎮 Setup Unity
               uses: grovegs/actions/.github/actions/setup-unity@v1.0.1
               with:
-                  project: ${{ matrix.project }}
+                  project: ${{ inputs.unity-project }}
                   cache: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop' }}
 
             - name: 🧪 Test Unity Project
               uses: grovegs/actions/.github/actions/test-unity@v1.0.1
               with:
-                  project: ${{ matrix.project }}
+                  project: ${{ inputs.unity-project }}
