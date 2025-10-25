@@ -11,18 +11,23 @@ on:
                 description: Specifies the version type such as major, minor, or patch for the build
                 required: true
                 type: string
-            unity-project:
-                description: Path to the Unity project containing the ProjectSettings folder
-                required: false
-                type: string
-                default: ""
             godot-project:
                 description: Path to the Godot project containing the project.godot file
                 required: false
                 type: string
                 default: ""
+            godot-preset-name:
+                description: The Godot export preset name to use for the build
+                required: false
+                type: string
+                default: "Default"
             global-json-file:
                 description: The relative path to the global.json file to extract .NET and Godot version
+                required: false
+                type: string
+                default: ""
+            unity-project:
+                description: Path to the Unity project containing the ProjectSettings folder
                 required: false
                 type: string
                 default: ""
@@ -31,21 +36,6 @@ on:
                 required: false
                 type: string
                 default: "Default"
-            godot-profile-name:
-                description: The Godot export preset name to use for the build
-                required: false
-                type: string
-                default: "Default"
-            ios-export-method:
-                description: The iOS export method (app-store, ad-hoc, development, enterprise)
-                required: false
-                type: string
-                default: "ad-hoc"
-            tester-groups:
-                description: Comma-separated list of tester groups to receive the build
-                required: false
-                default: ""
-                type: string
             build-android:
                 description: Flag to enable or disable the Android build
                 required: false
@@ -56,6 +46,11 @@ on:
                 required: false
                 default: true
                 type: boolean
+            ios-export-method:
+                description: The iOS export method (app-store, ad-hoc, development, enterprise)
+                required: false
+                type: string
+                default: "ad-hoc"
             publish-github:
                 description: If true, publish release to GitHub
                 required: false
@@ -66,6 +61,11 @@ on:
                 required: false
                 type: boolean
                 default: false
+            tester-groups:
+                description: Comma-separated list of tester groups to receive the build
+                required: false
+                default: ""
+                type: string
             publish-testflight:
                 description: If true, publish iOS builds to TestFlight
                 required: false
@@ -80,9 +80,6 @@ on:
             github-token:
                 description: The GitHub token for authentication
                 required: true
-            discord-webhook:
-                description: Discord webhook URL for sending notifications
-                required: false
             unity-email:
                 description: The Unity account email address
                 required: false
@@ -91,15 +88,6 @@ on:
                 required: false
             unity-license-key:
                 description: The Unity license serial key
-                required: false
-            firebase-credentials:
-                description: Firebase service account credentials for authentication with Firebase services
-                required: false
-            firebase-app-id-android:
-                description: Firebase Android app ID used to upload builds to Firebase App Distribution
-                required: false
-            firebase-app-id-ios:
-                description: Firebase iOS app ID used to upload builds to Firebase App Distribution
                 required: false
             android-keystore:
                 description: Base64-encoded content of the Android keystore for signing the build
@@ -133,6 +121,18 @@ on:
                 required: false
             ios-api-issuer-id:
                 description: App Store Connect API Issuer ID for TestFlight uploads
+                required: false
+            firebase-credentials:
+                description: Firebase service account credentials for authentication with Firebase services
+                required: false
+            firebase-app-id-android:
+                description: Firebase Android app ID used to upload builds to Firebase App Distribution
+                required: false
+            firebase-app-id-ios:
+                description: Firebase iOS app ID used to upload builds to Firebase App Distribution
+                required: false
+            discord-webhook:
+                description: Discord webhook URL for sending notifications
                 required: false
 
 jobs:
@@ -170,14 +170,13 @@ jobs:
                   #!/usr/bin/env bash
                   set -euo pipefail
 
-                  # Convert project name to kebab-case and append version
                   filename=$(echo "${{ inputs.name }}" | sed -E 's/([[:space:]]|_)/-/g; s/([a-z])([A-Z])/\1-\2/g' | tr '[:upper:]' '[:lower:]')
                   filename="${filename}-${{ steps.bump-version.outputs.next-version }}"
                   echo "filename=${filename}" >> "${GITHUB_OUTPUT}"
 
     build-android:
         name: Build Android
-        if: inputs.build-android && (inputs.unity-project != '' || inputs.godot-project != '')
+        if: inputs.build-android && (inputs.godot-project != '' || inputs.unity-project != '')
         needs: prepare
         runs-on: macos-latest
 
@@ -185,19 +184,26 @@ jobs:
             - name: 📂 Checkout Code
               uses: actions/checkout@v5
 
-            - name: ☕ Setup JDK
-              uses: actions/setup-java@v5
+            - name: 🔧 Setup .NET
+              if: inputs.godot-project != ''
+              uses: grovegs/actions/.github/actions/setup-dotnet@v1.0.1
               with:
-                  distribution: "temurin"
-                  java-version: "21"
+                  global-json-file: ${{ inputs.global-json-file }}
+                  cache: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop' }}
 
             - name: 🎮 Setup Godot
               if: inputs.godot-project != ''
               uses: grovegs/actions/.github/actions/setup-godot@v1.0.1
               with:
-                  project: ${{ inputs.godot-project }}
                   global-json-file: ${{ inputs.global-json-file }}
+                  target-platforms: Android
                   cache: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop' }}
+
+            - name: 🤖 Setup Android
+              uses: grovegs/actions/.github/actions/setup-android@v1.0.1
+              with:
+                  java-version: 17
+                  android-packages: ndk;27.2.12479018 platforms;android-35 build-tools;34.0.0
 
             - name: 🎮 Setup Unity
               if: inputs.unity-project != ''
@@ -213,15 +219,15 @@ jobs:
               uses: grovegs/actions/.github/actions/build-godot@v1.0.1
               with:
                   project: ${{ inputs.godot-project }}
+                  global-json-file: ${{ inputs.global-json-file }}
                   version: ${{ needs.prepare.outputs.version }}
                   platform: Android
+                  preset: ${{ inputs.godot-preset-name }}
                   configuration: Release
                   filename: ${{ needs.prepare.outputs.filename }}
-                  profile-name: ${{ inputs.godot-profile-name }}
                   android-keystore: ${{ secrets.android-keystore }}
                   android-keystore-user: ${{ secrets.android-keystore-user }}
                   android-keystore-password: ${{ secrets.android-keystore-password }}
-                  cache: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop' }}
 
             - name: 🏗️ Build Unity
               if: inputs.unity-project != ''
@@ -252,7 +258,7 @@ jobs:
 
     build-ios:
         name: Build iOS
-        if: inputs.build-ios && (inputs.unity-project != '' || inputs.godot-project != '')
+        if: inputs.build-ios && (inputs.godot-project != '' || inputs.unity-project != '')
         needs: prepare
         runs-on: macos-latest
 
@@ -260,18 +266,25 @@ jobs:
             - name: 📂 Checkout Code
               uses: actions/checkout@v5
 
-            - name: 🍎 Setup Xcode
-              uses: grovegs/actions/.github/actions/setup-xcode@v1.0.1
+            - name: 🔧 Setup .NET
+              if: inputs.godot-project != ''
+              uses: grovegs/actions/.github/actions/setup-dotnet@v1.0.1
               with:
-                  xcode-version: "16.1"
+                  global-json-file: ${{ inputs.global-json-file }}
+                  cache: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop' }}
 
             - name: 🎮 Setup Godot
               if: inputs.godot-project != ''
               uses: grovegs/actions/.github/actions/setup-godot@v1.0.1
               with:
-                  project: ${{ inputs.godot-project }}
                   global-json-file: ${{ inputs.global-json-file }}
+                  target-platforms: iOS
                   cache: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop' }}
+
+            - name: 🍎 Setup Xcode
+              uses: grovegs/actions/.github/actions/setup-xcode@v1.0.1
+              with:
+                  xcode-version: "16.0"
 
             - name: 🎮 Setup Unity
               if: inputs.unity-project != ''
@@ -287,18 +300,17 @@ jobs:
               uses: grovegs/actions/.github/actions/build-godot@v1.0.1
               with:
                   project: ${{ inputs.godot-project }}
+                  global-json-file: ${{ inputs.global-json-file }}
                   version: ${{ needs.prepare.outputs.version }}
                   platform: iOS
+                  preset: ${{ inputs.godot-preset-name }}
                   configuration: Release
                   filename: ${{ needs.prepare.outputs.filename }}
-                  profile-name: ${{ inputs.godot-profile-name }}
                   ios-team-id: ${{ secrets.ios-team-id }}
                   ios-certificate: ${{ secrets.ios-certificate }}
                   ios-certificate-password: ${{ secrets.ios-certificate-password }}
                   ios-provisioning-profile: ${{ secrets.ios-provisioning-profile }}
                   ios-provisioning-profile-uuid: ${{ secrets.ios-provisioning-profile-uuid }}
-                  ios-export-method: ${{ inputs.ios-export-method }}
-                  cache: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop' }}
 
             - name: 🏗️ Build Unity
               if: inputs.unity-project != ''
@@ -367,13 +379,11 @@ jobs:
                   android_file=""
                   ios_file=""
 
-                  # Find Android build files (APK or AAB)
                   if [ -d builds/android ]; then
                     android_file=$(find builds/android -type f \( -name "*.apk" -o -name "*.aab" \) 2>/dev/null | head -n 1 || echo "")
                     [ -n "${android_file}" ] && all_files="${android_file}"
                   fi
 
-                  # Find iOS build files (IPA)
                   if [ -d builds/ios ]; then
                     ios_file=$(find builds/ios -type f -name "*.ipa" 2>/dev/null | head -n 1 || echo "")
                     [ -n "${ios_file}" ] && all_files="${all_files} ${ios_file}"
@@ -381,7 +391,6 @@ jobs:
 
                   all_files=$(echo "${all_files}" | xargs)
 
-                  # Output results for later steps
                   echo "all-files=${all_files}" >> "${GITHUB_OUTPUT}"
                   echo "android-file=${android_file}" >> "${GITHUB_OUTPUT}"
                   echo "ios-file=${ios_file}" >> "${GITHUB_OUTPUT}"
