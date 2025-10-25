@@ -16,16 +16,6 @@ on:
                 required: false
                 type: string
                 default: ""
-            godot-addon:
-                description: Path to the Godot addon to package such as "addons/plugin"
-                required: false
-                type: string
-                default: ""
-            unity-package:
-                description: Path to the Unity package to package such as "Packages/com.example.package"
-                required: false
-                type: string
-                default: ""
             global-json-file:
                 description: The relative path to the global.json file to extract .NET version
                 required: false
@@ -33,6 +23,16 @@ on:
                 default: ""
             directory-build-props:
                 description: The relative path to the Directory.Build.props file to set version
+                required: false
+                type: string
+                default: ""
+            godot-addon:
+                description: Path to the Godot addon to package such as "addons/plugin"
+                required: false
+                type: string
+                default: ""
+            unity-package:
+                description: Path to the Unity package to package such as "Packages/com.example.package"
                 required: false
                 type: string
                 default: ""
@@ -98,7 +98,6 @@ jobs:
                   #!/usr/bin/env bash
                   set -euo pipefail
 
-                  # Convert package name to kebab-case and append version
                   filename=$(echo "${{ inputs.name }}" | sed -E 's/([[:space:]]|_)/-/g; s/([a-z])([A-Z])/\1-\2/g' | tr '[:upper:]' '[:lower:]')
                   filename="${filename}-${{ steps.bump-version.outputs.next-version }}"
                   echo "filename=${filename}" >> "${GITHUB_OUTPUT}"
@@ -239,12 +238,10 @@ jobs:
                   #!/usr/bin/env bash
                   set -euo pipefail
 
-                  # Configure git user for automated commits
                   git config user.name "github-actions[bot]"
                   git config user.email "github-actions[bot]@users.noreply.github.com"
                   git add .
 
-                  # Only commit if there are actual changes
                   if git diff --cached --quiet; then
                       echo "has_changes=false" >> "${GITHUB_OUTPUT}"
                   else
@@ -289,19 +286,16 @@ jobs:
                   godot_package=""
                   unity_package=""
 
-                  # Find .NET package
                   if [ -d packages/dotnet ]; then
                     dotnet_package=$(find packages/dotnet -type f -name "*.nupkg" 2>/dev/null | head -n 1 || echo "")
                     [ -n "${dotnet_package}" ] && all_packages="${dotnet_package}"
                   fi
 
-                  # Find Godot package
                   if [ -d packages/godot ]; then
                     godot_package=$(find packages/godot -type f \( -name "*.zip" -o -name "*.tgz" \) 2>/dev/null | head -n 1 || echo "")
                     [ -n "${godot_package}" ] && all_packages="${all_packages} ${godot_package}"
                   fi
 
-                  # Find Unity package
                   if [ -d packages/unity ]; then
                     unity_package=$(find packages/unity -type f \( -name "*.zip" -o -name "*.tgz" \) 2>/dev/null | head -n 1 || echo "")
                     [ -n "${unity_package}" ] && all_packages="${all_packages} ${unity_package}"
@@ -309,7 +303,6 @@ jobs:
 
                   all_packages=$(echo "${all_packages}" | xargs)
 
-                  # Output results
                   echo "all-packages=${all_packages}" >> "${GITHUB_OUTPUT}"
                   echo "dotnet-package=${dotnet_package}" >> "${GITHUB_OUTPUT}"
                   echo "godot-package=${godot_package}" >> "${GITHUB_OUTPUT}"
