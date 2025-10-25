@@ -235,9 +235,8 @@ jobs:
               with:
                   pattern: modified-*
 
-            - name: 💾 Commit and Push Version Changes
-              if: inputs.publish-github
-              id: commit-changes
+            - name: 💾 Commit Version Changes and Create Tag
+              id: commit-and-tag
               shell: bash
               run: |
                   #!/usr/bin/env bash
@@ -253,6 +252,16 @@ jobs:
                       git commit -m "chore: release version ${{ needs.prepare.outputs.version }} [skip ci]"
                       git push origin HEAD:"${{ github.ref_name }}"
                       echo "has_changes=true" >> "${GITHUB_OUTPUT}"
+                  fi
+
+                  tag="v${{ needs.prepare.outputs.version }}"
+
+                  if git rev-parse "${tag}" >/dev/null 2>&1; then
+                      echo "Tag ${tag} already exists, skipping creation"
+                  else
+                      git tag -a "${tag}" -m "Release ${tag}"
+                      git push origin "${tag}"
+                      echo "Created and pushed tag ${tag}"
                   fi
 
             - name: 📥 Download .NET Package
