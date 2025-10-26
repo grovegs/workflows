@@ -284,7 +284,7 @@ jobs:
             - name: 🍎 Setup Xcode
               uses: grovegs/actions/.github/actions/setup-xcode@v1.0.1
               with:
-                  xcode-version: "16.0"
+                  xcode-version: "16.1"
 
             - name: 🎮 Setup Unity
               if: inputs.unity-project != ''
