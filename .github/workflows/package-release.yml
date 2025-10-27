@@ -81,13 +81,13 @@ jobs:
 
             - name: 🆙 Bump Version
               id: bump-version
-              uses: grovegs/actions/.github/actions/bump-version@v1.0.1
+              uses: grovegs/actions/.github/actions/bump-version@v1.0.2
               with:
                   version-type: ${{ inputs.version-type }}
 
             - name: 📝 Generate Changelog
               id: generate-changelog
-              uses: grovegs/actions/.github/actions/generate-changelog@v1.0.1
+              uses: grovegs/actions/.github/actions/generate-changelog@v1.0.2
               with:
                   next-version: ${{ steps.bump-version.outputs.next-version }}
 
@@ -116,13 +116,13 @@ jobs:
               uses: actions/checkout@v5
 
             - name: 🔧 Setup .NET
-              uses: grovegs/actions/.github/actions/setup-dotnet@v1.0.1
+              uses: grovegs/actions/.github/actions/setup-dotnet@v1.0.2
               with:
                   global-json-file: ${{ inputs.global-json-file }}
                   cache: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop' }}
 
             - name: 🏗️ Build .NET Project
-              uses: grovegs/actions/.github/actions/build-dotnet@v1.0.1
+              uses: grovegs/actions/.github/actions/build-dotnet@v1.0.2
               with:
                   project: ${{ matrix.project }}
                   configuration: Release
@@ -155,7 +155,7 @@ jobs:
 
             - name: 📦 Pack NuGet
               id: pack-nuget
-              uses: grovegs/actions/.github/actions/pack-dotnet@v1.0.1
+              uses: grovegs/actions/.github/actions/pack-dotnet@v1.0.2
               with:
                   project: ${{ matrix.project }}
                   configuration: Release
@@ -164,7 +164,7 @@ jobs:
                   directory-build-props: ${{ inputs.directory-build-props }}
 
             - name: 📤 Upload Artifact
-              uses: grovegs/actions/.github/actions/upload-artifact@v1.0.1
+              uses: grovegs/actions/.github/actions/upload-artifact@v1.0.2
               with:
                   name: ${{ steps.generate-filename.outputs.artifact_name }}
                   path: ${{ steps.pack-nuget.outputs.package }}
@@ -172,7 +172,7 @@ jobs:
 
             - name: 📤 Upload Modified Files
               if: steps.pack-nuget.outputs.modified-files != ''
-              uses: grovegs/actions/.github/actions/upload-artifact@v1.0.1
+              uses: grovegs/actions/.github/actions/upload-artifact@v1.0.2
               with:
                   name: modified-${{ steps.generate-filename.outputs.artifact_name }}
                   path: ${{ steps.pack-nuget.outputs.modified-files }}
@@ -210,21 +210,21 @@ jobs:
 
             - name: 📦 Pack Godot Addon
               id: pack-addon
-              uses: grovegs/actions/.github/actions/pack-godot-addon@v1.0.1
+              uses: grovegs/actions/.github/actions/pack-godot-addon@v1.0.2
               with:
                   addon: ${{ matrix.addon }}
                   version: ${{ needs.shared.outputs.version }}
                   filename: ${{ steps.generate-filename.outputs.package_name }}
 
             - name: 📤 Upload Artifact
-              uses: grovegs/actions/.github/actions/upload-artifact@v1.0.1
+              uses: grovegs/actions/.github/actions/upload-artifact@v1.0.2
               with:
                   name: ${{ steps.generate-filename.outputs.artifact_name }}
                   path: ${{ steps.pack-addon.outputs.package }}
                   retention-days: 7
 
             - name: 📤 Upload Modified Files
-              uses: grovegs/actions/.github/actions/upload-artifact@v1.0.1
+              uses: grovegs/actions/.github/actions/upload-artifact@v1.0.2
               with:
                   name: modified-${{ steps.generate-filename.outputs.artifact_name }}
                   path: ${{ steps.pack-addon.outputs.modified-files }}
@@ -262,21 +262,21 @@ jobs:
 
             - name: 📦 Pack Unity Package
               id: pack-package
-              uses: grovegs/actions/.github/actions/pack-unity-package@v1.0.1
+              uses: grovegs/actions/.github/actions/pack-unity-package@v1.0.2
               with:
                   package: ${{ matrix.package }}
                   version: ${{ needs.shared.outputs.version }}
                   filename: ${{ steps.generate-filename.outputs.package_name }}
 
             - name: 📤 Upload Artifact
-              uses: grovegs/actions/.github/actions/upload-artifact@v1.0.1
+              uses: grovegs/actions/.github/actions/upload-artifact@v1.0.2
               with:
                   name: ${{ steps.generate-filename.outputs.artifact_name }}
                   path: ${{ steps.pack-package.outputs.package }}
                   retention-days: 7
 
             - name: 📤 Upload Modified Files
-              uses: grovegs/actions/.github/actions/upload-artifact@v1.0.1
+              uses: grovegs/actions/.github/actions/upload-artifact@v1.0.2
               with:
                   name: modified-${{ steps.generate-filename.outputs.artifact_name }}
                   path: ${{ steps.pack-package.outputs.modified-files }}
@@ -318,13 +318,13 @@ jobs:
                   echo "package_name=${package_name}" >> "${GITHUB_OUTPUT}"
 
             - name: 📥 Download Artifact
-              uses: grovegs/actions/.github/actions/download-artifact@v1.0.1
+              uses: grovegs/actions/.github/actions/download-artifact@v1.0.2
               with:
                   name: ${{ steps.generate-filename.outputs.artifact_name }}
                   path: packages
 
             - name: 🚀 Publish NuGet
-              uses: grovegs/actions/.github/actions/publish-nuget@v1.0.1
+              uses: grovegs/actions/.github/actions/publish-nuget@v1.0.2
               with:
                   file: packages/${{ steps.generate-filename.outputs.package_name }}.nupkg
                   api-key: ${{ secrets.nuget-api-key }}
@@ -346,7 +346,7 @@ jobs:
               uses: actions/checkout@v5
 
             - name: 📥 Download Modified Files
-              uses: grovegs/actions/.github/actions/download-artifact@v1.0.1
+              uses: grovegs/actions/.github/actions/download-artifact@v1.0.2
               continue-on-error: true
               with:
                   pattern: modified-*
@@ -373,7 +373,7 @@ jobs:
 
             - name: 📥 Download All Artifacts
               if: inputs.publish-github
-              uses: grovegs/actions/.github/actions/download-artifact@v1.0.1
+              uses: grovegs/actions/.github/actions/download-artifact@v1.0.2
               with:
                   pattern: ${{ needs.shared.outputs.filename }}*
                   path: packages
@@ -397,7 +397,7 @@ jobs:
 
             - name: 🚀 Publish to GitHub
               if: inputs.publish-github
-              uses: grovegs/actions/.github/actions/publish-github@v1.0.1
+              uses: grovegs/actions/.github/actions/publish-github@v1.0.2
               with:
                   title: ${{ inputs.name }} ${{ needs.shared.outputs.version }}
                   version: ${{ needs.shared.outputs.version }}
@@ -407,7 +407,7 @@ jobs:
 
             - name: 📢 Notify Discord Success
               if: success() && inputs.publish-discord
-              uses: grovegs/actions/.github/actions/notify-discord@v1.0.1
+              uses: grovegs/actions/.github/actions/notify-discord@v1.0.2
               with:
                   webhook-url: ${{ secrets.discord-webhook }}
                   title: ✅ ${{ github.event.repository.name }}
@@ -419,7 +419,7 @@ jobs:
 
             - name: 📢 Notify Discord Failure
               if: failure() && inputs.publish-discord
-              uses: grovegs/actions/.github/actions/notify-discord@v1.0.1
+              uses: grovegs/actions/.github/actions/notify-discord@v1.0.2
               with:
                   webhook-url: ${{ secrets.discord-webhook }}
                   title: ❌ ${{ github.event.repository.name }}
