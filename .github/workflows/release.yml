@@ -22,6 +22,8 @@ jobs:
         runs-on: ubuntu-latest
         outputs:
             version: ${{ steps.bump-version.outputs.next-version }}
+            changelog-raw: ${{ steps.generate-changelog.outputs.changelog-raw }}
+            changelog-plain: ${{ steps.generate-changelog.outputs.changelog-plain }}
             changelog-markdown: ${{ steps.generate-changelog.outputs.changelog-markdown }}
 
         steps:
@@ -30,21 +32,25 @@ jobs:
               with:
                   fetch-depth: 0
 
+            - name: 📝 Generate Changelog
+              id: generate-changelog
+              uses: grovegs/actions/.github/actions/generate-changelog@v1.0.4
+
+            - name: 🔖 Configure Git
+              shell: bash
+              run: |
+                  git config user.name "github-actions[bot]"
+                  git config user.email "github-actions[bot]@users.noreply.github.com"
+
             - name: 🆙 Bump Version
               id: bump-version
-              uses: grovegs/actions/.github/actions/bump-version@v1.0.1
+              uses: grovegs/actions/.github/actions/bump-version@v1.0.4
               with:
                   version-type: ${{ inputs.version-type }}
 
-            - name: 📝 Generate Changelog
-              id: generate-changelog
-              uses: grovegs/actions/.github/actions/generate-changelog@v1.0.1
-              with:
-                  next-version: ${{ steps.bump-version.outputs.next-version }}
-
-    release-github:
-        name: Publish to GitHub
-        needs: [prepare]
+    release:
+        name: Publish Release
+        needs: prepare
         runs-on: ubuntu-latest
 
         steps:
@@ -52,7 +58,7 @@ jobs:
               uses: actions/checkout@v5
 
             - name: 🚀 Publish to GitHub
-              uses: grovegs/actions/.github/actions/publish-github@v1.0.1
+              uses: grovegs/actions/.github/actions/publish-github@v1.0.4
               with:
                   title: Release v${{ needs.prepare.outputs.version }}
                   version: v${{ needs.prepare.outputs.version }}
@@ -61,10 +67,10 @@ jobs:
 
             - name: 📢 Notify Discord Success
               if: success()
-              uses: grovegs/actions/.github/actions/notify-discord@v1.0.1
+              uses: grovegs/actions/.github/actions/notify-discord@v1.0.4
               with:
                   webhook-url: ${{ secrets.DISCORD_WEBHOOK }}
-                  title: ✅ ${{ github.event.repository.name }}
+                  title: ✅ ${{ github.event.repository.name }} v${{ needs.prepare.outputs.version }} (${{ github.ref_name }})
                   description: |
                       ${{ needs.prepare.outputs.changelog-markdown }}
 
@@ -73,10 +79,10 @@ jobs:
 
             - name: 📢 Notify Discord Failure
               if: failure()
-              uses: grovegs/actions/.github/actions/notify-discord@v1.0.1
+              uses: grovegs/actions/.github/actions/notify-discord@v1.0.4
               with:
                   webhook-url: ${{ secrets.DISCORD_WEBHOOK }}
-                  title: ❌ ${{ github.event.repository.name }}
+                  title: ❌ ${{ github.event.repository.name }} v${{ needs.prepare.outputs.version }} (${{ github.ref_name }})
                   description: |
                       Release publication failed.
 
