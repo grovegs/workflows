@@ -32,21 +32,17 @@ jobs:
               with:
                   fetch-depth: 0
 
-            - name: 📝 Generate Changelog
-              id: generate-changelog
-              uses: grovegs/actions/.github/actions/generate-changelog@v1.0.4
-
-            - name: 🔖 Configure Git
-              shell: bash
-              run: |
-                  git config user.name "github-actions[bot]"
-                  git config user.email "github-actions[bot]@users.noreply.github.com"
-
             - name: 🆙 Bump Version
               id: bump-version
               uses: grovegs/actions/.github/actions/bump-version@v1.0.4
               with:
                   version-type: ${{ inputs.version-type }}
+
+            - name: 📝 Generate Changelog
+              id: generate-changelog
+              uses: grovegs/actions/.github/actions/generate-changelog@v1.0.4
+              with:
+                  next-version: ${{ steps.bump-version.outputs.next-version }}
 
     release:
         name: Publish Release

@@ -3,6 +3,11 @@ name: 🧪 Test Package
 on:
     workflow_call:
         inputs:
+            runs-on:
+                description: The type of runner to use (ubuntu-latest, macos-latest, or self-hosted label)
+                required: false
+                type: string
+                default: "ubuntu-latest"
             dotnet-project:
                 description: Path to the .NET test project to test such as "tests/Core.Tests"
                 required: false
@@ -18,20 +23,20 @@ jobs:
     test-dotnet:
         name: Test .NET
         if: inputs.dotnet-project != ''
-        runs-on: ubuntu-latest
+        runs-on: ${{ inputs.runs-on }}
 
         steps:
             - name: 📂 Checkout Code
               uses: actions/checkout@v5
 
             - name: 🔧 Setup .NET
-              uses: grovegs/actions/.github/actions/setup-dotnet@v1.0.1
+              uses: grovegs/actions/.github/actions/setup-dotnet@v1.0.4
               with:
                   global-json-file: ${{ inputs.global-json-file }}
                   cache: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop' }}
 
             - name: 🧪 Test .NET Project
-              uses: grovegs/actions/.github/actions/test-dotnet@v1.0.1
+              uses: grovegs/actions/.github/actions/test-dotnet@v1.0.4
               with:
                   project: ${{ inputs.dotnet-project }}
                   configuration: Release

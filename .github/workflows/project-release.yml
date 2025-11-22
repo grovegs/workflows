@@ -3,7 +3,7 @@ name: 🚀 Release Project
 on:
     workflow_call:
         inputs:
-            name:
+            project-name:
                 description: The name of project
                 required: true
                 type: string
@@ -11,6 +11,11 @@ on:
                 description: Specifies the version type such as major, minor, or patch for the build
                 required: true
                 type: string
+            runs-on:
+                description: The type of runner to use (ubuntu-latest, macos-latest, or self-hosted label)
+                required: false
+                type: string
+                default: "macos-latest"
             global-json-file:
                 description: The relative path to the global.json file to extract .NET and Godot version
                 required: false
@@ -138,7 +143,7 @@ on:
 jobs:
     prepare:
         name: Prepare Release
-        runs-on: ubuntu-latest
+        runs-on: ${{ inputs.runs-on }}
         outputs:
             version: ${{ steps.bump-version.outputs.next-version }}
             changelog-plain: ${{ steps.generate-changelog.outputs.changelog-plain }}
@@ -153,13 +158,13 @@ jobs:
 
             - name: 🆙 Bump Version
               id: bump-version
-              uses: grovegs/actions/.github/actions/bump-version@v1.0.1
+              uses: grovegs/actions/.github/actions/bump-version@v1.0.4
               with:
                   version-type: ${{ inputs.version-type }}
 
             - name: 📝 Generate Changelog
               id: generate-changelog
-              uses: grovegs/actions/.github/actions/generate-changelog@v1.0.1
+              uses: grovegs/actions/.github/actions/generate-changelog@v1.0.4
               with:
                   next-version: ${{ steps.bump-version.outputs.next-version }}
 
@@ -170,7 +175,7 @@ jobs:
                   #!/usr/bin/env bash
                   set -euo pipefail
 
-                  filename=$(echo "${{ inputs.name }}" | sed -E 's/([[:space:]]|_)/-/g; s/([a-z])([A-Z])/\1-\2/g' | tr '[:upper:]' '[:lower:]')
+                  filename=$(echo "${{ inputs.project-name }}" | sed -E 's/([[:space:]]|_)/-/g; s/([a-z])([A-Z])/\1-\2/g' | tr '[:upper:]' '[:lower:]')
                   filename="${filename}-${{ steps.bump-version.outputs.next-version }}"
                   echo "filename=${filename}" >> "${GITHUB_OUTPUT}"
 
@@ -178,7 +183,7 @@ jobs:
         name: Build Android
         if: inputs.build-android && (inputs.godot-project != '' || inputs.unity-project != '')
         needs: prepare
-        runs-on: macos-latest
+        runs-on: ${{ inputs.runs-on }}
 
         steps:
             - name: 📂 Checkout Code
@@ -186,28 +191,28 @@ jobs:
 
             - name: 🔧 Setup .NET
               if: inputs.godot-project != ''
-              uses: grovegs/actions/.github/actions/setup-dotnet@v1.0.1
+              uses: grovegs/actions/.github/actions/setup-dotnet@v1.0.4
               with:
                   global-json-file: ${{ inputs.global-json-file }}
                   cache: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop' }}
 
             - name: 🎮 Setup Godot
               if: inputs.godot-project != ''
-              uses: grovegs/actions/.github/actions/setup-godot@v1.0.1
+              uses: grovegs/actions/.github/actions/setup-godot@v1.0.4
               with:
                   global-json-file: ${{ inputs.global-json-file }}
                   target-platforms: Android
                   cache: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop' }}
 
             - name: 🤖 Setup Android
-              uses: grovegs/actions/.github/actions/setup-android@v1.0.1
+              uses: grovegs/actions/.github/actions/setup-android@v1.0.4
               with:
                   java-version: 17
                   android-packages: ndk;27.2.12479018 platforms;android-35 build-tools;34.0.0
 
             - name: 🎮 Setup Unity
               if: inputs.unity-project != ''
-              uses: grovegs/actions/.github/actions/setup-unity@v1.0.1
+              uses: grovegs/actions/.github/actions/setup-unity@v1.0.4
               with:
                   project: ${{ inputs.unity-project }}
                   unity-modules: android
@@ -216,7 +221,7 @@ jobs:
             - name: 🏗️ Build Godot
               if: inputs.godot-project != ''
               id: build-godot
-              uses: grovegs/actions/.github/actions/build-godot@v1.0.1
+              uses: grovegs/actions/.github/actions/build-godot@v1.0.4
               with:
                   project: ${{ inputs.godot-project }}
                   global-json-file: ${{ inputs.global-json-file }}
@@ -232,7 +237,7 @@ jobs:
             - name: 🏗️ Build Unity
               if: inputs.unity-project != ''
               id: build-unity
-              uses: grovegs/actions/.github/actions/build-unity@v1.0.1
+              uses: grovegs/actions/.github/actions/build-unity@v1.0.4
               with:
                   project: ${{ inputs.unity-project }}
                   version: ${{ needs.prepare.outputs.version }}
@@ -249,7 +254,7 @@ jobs:
                   cache: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop' }}
 
             - name: 📤 Upload Build Artifact
-              uses: grovegs/actions/.github/actions/upload-artifact@v1.0.1
+              uses: grovegs/actions/.github/actions/upload-artifact@v1.0.4
               if: steps.build-godot.outputs.file != '' || steps.build-unity.outputs.file != ''
               with:
                   name: ${{ needs.prepare.outputs.filename }}-android
@@ -260,7 +265,7 @@ jobs:
         name: Build iOS
         if: inputs.build-ios && (inputs.godot-project != '' || inputs.unity-project != '')
         needs: prepare
-        runs-on: macos-latest
+        runs-on: ${{ inputs.runs-on }}
 
         steps:
             - name: 📂 Checkout Code
@@ -268,27 +273,27 @@ jobs:
 
             - name: 🔧 Setup .NET
               if: inputs.godot-project != ''
-              uses: grovegs/actions/.github/actions/setup-dotnet@v1.0.1
+              uses: grovegs/actions/.github/actions/setup-dotnet@v1.0.4
               with:
                   global-json-file: ${{ inputs.global-json-file }}
                   cache: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop' }}
 
             - name: 🎮 Setup Godot
               if: inputs.godot-project != ''
-              uses: grovegs/actions/.github/actions/setup-godot@v1.0.1
+              uses: grovegs/actions/.github/actions/setup-godot@v1.0.4
               with:
                   global-json-file: ${{ inputs.global-json-file }}
                   target-platforms: iOS
                   cache: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop' }}
 
             - name: 🍎 Setup Xcode
-              uses: grovegs/actions/.github/actions/setup-xcode@v1.0.1
+              uses: grovegs/actions/.github/actions/setup-xcode@v1.0.4
               with:
                   xcode-version: "16.1"
 
             - name: 🎮 Setup Unity
               if: inputs.unity-project != ''
-              uses: grovegs/actions/.github/actions/setup-unity@v1.0.1
+              uses: grovegs/actions/.github/actions/setup-unity@v1.0.4
               with:
                   project: ${{ inputs.unity-project }}
                   unity-modules: ios
@@ -297,7 +302,7 @@ jobs:
             - name: 🏗️ Build Godot
               if: inputs.godot-project != ''
               id: build-godot
-              uses: grovegs/actions/.github/actions/build-godot@v1.0.1
+              uses: grovegs/actions/.github/actions/build-godot@v1.0.4
               with:
                   project: ${{ inputs.godot-project }}
                   global-json-file: ${{ inputs.global-json-file }}
@@ -315,7 +320,7 @@ jobs:
             - name: 🏗️ Build Unity
               if: inputs.unity-project != ''
               id: build-unity
-              uses: grovegs/actions/.github/actions/build-unity@v1.0.1
+              uses: grovegs/actions/.github/actions/build-unity@v1.0.4
               with:
                   project: ${{ inputs.unity-project }}
                   version: ${{ needs.prepare.outputs.version }}
@@ -335,7 +340,7 @@ jobs:
                   cache: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop' }}
 
             - name: 📤 Upload Build Artifact
-              uses: grovegs/actions/.github/actions/upload-artifact@v1.0.1
+              uses: grovegs/actions/.github/actions/upload-artifact@v1.0.4
               if: steps.build-godot.outputs.file != '' || steps.build-unity.outputs.file != ''
               with:
                   name: ${{ needs.prepare.outputs.filename }}-ios
@@ -346,7 +351,7 @@ jobs:
         name: Release Platforms
         if: always() && needs.prepare.result == 'success' && (needs.build-android.result == 'success' || needs.build-ios.result == 'success')
         needs: [prepare, build-android, build-ios]
-        runs-on: ubuntu-latest
+        runs-on: ${{ inputs.runs-on }}
 
         steps:
             - name: 📂 Checkout Code
@@ -355,7 +360,7 @@ jobs:
             - name: 📥 Download Android Artifact
               if: needs.build-android.result == 'success'
               continue-on-error: true
-              uses: grovegs/actions/.github/actions/download-artifact@v1.0.1
+              uses: grovegs/actions/.github/actions/download-artifact@v1.0.4
               with:
                   name: ${{ needs.prepare.outputs.filename }}-android
                   path: builds/android
@@ -363,7 +368,7 @@ jobs:
             - name: 📥 Download iOS Artifact
               if: needs.build-ios.result == 'success'
               continue-on-error: true
-              uses: grovegs/actions/.github/actions/download-artifact@v1.0.1
+              uses: grovegs/actions/.github/actions/download-artifact@v1.0.4
               with:
                   name: ${{ needs.prepare.outputs.filename }}-ios
                   path: builds/ios
@@ -399,31 +404,12 @@ jobs:
                   echo "Found Android file: ${android_file}"
                   echo "Found iOS file: ${ios_file}"
 
-            - name: 🏷️ Create and Push Tag
-              shell: bash
-              run: |
-                  #!/usr/bin/env bash
-                  set -euo pipefail
-
-                  git config user.name "github-actions[bot]"
-                  git config user.email "github-actions[bot]@users.noreply.github.com"
-
-                  tag="v${{ needs.prepare.outputs.version }}"
-
-                  if git rev-parse "${tag}" >/dev/null 2>&1; then
-                      echo "Tag ${tag} already exists, skipping creation"
-                  else
-                      git tag -a "${tag}" -m "Release ${tag}"
-                      git push origin "${tag}"
-                      echo "Created and pushed tag ${tag}"
-                  fi
-
             - name: 🚀 Publish to GitHub
               if: inputs.publish-github && steps.find-build-files.outputs.all-files != ''
-              uses: grovegs/actions/.github/actions/publish-github@v1.0.1
+              uses: grovegs/actions/.github/actions/publish-github@v1.0.4
               with:
-                  title: ${{ inputs.name }} ${{ needs.prepare.outputs.version }}
-                  version: ${{ needs.prepare.outputs.version }}
+                  title: ${{ inputs.project-name }} v${{ needs.prepare.outputs.version }}
+                  version: v${{ needs.prepare.outputs.version }}
                   changelog: ${{ needs.prepare.outputs.changelog-markdown }}
                   github-token: ${{ secrets.github-token }}
                   assets: ${{ steps.find-build-files.outputs.all-files }}
@@ -431,7 +417,7 @@ jobs:
             - name: 📤 Publish Android to Firebase
               if: inputs.publish-firebase && steps.find-build-files.outputs.android-file != ''
               continue-on-error: true
-              uses: grovegs/actions/.github/actions/publish-firebase@v1.0.1
+              uses: grovegs/actions/.github/actions/publish-firebase@v1.0.4
               with:
                   file: ${{ steps.find-build-files.outputs.android-file }}
                   app-id: ${{ secrets.firebase-app-id-android }}
@@ -442,7 +428,7 @@ jobs:
             - name: 📤 Publish iOS to Firebase
               if: inputs.publish-firebase && steps.find-build-files.outputs.ios-file != ''
               continue-on-error: true
-              uses: grovegs/actions/.github/actions/publish-firebase@v1.0.1
+              uses: grovegs/actions/.github/actions/publish-firebase@v1.0.4
               with:
                   file: ${{ steps.find-build-files.outputs.ios-file }}
                   app-id: ${{ secrets.firebase-app-id-ios }}
@@ -453,7 +439,7 @@ jobs:
             - name: 📤 Publish to TestFlight
               if: inputs.publish-testflight && steps.find-build-files.outputs.ios-file != ''
               continue-on-error: true
-              uses: grovegs/actions/.github/actions/publish-testflight@v1.0.1
+              uses: grovegs/actions/.github/actions/publish-testflight@v1.0.4
               with:
                   file: ${{ steps.find-build-files.outputs.ios-file }}
                   api-key: ${{ secrets.ios-api-key }}
@@ -462,10 +448,10 @@ jobs:
 
             - name: 📢 Notify Discord Success
               if: success() && inputs.publish-discord
-              uses: grovegs/actions/.github/actions/notify-discord@v1.0.1
+              uses: grovegs/actions/.github/actions/notify-discord@v1.0.4
               with:
                   webhook-url: ${{ secrets.discord-webhook }}
-                  title: ✅ ${{ github.event.repository.name }}
+                  title: ✅ ${{ github.event.repository.name }} v${{ needs.prepare.outputs.version }} (${{ github.ref_name }})
                   description: |
                       ${{ needs.prepare.outputs.changelog-markdown }}
 
@@ -474,10 +460,10 @@ jobs:
 
             - name: 📢 Notify Discord Failure
               if: failure() && inputs.publish-discord
-              uses: grovegs/actions/.github/actions/notify-discord@v1.0.1
+              uses: grovegs/actions/.github/actions/notify-discord@v1.0.4
               with:
                   webhook-url: ${{ secrets.discord-webhook }}
-                  title: ❌ ${{ github.event.repository.name }}
+                  title: ❌ ${{ github.event.repository.name }} v${{ needs.prepare.outputs.version }} (${{ github.ref_name }})
                   description: |
                       Release publication failed.
 
