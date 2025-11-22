@@ -46,6 +46,11 @@ on:
                 required: false
                 type: string
                 default: ""
+            create-tag:
+                description: Flag to create and push a Git tag
+                required: false
+                type: boolean
+                default: true
             publish-github:
                 description: If true, publish release to GitHub
                 required: false

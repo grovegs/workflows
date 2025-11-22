@@ -52,7 +52,6 @@ jobs:
               uses: grovegs/actions/.github/actions/setup-dotnet@v1.0.4
               with:
                   global-json-file: ${{ inputs.global-json-file }}
-                  cache: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop' }}
 
             - name: 🎨 Format .NET Project
               uses: grovegs/actions/.github/actions/format-dotnet@v1.0.4

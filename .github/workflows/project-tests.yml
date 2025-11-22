@@ -43,7 +43,6 @@ jobs:
               uses: grovegs/actions/.github/actions/setup-dotnet@v1.0.4
               with:
                   global-json-file: ${{ inputs.global-json-file }}
-                  cache: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop' }}
 
             - name: 🧪 Test .NET Project
               uses: grovegs/actions/.github/actions/test-dotnet@v1.0.4
@@ -64,19 +63,16 @@ jobs:
               uses: grovegs/actions/.github/actions/setup-dotnet@v1.0.4
               with:
                   global-json-file: ${{ inputs.global-json-file }}
-                  cache: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop' }}
 
             - name: 🎮 Setup Godot
               uses: grovegs/actions/.github/actions/setup-godot@v1.0.4
               with:
                   global-json-file: ${{ inputs.global-json-file }}
-                  cache: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop' }}
 
             - name: 🧪 Test Godot Project
               uses: grovegs/actions/.github/actions/test-godot@v1.0.4
               with:
                   project: ${{ inputs.godot-project }}
-                  global-json-file: ${{ inputs.global-json-file }}
 
     test-unity:
         name: Test Unity
@@ -91,7 +87,6 @@ jobs:
               uses: grovegs/actions/.github/actions/setup-unity@v1.0.4
               with:
                   project: ${{ inputs.unity-project }}
-                  cache: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop' }}
 
             - name: 🧪 Test Unity Project
               uses: grovegs/actions/.github/actions/test-unity@v1.0.4
