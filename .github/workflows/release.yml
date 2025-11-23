@@ -41,8 +41,6 @@ jobs:
             - name: 📝 Generate Changelog
               id: generate-changelog
               uses: grovegs/actions/.github/actions/generate-changelog@v1.0.4
-              with:
-                  next-version: ${{ steps.bump-version.outputs.next-version }}
 
     release:
         name: Publish Release
