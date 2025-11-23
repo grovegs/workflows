@@ -3,16 +3,26 @@ name: 🎨 Format Package
 on:
     workflow_call:
         inputs:
+            runs-on:
+                description: The type of runner to use (ubuntu-latest, macos-latest, or self-hosted label)
+                required: false
+                type: string
+                default: "ubuntu-latest"
             files:
                 description: File patterns to format using Prettier such as **/*.{yml,yaml,json,md,sh}
                 required: false
                 type: string
                 default: ""
-            dotnet-projects:
-                description: Array of .NET project paths to format such as ["src/Core", "src/Godot"]
+            dotnet-project:
+                description: Path to the .NET project to format such as "src/Core"
                 required: false
                 type: string
-                default: "[]"
+                default: ""
+            dotnet-test-project:
+                description: Path to the .NET test project to format such as "tests/Core.Tests"
+                required: false
+                type: string
+                default: ""
             global-json-file:
                 description: The relative path to the global.json file to extract .NET version
                 required: false
@@ -23,36 +33,51 @@ jobs:
     format-files:
         name: Format Files
         if: inputs.files != ''
-        runs-on: ubuntu-latest
+        runs-on: ${{ inputs.runs-on }}
 
         steps:
             - name: 📂 Checkout Code
               uses: actions/checkout@v5
 
             - name: 🎨 Format Files
-              uses: grovegs/actions/.github/actions/format-files@v1.0.1
+              uses: grovegs/actions/.github/actions/format-files@v1.0.6
               with:
                   files: ${{ inputs.files }}
 
-    format-dotnet-projects:
-        name: Format .NET Project
-        if: fromJSON(inputs.dotnet-projects)[0] != null
-        runs-on: ubuntu-latest
-        strategy:
-            matrix:
-                project: ${{ fromJSON(inputs.dotnet-projects) }}
+    format-dotnet:
+        name: Format .NET
+        if: inputs.dotnet-project != ''
+        runs-on: ${{ inputs.runs-on }}
 
         steps:
             - name: 📂 Checkout Code
               uses: actions/checkout@v5
 
             - name: 🔧 Setup .NET
-              uses: grovegs/actions/.github/actions/setup-dotnet@v1.0.1
+              uses: grovegs/actions/.github/actions/setup-dotnet@v1.0.6
               with:
                   global-json-file: ${{ inputs.global-json-file }}
-                  cache: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop' }}
 
             - name: 🎨 Format .NET Project
-              uses: grovegs/actions/.github/actions/format-dotnet@v1.0.1
+              uses: grovegs/actions/.github/actions/format-dotnet@v1.0.6
               with:
-                  project: ${{ matrix.project }}
+                  project: ${{ inputs.dotnet-project }}
+
+    format-dotnet-test:
+        name: Format .NET Test
+        if: inputs.dotnet-test-project != ''
+        runs-on: ${{ inputs.runs-on }}
+
+        steps:
+            - name: 📂 Checkout Code
+              uses: actions/checkout@v5
+
+            - name: 🔧 Setup .NET
+              uses: grovegs/actions/.github/actions/setup-dotnet@v1.0.6
+              with:
+                  global-json-file: ${{ inputs.global-json-file }}
+
+            - name: 🎨 Format .NET Test Project
+              uses: grovegs/actions/.github/actions/format-dotnet@v1.0.6
+              with:
+                  project: ${{ inputs.dotnet-test-project }}

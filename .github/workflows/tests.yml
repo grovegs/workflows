@@ -15,67 +15,68 @@ permissions:
 
 jobs:
     test-package-tests:
-        name: Test Package Workflows
+        name: Test Package Tests
         uses: ./.github/workflows/package-tests.yml
         with:
-            dotnet-projects: '["sandbox/ConsoleApplication"]'
+            dotnet-project: sandbox/ConsoleApplication
             global-json-file: sandbox/ConsoleApplication/global.json
 
-    test-godot-project-tests:
-        name: Test Godot Project
+    test-godot-tests:
+        name: Test Godot Project Tests
         uses: ./.github/workflows/project-tests.yml
         with:
-            godot-projects: '["sandbox/GodotApplication"]'
+            godot-project: sandbox/GodotApplication
             global-json-file: sandbox/GodotApplication/global.json
 
-    test-unity-project-tests:
-        name: Test Unity Project
+    test-unity-tests:
+        name: Test Unity Project Tests
         uses: ./.github/workflows/project-tests.yml
         with:
-            unity-projects: '["sandbox/UnityApplication"]'
+            unity-project: sandbox/UnityApplication
 
     test-package-format:
         name: Test Package Format
         uses: ./.github/workflows/package-format.yml
         with:
-            dotnet-projects: '["sandbox/ConsoleApplication", "sandbox/GodotApplication"]'
+            dotnet-project: sandbox/ConsoleApplication
             global-json-file: sandbox/ConsoleApplication/global.json
 
     test-project-format:
         name: Test Project Format
         uses: ./.github/workflows/project-format.yml
         with:
-            dotnet-projects: '["sandbox/ConsoleApplication"]'
+            dotnet-project: sandbox/ConsoleApplication
             global-json-file: sandbox/ConsoleApplication/global.json
 
-    test-release-package:
-        name: Test Release Package
+    test-package-release:
+        name: Test Package Release
         uses: ./.github/workflows/package-release.yml
         with:
-            name: Test Package
+            package-name: Test Package
             version-type: patch
-            dotnet-projects: '["sandbox/ConsoleApplication"]'
-            godot-addons: '["sandbox/GodotApplication/addons/TestAddon"]'
-            unity-packages: '["sandbox/UnityApplication/Packages/com.test.package"]'
+            dotnet-project: sandbox/ConsoleApplication
+            godot-addon: sandbox/GodotApplication/addons/TestAddon
+            unity-package: sandbox/UnityApplication/Packages/com.test.package
             global-json-file: sandbox/ConsoleApplication/global.json
+            create-tag: false
             publish-github: false
             publish-nuget: false
             publish-discord: false
         secrets:
             github-token: ${{ secrets.GITHUB_TOKEN }}
 
-    test-release-project:
-        name: Test Release Project
+    test-project-release:
+        name: Test Project Release
         uses: ./.github/workflows/project-release.yml
         with:
-            name: Test Project
+            project-name: Test Project
             version-type: patch
-            environment: Development
-            godot-projects: '["sandbox/GodotApplication"]'
-            unity-projects: '["sandbox/UnityApplication"]'
+            godot-project: sandbox/GodotApplication
+            unity-project: sandbox/UnityApplication
             global-json-file: sandbox/GodotApplication/global.json
-            release-android: false
-            release-ios: false
+            create-tag: false
+            build-android: false
+            build-ios: false
             publish-github: false
             publish-firebase: false
             publish-testflight: false

@@ -3,11 +3,16 @@ name: 🧪 Test Package
 on:
     workflow_call:
         inputs:
-            dotnet-projects:
-                description: Array of .NET test project paths to test such as ["tests/Core.Tests", "tests/Godot.Tests"]
+            runs-on:
+                description: The type of runner to use (ubuntu-latest, macos-latest, or self-hosted label)
                 required: false
                 type: string
-                default: "[]"
+                default: "ubuntu-latest"
+            dotnet-project:
+                description: Path to the .NET test project to test such as "tests/Core.Tests"
+                required: false
+                type: string
+                default: ""
             global-json-file:
                 description: The relative path to the global.json file to extract .NET version
                 required: false
@@ -15,26 +20,22 @@ on:
                 default: ""
 
 jobs:
-    test-dotnet-projects:
-        name: Test .NET Project
-        if: fromJSON(inputs.dotnet-projects)[0] != null
-        runs-on: ubuntu-latest
-        strategy:
-            matrix:
-                project: ${{ fromJSON(inputs.dotnet-projects) }}
+    test-dotnet:
+        name: Test .NET
+        if: inputs.dotnet-project != ''
+        runs-on: ${{ inputs.runs-on }}
 
         steps:
             - name: 📂 Checkout Code
               uses: actions/checkout@v5
 
             - name: 🔧 Setup .NET
-              uses: grovegs/actions/.github/actions/setup-dotnet@v1.0.1
+              uses: grovegs/actions/.github/actions/setup-dotnet@v1.0.6
               with:
                   global-json-file: ${{ inputs.global-json-file }}
-                  cache: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop' }}
 
             - name: 🧪 Test .NET Project
-              uses: grovegs/actions/.github/actions/test-dotnet@v1.0.1
+              uses: grovegs/actions/.github/actions/test-dotnet@v1.0.6
               with:
-                  project: ${{ matrix.project }}
+                  project: ${{ inputs.dotnet-project }}
                   configuration: Release
