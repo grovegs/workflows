@@ -244,6 +244,7 @@ jobs:
                   pattern: modified-*
 
             - name: 💾 Commit Version Changes
+              if: inputs.publish-github
               shell: bash
               run: |
                   #!/usr/bin/env bash
@@ -262,7 +263,6 @@ jobs:
                   fi
 
             - name: 📥 Download .NET Package
-              if: needs.build-dotnet.result == 'success'
               continue-on-error: true
               uses: grovegs/actions/.github/actions/download-artifact@v1.0.6
               with:
@@ -270,7 +270,6 @@ jobs:
                   path: packages/dotnet
 
             - name: 📥 Download Godot Package
-              if: needs.build-godot.result == 'success'
               continue-on-error: true
               uses: grovegs/actions/.github/actions/download-artifact@v1.0.6
               with:
@@ -278,7 +277,6 @@ jobs:
                   path: packages/godot
 
             - name: 📥 Download Unity Package
-              if: needs.build-unity.result == 'success'
               continue-on-error: true
               uses: grovegs/actions/.github/actions/download-artifact@v1.0.6
               with:
