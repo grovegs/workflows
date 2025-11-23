@@ -62,9 +62,3 @@ jobs:
               with:
                   files: "**/*.md"
                   ignore-path: ".gitignore"
-
-            - name: 🎨 Format Shell Scripts
-              uses: grovegs/actions/.github/actions/format-files@v1.0.4
-              with:
-                  files: "**/*.sh"
-                  ignore-path: ".gitignore"
