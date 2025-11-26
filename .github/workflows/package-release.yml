@@ -296,21 +296,31 @@ jobs:
                   unity_package=""
 
                   if [ -d packages/dotnet ]; then
-                    dotnet_package=$(find packages/dotnet -type f -name "*.nupkg" 2>/dev/null | head -n 1 || echo "")
+                    dotnet_package=$(find packages/dotnet -type f -name "*.nupkg" 2>/dev/null | head -n 1)
                     [ -n "${dotnet_package}" ] && all_packages="${dotnet_package}"
                   fi
 
                   if [ -d packages/godot ]; then
-                    godot_package=$(find packages/godot -type f \( -name "*.zip" -o -name "*.tgz" \) 2>/dev/null | head -n 1 || echo "")
-                    [ -n "${godot_package}" ] && all_packages="${all_packages} ${godot_package}"
+                    godot_package=$(find packages/godot -type f \( -name "*.zip" -o -name "*.tgz" \) 2>/dev/null | head -n 1)
+                    if [ -n "${godot_package}" ]; then
+                      if [ -n "${all_packages}" ]; then
+                        all_packages="${all_packages} ${godot_package}"
+                      else
+                        all_packages="${godot_package}"
+                      fi
+                    fi
                   fi
 
                   if [ -d packages/unity ]; then
-                    unity_package=$(find packages/unity -type f \( -name "*.zip" -o -name "*.tgz" \) 2>/dev/null | head -n 1 || echo "")
-                    [ -n "${unity_package}" ] && all_packages="${all_packages} ${unity_package}"
+                    unity_package=$(find packages/unity -type f \( -name "*.zip" -o -name "*.tgz" \) 2>/dev/null | head -n 1)
+                    if [ -n "${unity_package}" ]; then
+                      if [ -n "${all_packages}" ]; then
+                        all_packages="${all_packages} ${unity_package}"
+                      else
+                        all_packages="${unity_package}"
+                      fi
+                    fi
                   fi
-
-                  all_packages=$(echo "${all_packages}" | xargs)
 
                   echo "all-packages=${all_packages}" >> "${GITHUB_OUTPUT}"
                   echo "dotnet-package=${dotnet_package}" >> "${GITHUB_OUTPUT}"
