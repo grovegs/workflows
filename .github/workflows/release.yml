@@ -28,7 +28,7 @@ jobs:
 
         steps:
             - name: 📂 Checkout Code
-              uses: actions/checkout@v5
+              uses: actions/checkout@v6
               with:
                   fetch-depth: 0
 
@@ -49,7 +49,7 @@ jobs:
 
         steps:
             - name: 📂 Checkout Code
-              uses: actions/checkout@v5
+              uses: actions/checkout@v6
 
             - name: 🚀 Publish to GitHub
               uses: grovegs/actions/.github/actions/publish-github@v1.0.6
