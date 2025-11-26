@@ -37,7 +37,7 @@ jobs:
 
         steps:
             - name: 📂 Checkout Code
-              uses: actions/checkout@v5
+              uses: actions/checkout@v6
 
             - name: 🎨 Format Files
               uses: grovegs/actions/.github/actions/format-files@v1.0.6
@@ -51,7 +51,7 @@ jobs:
 
         steps:
             - name: 📂 Checkout Code
-              uses: actions/checkout@v5
+              uses: actions/checkout@v6
 
             - name: 🔧 Setup .NET
               uses: grovegs/actions/.github/actions/setup-dotnet@v1.0.6
@@ -70,7 +70,7 @@ jobs:
 
         steps:
             - name: 📂 Checkout Code
-              uses: actions/checkout@v5
+              uses: actions/checkout@v6
 
             - name: 🔧 Setup .NET
               uses: grovegs/actions/.github/actions/setup-dotnet@v1.0.6

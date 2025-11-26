@@ -90,7 +90,7 @@ jobs:
 
         steps:
             - name: 📂 Checkout Code
-              uses: actions/checkout@v5
+              uses: actions/checkout@v6
               with:
                   fetch-depth: 0
 
@@ -124,7 +124,7 @@ jobs:
 
         steps:
             - name: 📂 Checkout Code
-              uses: actions/checkout@v5
+              uses: actions/checkout@v6
 
             - name: 🔧 Setup .NET
               uses: grovegs/actions/.github/actions/setup-dotnet@v1.0.6
@@ -171,7 +171,7 @@ jobs:
 
         steps:
             - name: 📂 Checkout Code
-              uses: actions/checkout@v5
+              uses: actions/checkout@v6
 
             - name: 📦 Pack Godot Addon
               id: pack-addon
@@ -203,7 +203,7 @@ jobs:
 
         steps:
             - name: 📂 Checkout Code
-              uses: actions/checkout@v5
+              uses: actions/checkout@v6
 
             - name: 📦 Pack Unity Package
               id: pack-package
@@ -235,7 +235,7 @@ jobs:
 
         steps:
             - name: 📂 Checkout Code
-              uses: actions/checkout@v5
+              uses: actions/checkout@v6
 
             - name: 📥 Download Modified Files
               uses: grovegs/actions/.github/actions/download-artifact@v1.0.6
