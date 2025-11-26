@@ -51,11 +51,36 @@ on:
                 required: false
                 type: string
                 default: "Default"
-            xcode-version:
+            unity-cache:
+                description: Flag to enable or disable Unity Library caching
+                required: false
+                type: boolean
+                default: false
+            ios-xcode-version:
                 description: The Xcode version to use for iOS builds
                 required: false
                 type: string
-                default: "16.1"
+                default: ""
+            android-java-version:
+                description: The Java version to use for Android builds
+                required: false
+                type: string
+                default: "17"
+            android-ndk-version:
+                description: The Android NDK version to install
+                required: false
+                type: string
+                default: ""
+            android-platform-version:
+                description: The Android platform version to install
+                required: false
+                type: string
+                default: ""
+            android-build-tools-version:
+                description: The Android build tools version to install
+                required: false
+                type: string
+                default: ""
             ios-export-method:
                 description: The iOS export method (app-store, ad-hoc, development, enterprise)
                 required: false
@@ -220,8 +245,8 @@ jobs:
             - name: 🤖 Setup Android
               uses: grovegs/actions/.github/actions/setup-android@v1.0.6
               with:
-                  java-version: 17
-                  android-packages: ndk;27.2.12479018 platforms;android-35 build-tools;34.0.0
+                  java-version: ${{ inputs.android-java-version }}
+                  android-packages: ${{ inputs.android-ndk-version != '' && format('ndk;{0}', inputs.android-ndk-version) || '' }} ${{ inputs.android-platform-version != '' && format('platforms;android-{0}', inputs.android-platform-version) || '' }} ${{ inputs.android-build-tools-version != '' && format('build-tools;{0}', inputs.android-build-tools-version) || '' }}
 
             - name: 🏗️ Build Godot
               id: build-godot
@@ -269,9 +294,10 @@ jobs:
                   godot-path: ${{ inputs.godot-path }}
 
             - name: 🍎 Setup Xcode
+              if: inputs.ios-xcode-version != ''
               uses: grovegs/actions/.github/actions/setup-xcode@v1.0.6
               with:
-                  xcode-version: ${{ inputs.xcode-version }}
+                  xcode-version: ${{ inputs.ios-xcode-version }}
 
             - name: 🏗️ Build Godot
               id: build-godot
@@ -330,14 +356,14 @@ jobs:
                   android-keystore: ${{ secrets.android-keystore }}
                   android-keystore-user: ${{ secrets.android-keystore-user }}
                   android-keystore-password: ${{ secrets.android-keystore-password }}
-                  cache: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop' }}
+                  cache: ${{ inputs.unity-cache }}
 
             - name: 📤 Upload Build Artifact
               uses: grovegs/actions/.github/actions/upload-artifact@v1.0.6
               if: steps.build-unity.outputs.file != ''
               with:
                   name: ${{ needs.prepare.outputs.filename }}-android
-                  path: steps.build-unity.outputs.file }}
+                  path: ${{ steps.build-unity.outputs.file }}
                   retention-days: 7
 
     build-unity-ios:
@@ -351,9 +377,10 @@ jobs:
               uses: actions/checkout@v5
 
             - name: 🍎 Setup Xcode
+              if: inputs.ios-xcode-version != ''
               uses: grovegs/actions/.github/actions/setup-xcode@v1.0.6
               with:
-                  xcode-version: ${{ inputs.xcode-version }}
+                  xcode-version: ${{ inputs.ios-xcode-version }}
 
             - name: 🎮 Setup Unity
               uses: grovegs/actions/.github/actions/setup-unity@v1.0.6
@@ -380,19 +407,19 @@ jobs:
                   ios-certificate-password: ${{ secrets.ios-certificate-password }}
                   ios-provisioning-profile: ${{ secrets.ios-provisioning-profile }}
                   ios-export-method: ${{ inputs.ios-export-method }}
-                  cache: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop' }}
+                  cache: ${{ inputs.unity-cache }}
 
             - name: 📤 Upload Build Artifact
               uses: grovegs/actions/.github/actions/upload-artifact@v1.0.6
               if: steps.build-unity.outputs.file != ''
               with:
                   name: ${{ needs.prepare.outputs.filename }}-ios
-                  path: steps.build-unity.outputs.file }}
+                  path: ${{ steps.build-unity.outputs.file }}
                   retention-days: 7
 
     release:
         name: Release Platforms
-        if: always() && needs.prepare.result == 'success' && (needs.build-godot-android.result == 'success' || needs.build-godot-ios.result == 'success' && needs.build-unity-android.result == 'success' || needs.build-unity-ios.result == 'success')
+        if: always() && needs.prepare.result == 'success' && (needs.build-godot-android.result == 'success' || needs.build-godot-ios.result == 'success' || needs.build-unity-android.result == 'success' || needs.build-unity-ios.result == 'success')
         needs:
             [
                 prepare,
@@ -433,16 +460,20 @@ jobs:
                   ios_file=""
 
                   if [ -d builds/android ]; then
-                    android_file=$(find builds/android -type f \( -name "*.apk" -o -name "*.aab" \) 2>/dev/null | head -n 1 || echo "")
+                    android_file=$(find builds/android -type f \( -name "*.apk" -o -name "*.aab" \) 2>/dev/null | head -n 1)
                     [ -n "${android_file}" ] && all_files="${android_file}"
                   fi
 
                   if [ -d builds/ios ]; then
-                    ios_file=$(find builds/ios -type f -name "*.ipa" 2>/dev/null | head -n 1 || echo "")
-                    [ -n "${ios_file}" ] && all_files="${all_files} ${ios_file}"
+                    ios_file=$(find builds/ios -type f -name "*.ipa" 2>/dev/null | head -n 1)
+                    if [ -n "${ios_file}" ]; then
+                      if [ -n "${all_files}" ]; then
+                        all_files="${all_files} ${ios_file}"
+                      else
+                        all_files="${ios_file}"
+                      fi
+                    fi
                   fi
-
-                  all_files=$(echo "${all_files}" | xargs)
 
                   echo "all-files=${all_files}" >> "${GITHUB_OUTPUT}"
                   echo "android-file=${android_file}" >> "${GITHUB_OUTPUT}"
