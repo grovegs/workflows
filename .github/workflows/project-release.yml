@@ -409,6 +409,7 @@ jobs:
                   unity-email: ${{ secrets.unity-email }}
                   unity-password: ${{ secrets.unity-password }}
                   unity-license-key: ${{ secrets.unity-license-key }}
+                  unity-path: ${{ inputs.unity-path }}
                   ios-team-id: ${{ secrets.ios-team-id }}
                   ios-certificate: ${{ secrets.ios-certificate }}
                   ios-certificate-password: ${{ secrets.ios-certificate-password }}
