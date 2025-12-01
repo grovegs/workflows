@@ -207,12 +207,6 @@ jobs:
               id: generate-changelog
               uses: grovegs/actions/.github/actions/generate-changelog@v1.0.20
 
-            - name: 🔖 Configure Git
-              shell: bash
-              run: |
-                  git config user.name "github-actions[bot]"
-                  git config user.email "github-actions[bot]@users.noreply.github.com"
-
             - name: 🆙 Bump Version
               id: bump-version
               uses: grovegs/actions/.github/actions/bump-version@v1.0.20
