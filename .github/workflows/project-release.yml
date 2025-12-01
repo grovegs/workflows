@@ -448,14 +448,14 @@ jobs:
               uses: actions/checkout@v6
 
             - name: 📥 Download Android Artifact
-              continue-on-error: true
+              if: needs.build-godot-android.result == 'success' || needs.build-unity-android.result == 'success'
               uses: grovegs/actions/.github/actions/download-artifact@v1.0.15
               with:
                   name: ${{ needs.prepare.outputs.filename }}-android
                   path: builds/android
 
             - name: 📥 Download iOS Artifact
-              continue-on-error: true
+              if: needs.build-godot-ios.result == 'success' || needs.build-unity-ios.result == 'success'
               uses: grovegs/actions/.github/actions/download-artifact@v1.0.15
               with:
                   name: ${{ needs.prepare.outputs.filename }}-ios
