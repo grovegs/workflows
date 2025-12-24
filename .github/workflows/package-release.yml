@@ -96,11 +96,11 @@ jobs:
 
             - name: 📝 Generate Changelog
               id: generate-changelog
-              uses: grovegs/actions/.github/actions/generate-changelog@v1.0.27
+              uses: grovegs/actions/.github/actions/generate-changelog@v1.0.31
 
             - name: 🆙 Bump Version
               id: bump-version
-              uses: grovegs/actions/.github/actions/bump-version@v1.0.27
+              uses: grovegs/actions/.github/actions/bump-version@v1.0.31
               with:
                   version-type: ${{ inputs.version-type }}
                   create-tag: ${{ inputs.create-tag }}
@@ -127,12 +127,12 @@ jobs:
               uses: actions/checkout@v6
 
             - name: 🔧 Setup .NET
-              uses: grovegs/actions/.github/actions/setup-dotnet@v1.0.27
+              uses: grovegs/actions/.github/actions/setup-dotnet@v1.0.31
               with:
                   global-json-file: ${{ inputs.global-json-file }}
 
             - name: 🏗️ Build .NET Project
-              uses: grovegs/actions/.github/actions/build-dotnet@v1.0.27
+              uses: grovegs/actions/.github/actions/build-dotnet@v1.0.31
               with:
                   project: ${{ inputs.dotnet-project }}
                   configuration: Release
@@ -140,7 +140,7 @@ jobs:
 
             - name: 📦 Pack NuGet
               id: pack-nuget
-              uses: grovegs/actions/.github/actions/pack-dotnet@v1.0.27
+              uses: grovegs/actions/.github/actions/pack-dotnet@v1.0.31
               with:
                   project: ${{ inputs.dotnet-project }}
                   configuration: Release
@@ -149,7 +149,7 @@ jobs:
                   directory-build-props: ${{ inputs.directory-build-props }}
 
             - name: 📤 Upload Package Artifact
-              uses: grovegs/actions/.github/actions/upload-artifact@v1.0.27
+              uses: grovegs/actions/.github/actions/upload-artifact@v1.0.31
               with:
                   name: ${{ needs.prepare.outputs.filename }}-dotnet
                   path: ${{ steps.pack-nuget.outputs.package }}
@@ -157,7 +157,7 @@ jobs:
 
             - name: 📤 Upload Modified Files
               if: steps.pack-nuget.outputs.modified-files != ''
-              uses: grovegs/actions/.github/actions/upload-artifact@v1.0.27
+              uses: grovegs/actions/.github/actions/upload-artifact@v1.0.31
               with:
                   name: modified-dotnet
                   path: ${{ steps.pack-nuget.outputs.modified-files }}
@@ -175,21 +175,21 @@ jobs:
 
             - name: 📦 Pack Godot Addon
               id: pack-addon
-              uses: grovegs/actions/.github/actions/pack-godot-addon@v1.0.27
+              uses: grovegs/actions/.github/actions/pack-godot-addon@v1.0.31
               with:
                   addon: ${{ inputs.godot-addon }}
                   version: ${{ needs.prepare.outputs.version }}
                   filename: ${{ needs.prepare.outputs.filename }}
 
             - name: 📤 Upload Package Artifact
-              uses: grovegs/actions/.github/actions/upload-artifact@v1.0.27
+              uses: grovegs/actions/.github/actions/upload-artifact@v1.0.31
               with:
                   name: ${{ needs.prepare.outputs.filename }}-godot
                   path: ${{ steps.pack-addon.outputs.package }}
                   retention-days: 7
 
             - name: 📤 Upload Modified Files
-              uses: grovegs/actions/.github/actions/upload-artifact@v1.0.27
+              uses: grovegs/actions/.github/actions/upload-artifact@v1.0.31
               with:
                   name: modified-godot
                   path: ${{ steps.pack-addon.outputs.modified-files }}
@@ -207,21 +207,21 @@ jobs:
 
             - name: 📦 Pack Unity Package
               id: pack-package
-              uses: grovegs/actions/.github/actions/pack-unity-package@v1.0.27
+              uses: grovegs/actions/.github/actions/pack-unity-package@v1.0.31
               with:
                   package: ${{ inputs.unity-package }}
                   version: ${{ needs.prepare.outputs.version }}
                   filename: ${{ needs.prepare.outputs.filename }}
 
             - name: 📤 Upload Package Artifact
-              uses: grovegs/actions/.github/actions/upload-artifact@v1.0.27
+              uses: grovegs/actions/.github/actions/upload-artifact@v1.0.31
               with:
                   name: ${{ needs.prepare.outputs.filename }}-unity
                   path: ${{ steps.pack-package.outputs.package }}
                   retention-days: 7
 
             - name: 📤 Upload Modified Files
-              uses: grovegs/actions/.github/actions/upload-artifact@v1.0.27
+              uses: grovegs/actions/.github/actions/upload-artifact@v1.0.31
               with:
                   name: modified-unity
                   path: ${{ steps.pack-package.outputs.modified-files }}
@@ -238,7 +238,7 @@ jobs:
               uses: actions/checkout@v6
 
             - name: 📥 Download Modified Files
-              uses: grovegs/actions/.github/actions/download-artifact@v1.0.27
+              uses: grovegs/actions/.github/actions/download-artifact@v1.0.31
               continue-on-error: true
               with:
                   pattern: modified-*
@@ -264,21 +264,21 @@ jobs:
 
             - name: 📥 Download .NET Package
               continue-on-error: true
-              uses: grovegs/actions/.github/actions/download-artifact@v1.0.27
+              uses: grovegs/actions/.github/actions/download-artifact@v1.0.31
               with:
                   name: ${{ needs.prepare.outputs.filename }}-dotnet
                   path: packages/dotnet
 
             - name: 📥 Download Godot Package
               continue-on-error: true
-              uses: grovegs/actions/.github/actions/download-artifact@v1.0.27
+              uses: grovegs/actions/.github/actions/download-artifact@v1.0.31
               with:
                   name: ${{ needs.prepare.outputs.filename }}-godot
                   path: packages/godot
 
             - name: 📥 Download Unity Package
               continue-on-error: true
-              uses: grovegs/actions/.github/actions/download-artifact@v1.0.27
+              uses: grovegs/actions/.github/actions/download-artifact@v1.0.31
               with:
                   name: ${{ needs.prepare.outputs.filename }}-unity
                   path: packages/unity
@@ -334,7 +334,7 @@ jobs:
 
             - name: 🚀 Publish to GitHub
               if: inputs.publish-github && steps.find-packages.outputs.all-packages != ''
-              uses: grovegs/actions/.github/actions/publish-github@v1.0.27
+              uses: grovegs/actions/.github/actions/publish-github@v1.0.31
               with:
                   title: ${{ inputs.package-name }} v${{ needs.prepare.outputs.version }}
                   version: v${{ needs.prepare.outputs.version }}
@@ -345,14 +345,15 @@ jobs:
             - name: 📤 Publish to NuGet
               if: inputs.publish-nuget && steps.find-packages.outputs.dotnet-package != ''
               continue-on-error: true
-              uses: grovegs/actions/.github/actions/publish-nuget@v1.0.27
+              uses: grovegs/actions/.github/actions/publish-nuget@v1.0.31
               with:
                   file: ${{ steps.find-packages.outputs.dotnet-package }}
                   api-key: ${{ secrets.nuget-api-key }}
 
             - name: 📢 Notify Discord Success
               if: success() && inputs.publish-discord
-              uses: grovegs/actions/.github/actions/notify-discord@v1.0.27
+              continue-on-error: true
+              uses: grovegs/actions/.github/actions/notify-discord@v1.0.31
               with:
                   webhook-url: ${{ secrets.discord-webhook }}
                   title: ✅ ${{ github.event.repository.name }} v${{ needs.prepare.outputs.version }} (${{ github.ref_name }})
@@ -364,7 +365,8 @@ jobs:
 
             - name: 📢 Notify Discord Failure
               if: failure() && inputs.publish-discord
-              uses: grovegs/actions/.github/actions/notify-discord@v1.0.27
+              continue-on-error: true
+              uses: grovegs/actions/.github/actions/notify-discord@v1.0.31
               with:
                   webhook-url: ${{ secrets.discord-webhook }}
                   title: ❌ ${{ github.event.repository.name }} v${{ needs.prepare.outputs.version }} (${{ github.ref_name }})
@@ -373,3 +375,19 @@ jobs:
 
                       [View Workflow Run](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
                   color: "15158332"
+
+    cleanup:
+        name: Cleanup on Failure
+        if: always() && (failure() || cancelled()) && needs.prepare.result == 'success' && inputs.create-tag
+        needs: [prepare, build-dotnet, build-godot, build-unity, release]
+        runs-on: ${{ inputs.runs-on }}
+
+        steps:
+            - name: 📂 Checkout Code
+              uses: actions/checkout@v6
+              with:
+                  fetch-depth: 0
+
+            - name: 🗑️ Delete Tag
+              run: |
+                  git push origin :refs/tags/v${{ needs.prepare.outputs.version }}
