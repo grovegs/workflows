@@ -13,13 +13,8 @@ on:
                 required: false
                 type: string
                 default: ""
-            dotnet-project:
-                description: Path to the .NET project to format such as "src/Core"
-                required: false
-                type: string
-                default: ""
-            dotnet-test-project:
-                description: Path to the .NET test project to format such as "tests/Core.Tests"
+            dotnet-solution:
+                description: Path to the .NET solution directory containing sln, slnx, or csproj file
                 required: false
                 type: string
                 default: ""
@@ -46,7 +41,7 @@ jobs:
 
     format-dotnet:
         name: Format .NET
-        if: inputs.dotnet-project != ''
+        if: inputs.dotnet-solution != ''
         runs-on: ${{ inputs.runs-on }}
 
         steps:
@@ -58,26 +53,7 @@ jobs:
               with:
                   global-json-file: ${{ inputs.global-json-file }}
 
-            - name: 🎨 Format .NET Project
+            - name: 🎨 Format .NET Solution
               uses: grovegs/actions/.github/actions/format-dotnet@v1.0.33
               with:
-                  project: ${{ inputs.dotnet-project }}
-
-    format-dotnet-test:
-        name: Format .NET Test
-        if: inputs.dotnet-test-project != ''
-        runs-on: ${{ inputs.runs-on }}
-
-        steps:
-            - name: 📂 Checkout Code
-              uses: actions/checkout@v6
-
-            - name: 🔧 Setup .NET
-              uses: grovegs/actions/.github/actions/setup-dotnet@v1.0.33
-              with:
-                  global-json-file: ${{ inputs.global-json-file }}
-
-            - name: 🎨 Format .NET Test Project
-              uses: grovegs/actions/.github/actions/format-dotnet@v1.0.33
-              with:
-                  project: ${{ inputs.dotnet-test-project }}
+                  project: ${{ inputs.dotnet-solution }}
