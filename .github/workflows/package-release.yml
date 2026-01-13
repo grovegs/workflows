@@ -36,11 +36,6 @@ on:
                 required: false
                 type: string
                 default: ""
-            godot-preset-name:
-                description: The Godot export preset name to use for the build
-                required: false
-                type: string
-                default: "Default"
             unity-package:
                 description: Path to the Unity package to package such as "Packages/com.example.package"
                 required: false
