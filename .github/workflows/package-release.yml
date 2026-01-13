@@ -228,7 +228,7 @@ jobs:
                   retention-days: 1
 
     release:
-        name: Release Package
+        name: Release Platforms
         if: always() && needs.prepare.result == 'success' && (needs.build-dotnet.result == 'success' || needs.build-godot.result == 'success' || needs.build-unity.result == 'success')
         needs: [prepare, build-dotnet, build-godot, build-unity]
         runs-on: ${{ inputs.runs-on }}
