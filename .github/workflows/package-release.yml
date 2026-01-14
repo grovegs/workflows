@@ -15,7 +15,7 @@ on:
                 description: The type of runner to use (ubuntu-latest, macos-latest, or self-hosted label)
                 required: false
                 type: string
-                default: "macos-latest"
+                default: "ubuntu-latest"
             dotnet-project:
                 description: Path to the .NET project to build and package such as "src/Core"
                 required: false

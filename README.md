@@ -42,8 +42,8 @@ A comprehensive collection of reusable GitHub Actions workflows designed specifi
 
 **GitHub Runners:**
 
-- `ubuntu-latest` - For .NET, Android, and Godot Linux builds
-- `macos-latest` - Required for iOS, macOS, and Godot addon builds
+- `ubuntu-latest` - For .NET, Android, Godot, and package builds
+- `macos-latest` - Required for iOS and macOS builds
 
 **Additional Requirements:**
 
@@ -516,14 +516,6 @@ IOS_API_KEY: Base64-encoded App Store Connect API .p8 key
 IOS_API_KEY_ID: API Key ID
 IOS_API_ISSUER_ID: API Issuer ID
 ```
-
----
-
-#### Godot addon packaging fails on Linux runner
-
-Godot addon packaging requires macOS runner.
-
-The `pack-godot-addons` job automatically runs on `macos-latest`. No action needed.
 
 ---
 
