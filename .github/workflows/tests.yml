@@ -38,7 +38,7 @@ jobs:
         name: Test Package Format
         uses: ./.github/workflows/package-format.yml
         with:
-            dotnet-project: sandbox/ConsoleApplication
+            dotnet-solution: sandbox/ConsoleApplication
             global-json-file: sandbox/ConsoleApplication/global.json
 
     test-project-format:

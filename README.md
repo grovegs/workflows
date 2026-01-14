@@ -14,7 +14,7 @@ A comprehensive collection of reusable GitHub Actions workflows designed specifi
 - **Game Engine Focused**: Purpose-built workflows for Unity and Godot with deep integration support
 - **Cross-Platform**: Native support for mobile (Android, iOS), desktop (Windows, macOS, Linux), and web platforms
 - **Production Ready**: Battle-tested workflows with extensive error handling, caching, and retry logic
-- **Unified Workflows**: Single workflows handle multiple projects using array-based inputs for scalability
+- **Unified Workflows**: Single workflows handle Godot and Unity projects with consistent inputs
 
 **Ideal For:**
 
@@ -35,7 +35,6 @@ A comprehensive collection of reusable GitHub Actions workflows designed specifi
 - **Distribution**: Publish to Firebase, TestFlight, NuGet, and GitHub Releases
 - **Smart Caching**: Intelligent caching for Unity, Godot, .NET, and build dependencies
 - **Version Management**: Automatic version bumping and changelog generation
-- **Array-Based Inputs**: Support for multiple projects in a single workflow run
 
 ---
 
@@ -73,11 +72,10 @@ jobs:
   release:
     uses: grovegs/workflows/.github/workflows/project-release.yml@v1.0.0
     with:
-      name: "My Game"
-      godot-projects: '["games/MyGame"]'
-      version-type: "minor"
-      environment: "Development"
-      global-json-file: "global.json"
+      project-name: "My Game"
+      godot-project: games/MyGame
+      version-type: minor
+      global-json-file: global.json
     secrets:
       github-token: ${{ secrets.GITHUB_TOKEN }}
       firebase-credentials: ${{ secrets.FIREBASE_CREDENTIALS }}
@@ -93,10 +91,10 @@ jobs:
 
 ### Godot Game Project Example
 
-Build and release multiple Godot projects:
+Build and release a Godot project:
 
 ```yaml
-name: Release Godot Games
+name: Release Godot Game
 
 on:
   workflow_dispatch:
@@ -109,13 +107,6 @@ on:
           - major
           - minor
           - patch
-      environment:
-        description: "Build environment"
-        required: true
-        type: choice
-        options:
-          - Development
-          - Production
 
 permissions:
   contents: write
@@ -124,12 +115,11 @@ jobs:
   release:
     uses: grovegs/workflows/.github/workflows/project-release.yml@v1.0.0
     with:
-      name: "My Game Collection"
-      godot-projects: '["games/PuzzleGame", "games/ActionGame"]'
+      project-name: My Game
+      godot-project: games/MyGame
       version-type: ${{ inputs.version-type }}
-      environment: ${{ inputs.environment }}
-      global-json-file: "global.json"
-      tester-groups: "qa-team"
+      global-json-file: global.json
+      tester-groups: qa-team
       publish-github: true
       publish-firebase: true
       publish-discord: true
@@ -146,7 +136,6 @@ jobs:
       ios-certificate: ${{ secrets.IOS_CERTIFICATE }}
       ios-certificate-password: ${{ secrets.IOS_CERTIFICATE_PASSWORD }}
       ios-provisioning-profile: ${{ secrets.IOS_PROVISIONING_PROFILE }}
-      ios-provisioning-profile-uuid: ${{ secrets.IOS_PROVISIONING_PROFILE_UUID }}
       ios-api-key: ${{ secrets.IOS_API_KEY }}
       ios-api-key-id: ${{ secrets.IOS_API_KEY_ID }}
       ios-api-issuer-id: ${{ secrets.IOS_API_ISSUER_ID }}
@@ -154,10 +143,10 @@ jobs:
 
 ### Unity Game Project Example
 
-Build and release Unity projects:
+Build and release a Unity project:
 
 ```yaml
-name: Release Unity Games
+name: Release Unity Game
 
 on:
   workflow_dispatch:
@@ -166,10 +155,6 @@ on:
         required: true
         type: choice
         options: [major, minor, patch]
-      environment:
-        required: true
-        type: choice
-        options: [Development, Production]
 
 permissions:
   contents: write
@@ -178,10 +163,9 @@ jobs:
   release:
     uses: grovegs/workflows/.github/workflows/project-release.yml@v1.0.0
     with:
-      name: "My Unity Game"
-      unity-projects: '["projects/MainGame", "projects/DemoLevel"]'
+      project-name: My Unity Game
+      unity-project: projects/MainGame
       version-type: ${{ inputs.version-type }}
-      environment: ${{ inputs.environment }}
       publish-github: true
       publish-firebase: true
       publish-testflight: true
@@ -200,7 +184,6 @@ jobs:
       ios-certificate: ${{ secrets.IOS_CERTIFICATE }}
       ios-certificate-password: ${{ secrets.IOS_CERTIFICATE_PASSWORD }}
       ios-provisioning-profile: ${{ secrets.IOS_PROVISIONING_PROFILE }}
-      ios-provisioning-profile-uuid: ${{ secrets.IOS_PROVISIONING_PROFILE_UUID }}
       ios-api-key: ${{ secrets.IOS_API_KEY }}
       ios-api-key-id: ${{ secrets.IOS_API_KEY_ID }}
       ios-api-issuer-id: ${{ secrets.IOS_API_ISSUER_ID }}
@@ -208,7 +191,7 @@ jobs:
 
 ### .NET Package Example
 
-Build and publish NuGet packages:
+Build and publish a NuGet package:
 
 ```yaml
 name: Release Package
@@ -228,10 +211,10 @@ jobs:
   release:
     uses: grovegs/workflows/.github/workflows/package-release.yml@v1.0.0
     with:
-      name: "My Library"
-      dotnet-projects: '["src/Core", "src/Extensions"]'
+      package-name: My Library
+      dotnet-project: src/Core
       version-type: ${{ inputs.version-type }}
-      global-json-file: "global.json"
+      global-json-file: global.json
       publish-github: true
       publish-nuget: true
     secrets:
@@ -241,7 +224,7 @@ jobs:
 
 ### Godot Addon Package Example
 
-Package and release Godot addons:
+Package and release a Godot addon:
 
 ```yaml
 name: Release Godot Package
@@ -261,11 +244,11 @@ jobs:
   release:
     uses: grovegs/workflows/.github/workflows/package-release.yml@v1.0.0
     with:
-      name: "My Godot Plugin"
-      dotnet-projects: '["src/Core", "src/Godot"]'
-      godot-addons: '["addons/my-plugin"]'
+      package-name: My Godot Plugin
+      dotnet-project: src/Core
+      godot-addon: addons/my-plugin
       version-type: ${{ inputs.version-type }}
-      global-json-file: "global.json"
+      global-json-file: global.json
       publish-github: true
       publish-nuget: true
     secrets:
@@ -281,19 +264,18 @@ jobs:
 
 **project-release.yml** - Build and release game projects
 
-- Supports: Multiple Godot and Unity projects
+- Supports: Godot and Unity projects
 - Platforms: Android (APK/AAB), iOS (IPA)
 - Publishing: Firebase, TestFlight, GitHub Releases
 - Inputs:
-  - `name` - Project name
+  - `project-name` - Project name
   - `version-type` - major, minor, or patch
-  - `environment` - Development or Production
-  - `godot-projects` - Array of Godot project paths
-  - `unity-projects` - Array of Unity project paths
+  - `godot-project` - Path to Godot project
+  - `unity-project` - Path to Unity project
   - `global-json-file` - Path to global.json
   - `tester-groups` - Firebase tester groups
-  - `release-android` - Enable Android builds
-  - `release-ios` - Enable iOS builds
+  - `build-android` - Enable Android builds
+  - `build-ios` - Enable iOS builds
   - `publish-github` - Publish to GitHub
   - `publish-firebase` - Publish to Firebase
   - `publish-testflight` - Publish to TestFlight
@@ -302,16 +284,16 @@ jobs:
 **project-tests.yml** - Run tests for game projects
 
 - Inputs:
-  - `godot-projects` - Array of Godot project paths
-  - `godot-tests` - Array of Godot test project paths
-  - `unity-projects` - Array of Unity project paths
+  - `dotnet-project` - Path to .NET test project
+  - `godot-project` - Path to Godot project
+  - `unity-project` - Path to Unity project
   - `global-json-file` - Path to global.json
 
 **project-format.yml** - Format game project code
 
 - Inputs:
-  - `godot-projects` - Array of Godot project paths
-  - `unity-projects` - Array of Unity project paths
+  - `files` - File patterns to format using Prettier
+  - `dotnet-project` - Path to .NET project
   - `global-json-file` - Path to global.json
 
 ### Package Workflows
@@ -321,11 +303,11 @@ jobs:
 - Supports: .NET projects, Godot addons, Unity packages
 - Publishing: NuGet, GitHub Releases
 - Inputs:
-  - `name` - Package name
+  - `package-name` - Package name
   - `version-type` - major, minor, or patch
-  - `dotnet-projects` - Array of .NET project paths
-  - `godot-addons` - Array of Godot addon paths
-  - `unity-packages` - Array of Unity package paths
+  - `dotnet-project` - Path to .NET project
+  - `godot-addon` - Path to Godot addon
+  - `unity-package` - Path to Unity package
   - `global-json-file` - Path to global.json
   - `directory-build-props` - Path to Directory.Build.props
   - `publish-github` - Publish to GitHub
@@ -335,36 +317,19 @@ jobs:
 **package-tests.yml** - Run tests for packages
 
 - Inputs:
-  - `dotnet-tests` - Array of .NET test project paths
+  - `dotnet-project` - Path to .NET test project
   - `global-json-file` - Path to global.json
 
 **package-format.yml** - Format package code
 
 - Inputs:
-  - `dotnet-projects` - Array of .NET project paths
-  - `godot-addons` - Array of Godot addon paths
+  - `files` - File patterns to format using Prettier
+  - `dotnet-solution` - Path to .NET solution directory
   - `global-json-file` - Path to global.json
 
 ---
 
 ## Advanced Usage
-
-### Mixed Engine Projects
-
-Build both Godot and Unity projects in a single workflow:
-
-```yaml
-jobs:
-  release:
-    uses: grovegs/workflows/.github/workflows/project-release.yml@v1.0.0
-    with:
-      name: "Multi-Engine Games"
-      godot-projects: '["games/GodotGame"]'
-      unity-projects: '["games/UnityGame"]'
-      version-type: "minor"
-      environment: "Development"
-      global-json-file: "global.json"
-```
 
 ### Conditional Platform Builds
 
@@ -375,44 +340,42 @@ jobs:
   release:
     uses: grovegs/workflows/.github/workflows/project-release.yml@v1.0.0
     with:
-      name: "My Game"
-      godot-projects: '["games/MyGame"]'
-      version-type: "patch"
-      environment: "Production"
-      release-android: true
-      release-ios: false
+      project-name: My Game
+      godot-project: games/MyGame
+      version-type: patch
+      build-android: true
+      build-ios: false
 ```
 
-### Environment-Specific Publishing
+### Selective Publishing
 
-Development builds go to Firebase, Production builds to TestFlight:
+Choose specific publishing targets:
 
 ```yaml
 jobs:
   release:
     uses: grovegs/workflows/.github/workflows/project-release.yml@v1.0.0
     with:
-      name: "My Game"
-      godot-projects: '["games/MyGame"]'
-      version-type: "minor"
-      environment: "Development"
+      project-name: My Game
+      godot-project: games/MyGame
+      version-type: minor
       publish-firebase: true
       publish-testflight: false
 ```
 
-### Multi-Project Package Release
+### Package with Godot Addon
 
 ```yaml
 jobs:
   release:
     uses: grovegs/workflows/.github/workflows/package-release.yml@v1.0.0
     with:
-      name: "My SDK"
-      dotnet-projects: '["src/Core", "src/Godot", "src/Unity", "src/Extensions"]'
-      godot-addons: '["addons/plugin1", "addons/plugin2"]'
-      unity-packages: '["Packages/com.example.package"]'
-      version-type: "minor"
-      global-json-file: "global.json"
+      package-name: My SDK
+      dotnet-project: src/Core
+      godot-addon: addons/my-plugin
+      unity-package: Packages/com.example.package
+      version-type: minor
+      global-json-file: global.json
 ```
 
 ### Automated Testing on Pull Requests
@@ -428,9 +391,9 @@ jobs:
   test:
     uses: grovegs/workflows/.github/workflows/project-tests.yml@v1.0.0
     with:
-      godot-projects: '["games/MyGame"]'
-      godot-tests: '["tests/MyGame.Tests"]'
-      global-json-file: "global.json"
+      godot-project: games/MyGame
+      dotnet-project: tests/MyGame.Tests
+      global-json-file: global.json
 ```
 
 ### Code Formatting on Push
@@ -449,8 +412,8 @@ jobs:
   format:
     uses: grovegs/workflows/.github/workflows/project-format.yml@v1.0.0
     with:
-      godot-projects: '["games/MyGame"]'
-      global-json-file: "global.json"
+      dotnet-project: src/MyProject
+      global-json-file: global.json
 ```
 
 ---
@@ -520,20 +483,6 @@ All workflows follow a consistent pattern:
 
 ### Common Issues
 
-#### Workflow fails with "Invalid JSON" error
-
-Ensure array inputs use proper JSON format:
-
-```yaml
-# ❌ WRONG
-godot-projects: ["games/MyGame"]
-
-# ✅ CORRECT
-godot-projects: '["games/MyGame"]'
-```
-
----
-
 #### Android build fails with keystore error
 
 Keystore must be base64 encoded:
@@ -558,7 +507,6 @@ IOS_TEAM_ID: Your Apple Developer Team ID
 IOS_CERTIFICATE: Base64-encoded .p12 certificate
 IOS_CERTIFICATE_PASSWORD: Certificate password
 IOS_PROVISIONING_PROFILE: Base64-encoded .mobileprovision file
-IOS_PROVISIONING_PROFILE_UUID: Profile UUID
 ```
 
 For TestFlight uploads, also configure:
