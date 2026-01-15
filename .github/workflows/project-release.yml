@@ -241,6 +241,16 @@ jobs:
                   java-version: ${{ inputs.android-java-version }}
                   android-packages: ${{ inputs.android-ndk-version != '' && format('ndk;{0}', inputs.android-ndk-version) || '' }} ${{ inputs.android-platform-version != '' && format('platforms;android-{0}', inputs.android-platform-version) || '' }} ${{ inputs.android-build-tools-version != '' && format('build-tools;{0}', inputs.android-build-tools-version) || '' }}
 
+            - name: 📦 Generate Filename
+              id: generate-filename
+              shell: bash
+              run: |
+                  #!/usr/bin/env bash
+                  set -euo pipefail
+
+                  filename=$(echo "${{ inputs.project-name }}" | sed -E 's/[[:space:]]/-/g; s/([a-z])([A-Z])/\1-\2/g' | tr '[:upper:]' '[:lower:]')
+                  echo "filename=${filename}-android-${{ needs.prepare.outputs.version }}" >> "${GITHUB_OUTPUT}"
+
             - name: 🏗️ Build Godot
               id: build-godot
               uses: grovegs/actions/.github/actions/build-godot@v1.0.37
@@ -251,7 +261,7 @@ jobs:
                   platform: Android
                   preset: ${{ inputs.godot-preset-name }}
                   configuration: Release
-                  filename: ${{ inputs.project-name }}
+                  filename: ${{ steps.generate-filename.outputs.filename }}
                   android-keystore: ${{ secrets.android-keystore }}
                   android-keystore-user: ${{ secrets.android-keystore-user }}
                   android-keystore-password: ${{ secrets.android-keystore-password }}
@@ -292,6 +302,16 @@ jobs:
               with:
                   xcode-version: ${{ inputs.ios-xcode-version }}
 
+            - name: 📦 Generate Filename
+              id: generate-filename
+              shell: bash
+              run: |
+                  #!/usr/bin/env bash
+                  set -euo pipefail
+
+                  filename=$(echo "${{ inputs.project-name }}" | sed -E 's/[[:space:]]/-/g; s/([a-z])([A-Z])/\1-\2/g' | tr '[:upper:]' '[:lower:]')
+                  echo "filename=${filename}-ios-${{ needs.prepare.outputs.version }}" >> "${GITHUB_OUTPUT}"
+
             - name: 🏗️ Build Godot
               id: build-godot
               uses: grovegs/actions/.github/actions/build-godot@v1.0.37
@@ -302,7 +322,7 @@ jobs:
                   platform: iOS
                   preset: ${{ inputs.godot-preset-name }}
                   configuration: Release
-                  filename: ${{ inputs.project-name }}
+                  filename: ${{ steps.generate-filename.outputs.filename }}
                   ios-team-id: ${{ secrets.ios-team-id }}
                   ios-certificate: ${{ secrets.ios-certificate }}
                   ios-certificate-password: ${{ secrets.ios-certificate-password }}
@@ -333,6 +353,16 @@ jobs:
                   unity-modules: android
                   unity-path: ${{ inputs.unity-path }}
 
+            - name: 📦 Generate Filename
+              id: generate-filename
+              shell: bash
+              run: |
+                  #!/usr/bin/env bash
+                  set -euo pipefail
+
+                  filename=$(echo "${{ inputs.project-name }}" | sed -E 's/[[:space:]]/-/g; s/([a-z])([A-Z])/\1-\2/g' | tr '[:upper:]' '[:lower:]')
+                  echo "filename=${filename}-android-${{ needs.prepare.outputs.version }}" >> "${GITHUB_OUTPUT}"
+
             - name: 🏗️ Build Unity
               id: build-unity
               uses: grovegs/actions/.github/actions/build-unity@v1.0.37
@@ -341,7 +371,7 @@ jobs:
                   version: ${{ needs.prepare.outputs.version }}
                   platform: Android
                   configuration: Release
-                  filename: ${{ inputs.project-name }}
+                  filename: ${{ steps.generate-filename.outputs.filename }}
                   profile-name: ${{ inputs.unity-android-profile-name }}
                   unity-email: ${{ secrets.unity-email }}
                   unity-password: ${{ secrets.unity-password }}
@@ -383,6 +413,16 @@ jobs:
                   unity-modules: ios
                   unity-path: ${{ inputs.unity-path }}
 
+            - name: 📦 Generate Filename
+              id: generate-filename
+              shell: bash
+              run: |
+                  #!/usr/bin/env bash
+                  set -euo pipefail
+
+                  filename=$(echo "${{ inputs.project-name }}" | sed -E 's/[[:space:]]/-/g; s/([a-z])([A-Z])/\1-\2/g' | tr '[:upper:]' '[:lower:]')
+                  echo "filename=${filename}-ios-${{ needs.prepare.outputs.version }}" >> "${GITHUB_OUTPUT}"
+
             - name: 🏗️ Build Unity
               id: build-unity
               uses: grovegs/actions/.github/actions/build-unity@v1.0.37
@@ -391,7 +431,7 @@ jobs:
                   version: ${{ needs.prepare.outputs.version }}
                   platform: iOS
                   configuration: Release
-                  filename: ${{ inputs.project-name }}
+                  filename: ${{ steps.generate-filename.outputs.filename }}
                   profile-name: ${{ inputs.unity-ios-profile-name }}
                   unity-email: ${{ secrets.unity-email }}
                   unity-password: ${{ secrets.unity-password }}

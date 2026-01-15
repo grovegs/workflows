@@ -127,6 +127,16 @@ jobs:
                   configuration: Release
                   version: ${{ needs.prepare.outputs.version }}
 
+            - name: 📦 Generate Filename
+              id: generate-filename
+              shell: bash
+              run: |
+                  #!/usr/bin/env bash
+                  set -euo pipefail
+
+                  filename=$(echo "${{ inputs.package-name }}" | sed -E 's/[[:space:]]/-/g; s/([a-z])([A-Z])/\1-\2/g' | tr '[:upper:]' '[:lower:]')
+                  echo "filename=${filename}-${{ needs.prepare.outputs.version }}" >> "${GITHUB_OUTPUT}"
+
             - name: 📦 Pack NuGet
               id: pack-nuget
               uses: grovegs/actions/.github/actions/pack-dotnet@v1.0.37
@@ -134,7 +144,7 @@ jobs:
                   project: ${{ inputs.dotnet-project }}
                   configuration: Release
                   version: ${{ needs.prepare.outputs.version }}
-                  name: ${{ inputs.package-name }}
+                  name: ${{ steps.generate-filename.outputs.filename }}
                   directory-build-props: ${{ inputs.directory-build-props }}
 
             - name: 📤 Upload Package Artifact
@@ -162,13 +172,23 @@ jobs:
             - name: 📂 Checkout Code
               uses: actions/checkout@v6
 
+            - name: 📦 Generate Filename
+              id: generate-filename
+              shell: bash
+              run: |
+                  #!/usr/bin/env bash
+                  set -euo pipefail
+
+                  filename=$(echo "${{ inputs.package-name }}" | sed -E 's/[[:space:]]/-/g; s/([a-z])([A-Z])/\1-\2/g' | tr '[:upper:]' '[:lower:]')
+                  echo "filename=${filename}-godot-${{ needs.prepare.outputs.version }}" >> "${GITHUB_OUTPUT}"
+
             - name: 📦 Pack Godot Addon
               id: pack-addon
               uses: grovegs/actions/.github/actions/pack-godot-addon@v1.0.37
               with:
                   addon: ${{ inputs.godot-addon }}
                   version: ${{ needs.prepare.outputs.version }}
-                  filename: ${{ inputs.package-name }}
+                  filename: ${{ steps.generate-filename.outputs.filename }}
 
             - name: 📤 Upload Package Artifact
               uses: grovegs/actions/.github/actions/upload-artifact@v1.0.37
@@ -194,13 +214,23 @@ jobs:
             - name: 📂 Checkout Code
               uses: actions/checkout@v6
 
+            - name: 📦 Generate Filename
+              id: generate-filename
+              shell: bash
+              run: |
+                  #!/usr/bin/env bash
+                  set -euo pipefail
+
+                  filename=$(echo "${{ inputs.package-name }}" | sed -E 's/[[:space:]]/-/g; s/([a-z])([A-Z])/\1-\2/g' | tr '[:upper:]' '[:lower:]')
+                  echo "filename=${filename}-unity-${{ needs.prepare.outputs.version }}" >> "${GITHUB_OUTPUT}"
+
             - name: 📦 Pack Unity Package
               id: pack-package
               uses: grovegs/actions/.github/actions/pack-unity-package@v1.0.37
               with:
                   package: ${{ inputs.unity-package }}
                   version: ${{ needs.prepare.outputs.version }}
-                  filename: ${{ inputs.package-name }}
+                  filename: ${{ steps.generate-filename.outputs.filename }}
 
             - name: 📤 Upload Package Artifact
               uses: grovegs/actions/.github/actions/upload-artifact@v1.0.37
