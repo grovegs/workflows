@@ -324,7 +324,7 @@ jobs:
 
 - Inputs:
   - `files` - File patterns to format using Prettier
-  - `dotnet-solution` - Path to .NET solution directory
+  - `dotnet-project` - Path to .NET project
   - `global-json-file` - Path to global.json
 
 ---
