@@ -181,7 +181,7 @@ jobs:
         steps:
             - name: 🔑 Generate App Token
               id: app-token
-              uses: actions/create-github-app-token@v1
+              uses: actions/create-github-app-token@v2
               continue-on-error: true
               with:
                   app-id: ${{ secrets.app-id }}
@@ -236,7 +236,7 @@ jobs:
         steps:
             - name: 🔑 Generate App Token
               id: app-token
-              uses: actions/create-github-app-token@v1
+              uses: actions/create-github-app-token@v2
               continue-on-error: true
               with:
                   app-id: ${{ secrets.app-id }}
