@@ -314,8 +314,8 @@ jobs:
               shell: bash
               run: |
                   set -euo pipefail
-                  git config user.name "github-actions[bot]"
-                  git config user.email "github-actions[bot]@users.noreply.github.com"
+                  git config --global user.name "github-actions[bot]"
+                  git config --global user.email "github-actions[bot]@users.noreply.github.com"
                   VERSION="${{ needs.prepare.outputs.version }}"
                   PATHS=("${{ inputs.unity-package }}" "${{ inputs.godot-addon }}")
                   for TARGET_PATH in "${PATHS[@]}"; do
@@ -335,6 +335,8 @@ jobs:
                   done
                   git add .
                   if ! git diff --cached --quiet; then
+                    echo "No changes to commit"
+                  else
                     git commit -m "chore: release version $VERSION [skip ci]"
                     git push origin HEAD:"${{ github.ref_name }}"
                   fi
