@@ -265,6 +265,7 @@ jobs:
               uses: actions/checkout@v6
               with:
                   token: ${{ steps.app-token.outputs.token || secrets.github-token }}
+                  submodules: recursive
 
             - name: 📥 Download Modified Files
               uses: grovegs/actions/.github/actions/download-artifact@v1.0.37
@@ -276,19 +277,30 @@ jobs:
               if: inputs.publish-github
               shell: bash
               run: |
-                  #!/usr/bin/env bash
                   set -euo pipefail
-
                   git config user.name "github-actions[bot]"
                   git config user.email "github-actions[bot]@users.noreply.github.com"
+                  VERSION="${{ needs.prepare.outputs.version }}"
+                  PATHS=("${{ inputs.unity-package }}" "${{ inputs.godot-addon }}")
+                  for TARGET_PATH in "${PATHS[@]}"; do
+                    if [ -n "$TARGET_PATH" ] && [ -d "$TARGET_PATH" ]; then
+                      IS_SUBMODULE=$(git ls-tree HEAD "$TARGET_PATH" | awk '{print $1}' | grep "160000" || echo "")
+                      if [ "$IS_SUBMODULE" == "160000" ]; then
+                        pushd "$TARGET_PATH"
+                        git add .
+                        if ! git diff --cached --quiet; then
+                          git commit -m "chore: version bump to $VERSION [skip ci]"
+                          git push origin HEAD:main
+                        fi
+                        popd
+                        git add "$TARGET_PATH"
+                      fi
+                    fi
+                  done
                   git add .
-
-                  if git diff --cached --quiet; then
-                      echo "No version changes to commit"
-                  else
-                      git commit -m "chore: release version ${{ needs.prepare.outputs.version }} [skip ci]"
-                      git push origin HEAD:"${{ github.ref_name }}"
-                      echo "Committed and pushed version changes"
+                  if ! git diff --cached --quiet; then
+                    git commit -m "chore: release version $VERSION [skip ci]"
+                    git push origin HEAD:"${{ github.ref_name }}"
                   fi
 
             - name: 📥 Download .NET Package
