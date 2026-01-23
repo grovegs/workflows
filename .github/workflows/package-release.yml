@@ -319,6 +319,11 @@ jobs:
                   BRANCH="${{ github.ref_name }}"
                   TOKEN="${{ steps.app-token.outputs.token }}"
 
+                  if [ -z "$TOKEN" ]; then
+                    echo "GitHub App token is missing"
+                    exit 1
+                  fi
+
                   git config user.name "github-actions[bot]"
                   git config user.email "github-actions[bot]@users.noreply.github.com"
 
@@ -330,43 +335,26 @@ jobs:
                     git push origin "$BRANCH"
                   fi
 
-                  mapfile -t MODULE_PATHS < <(
-                    find . -name .gitmodules -type f -print0 |
-                    xargs -0 -n1 bash -c '
-                      FILE="$0"
-                      BASE="$(dirname "$FILE")"
-                      git config --file "$FILE" --get-regexp path 2>/dev/null |
-                      awk -v b="$BASE" "{ print b \"/\" \$2 }"
-                    ' |
-                    sed 's|^\./||' |
-                    sort -u
-                  )
-
-                  for MODULE in "${MODULE_PATHS[@]}"; do
-                    [ ! -d "$MODULE" ] && continue
-                    git -C "$MODULE" rev-parse --is-inside-work-tree >/dev/null 2>&1 || continue
-
-                    pushd "$MODULE" >/dev/null
+                  git submodule foreach --recursive '
+                    set -e
 
                     git config user.name "github-actions[bot]"
                     git config user.email "github-actions[bot]@users.noreply.github.com"
 
-                    REPO_PATH=$(git config --get remote.origin.url | sed -E 's#(https://github.com/|git@github.com:)##; s#\.git##')
-                    git remote set-url origin "https://x-access-token:${TOKEN}@github.com/${REPO_PATH}.git"
+                    REMOTE=$(git config --get remote.origin.url | sed -E "s#https://github.com/##; s#\.git##")
+                    git remote set-url origin "https://x-access-token:'"$TOKEN"'@github.com/${REMOTE}.git"
 
-                    DEFAULT_BRANCH=$(git remote show origin | awk '/HEAD branch/ {print $NF}')
+                    DEFAULT_BRANCH=$(git remote show origin | awk "/HEAD branch/ {print \$NF}")
 
                     git fetch origin "$DEFAULT_BRANCH"
                     git checkout -B "$DEFAULT_BRANCH" "origin/$DEFAULT_BRANCH"
 
                     git add .
                     if ! git diff --cached --quiet; then
-                      git commit -m "chore: version bump to $VERSION [skip ci]"
+                      git commit -m "chore: version bump to '"$VERSION"' [skip ci]"
                       git push origin "$DEFAULT_BRANCH"
                     fi
-
-                    popd >/dev/null
-                  done
+                  '
 
             - name: 📥 Download .NET Package
               continue-on-error: true
