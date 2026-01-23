@@ -278,7 +278,7 @@ jobs:
             - name: 📂 Checkout Code
               uses: actions/checkout@v6
               with:
-                  token: ${{ steps.app-token.outputs.token }}
+                  token: ${{ steps.app-token.outputs.token || secrets.github-token }}
 
             - name: 📥 Download Modified Files
               uses: grovegs/actions/.github/actions/download-artifact@v1.1.0
