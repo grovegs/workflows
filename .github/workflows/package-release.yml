@@ -314,32 +314,47 @@ jobs:
               shell: bash
               run: |
                   set -euo pipefail
-                  git config --global user.name "github-actions[bot]"
-                  git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+                  echo "${{ steps.app-token.outputs.token }}" | gh auth login --with-token
+
                   VERSION="${{ needs.prepare.outputs.version }}"
-                  PATHS=("${{ inputs.unity-package }}" "${{ inputs.godot-addon }}")
-                  for TARGET_PATH in "${PATHS[@]}"; do
-                    if [ -n "$TARGET_PATH" ] && [ -d "$TARGET_PATH" ]; then
-                      IS_SUBMODULE=$(git ls-tree HEAD "$TARGET_PATH" | awk '{print $1}' | grep "160000" || echo "")
-                      if [ "$IS_SUBMODULE" == "160000" ]; then
-                        pushd "$TARGET_PATH"
-                        git add .
-                        if ! git diff --cached --quiet; then
-                          git commit -m "chore: version bump to $VERSION [skip ci]"
-                          git push origin HEAD:main
-                        fi
-                        popd
-                        git add "$TARGET_PATH"
-                      fi
-                    fi
-                  done
+                  BRANCH="${{ github.ref_name }}"
+
                   git add .
                   if ! git diff --cached --quiet; then
-                    echo "No changes to commit"
-                  else
                     git commit -m "chore: release version $VERSION [skip ci]"
-                    git push origin HEAD:"${{ github.ref_name }}"
+                    git push origin HEAD:"$BRANCH"
                   fi
+
+                  mapfile -t MODULE_PATHS < <(
+                    find . -name .gitmodules -type f -print0 |
+                    xargs -0 -n1 bash -c '
+                      FILE="$0"
+                      BASE="$(dirname "$FILE")"
+                      git config --file "$FILE" --get-regexp path 2>/dev/null |
+                      awk -v b="$BASE" "{ print b \"/\" \$2 }"
+                    ' |
+                    sed 's|^\./||' |
+                    sort -u
+                  )
+
+                  for MODULE in "${MODULE_PATHS[@]}"; do
+                    [ ! -d "$MODULE" ] && continue
+
+                    if ! git -C "$MODULE" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+                      continue
+                    fi
+
+                    pushd "$MODULE" >/dev/null
+
+                    git add .
+                    if ! git diff --cached --quiet; then
+                      git commit -m "chore: version bump to $VERSION [skip ci]"
+                      git push origin HEAD:"$BRANCH"
+                    fi
+
+                    popd >/dev/null
+                  done
 
             - name: 📥 Download .NET Package
               continue-on-error: true
