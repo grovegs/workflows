@@ -179,19 +179,8 @@ jobs:
         runs-on: ${{ inputs.runs-on }}
 
         steps:
-            - name: 🔑 Generate App Token
-              id: app-token
-              uses: actions/create-github-app-token@v2
-              continue-on-error: true
-              with:
-                  app-id: ${{ secrets.app-id }}
-                  private-key: ${{ secrets.app-private-key }}
-
             - name: 📂 Checkout Code
               uses: actions/checkout@v6
-              with:
-                  token: ${{ steps.app-token.outputs.token || secrets.github-token }}
-                  submodules: recursive
 
             - name: 📦 Generate Filename
               id: generate-filename
@@ -234,19 +223,8 @@ jobs:
         runs-on: ${{ inputs.runs-on }}
 
         steps:
-            - name: 🔑 Generate App Token
-              id: app-token
-              uses: actions/create-github-app-token@v2
-              continue-on-error: true
-              with:
-                  app-id: ${{ secrets.app-id }}
-                  private-key: ${{ secrets.app-private-key }}
-
             - name: 📂 Checkout Code
               uses: actions/checkout@v6
-              with:
-                  token: ${{ steps.app-token.outputs.token || secrets.github-token }}
-                  submodules: recursive
 
             - name: 📦 Generate Filename
               id: generate-filename
@@ -300,8 +278,7 @@ jobs:
             - name: 📂 Checkout Code
               uses: actions/checkout@v6
               with:
-                  token: ${{ steps.app-token.outputs.token || secrets.github-token }}
-                  submodules: recursive
+                  token: ${{ steps.app-token.outputs.token }}
 
             - name: 📥 Download Modified Files
               uses: grovegs/actions/.github/actions/download-artifact@v1.1.0
@@ -315,46 +292,17 @@ jobs:
               run: |
                   set -euo pipefail
 
-                  VERSION="${{ needs.prepare.outputs.version }}"
-                  BRANCH="${{ github.ref_name }}"
-                  TOKEN="${{ steps.app-token.outputs.token }}"
-
-                  if [ -z "$TOKEN" ]; then
-                    echo "GitHub App token is missing"
-                    exit 1
-                  fi
-
                   git config user.name "github-actions[bot]"
                   git config user.email "github-actions[bot]@users.noreply.github.com"
-
-                  git remote set-url origin "https://x-access-token:${TOKEN}@github.com/${{ github.repository }}.git"
-
                   git add .
-                  if ! git diff --cached --quiet; then
-                    git commit -m "chore: release version $VERSION [skip ci]"
-                    git push origin "$BRANCH"
+
+                  if git diff --cached --quiet; then
+                      echo "No version changes to commit"
+                  else
+                      git commit -m "chore: release version ${{ needs.prepare.outputs.version }} [skip ci]"
+                      git push origin HEAD:"${{ github.ref_name }}"
+                      echo "Committed and pushed version changes"
                   fi
-
-                  git submodule foreach --recursive '
-                    set -e
-
-                    git config user.name "github-actions[bot]"
-                    git config user.email "github-actions[bot]@users.noreply.github.com"
-
-                    REMOTE=$(git config --get remote.origin.url | sed -E "s#https://github.com/##; s#\.git##")
-                    git remote set-url origin "https://x-access-token:'"$TOKEN"'@github.com/${REMOTE}.git"
-
-                    DEFAULT_BRANCH=$(git remote show origin | awk "/HEAD branch/ {print \$NF}")
-
-                    git fetch origin "$DEFAULT_BRANCH"
-                    git checkout -B "$DEFAULT_BRANCH" "origin/$DEFAULT_BRANCH"
-
-                    git add .
-                    if ! git diff --cached --quiet; then
-                      git commit -m "chore: version bump to '"$VERSION"' [skip ci]"
-                      git push origin "$DEFAULT_BRANCH"
-                    fi
-                  '
 
             - name: 📥 Download .NET Package
               continue-on-error: true
