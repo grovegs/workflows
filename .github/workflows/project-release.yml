@@ -135,6 +135,12 @@ on:
             github-token:
                 description: The GitHub token for authentication
                 required: true
+            app-id:
+                description: GitHub App ID for bypassing branch protection
+                required: false
+            app-private-key:
+                description: GitHub App private key for bypassing branch protection
+                required: false
             unity-email:
                 description: The Unity account email address
                 required: false
@@ -220,8 +226,19 @@ jobs:
         runs-on: ${{ inputs.runs-on }}
 
         steps:
+            - name: 🔑 Generate App Token
+              id: app-token
+              uses: actions/create-github-app-token@v2
+              continue-on-error: true
+              with:
+                  app-id: ${{ secrets.app-id }}
+                  private-key: ${{ secrets.app-private-key }}
+
             - name: 📂 Checkout Code
               uses: actions/checkout@v6
+              with:
+                  token: ${{ steps.app-token.outputs.token || secrets.github-token }}
+                  submodules: recursive
 
             - name: 🔧 Setup .NET
               uses: grovegs/actions/.github/actions/setup-dotnet@v1.1.0
@@ -281,8 +298,19 @@ jobs:
         runs-on: ${{ inputs.runs-on }}
 
         steps:
+            - name: 🔑 Generate App Token
+              id: app-token
+              uses: actions/create-github-app-token@v2
+              continue-on-error: true
+              with:
+                  app-id: ${{ secrets.app-id }}
+                  private-key: ${{ secrets.app-private-key }}
+
             - name: 📂 Checkout Code
               uses: actions/checkout@v6
+              with:
+                  token: ${{ steps.app-token.outputs.token || secrets.github-token }}
+                  submodules: recursive
 
             - name: 🔧 Setup .NET
               uses: grovegs/actions/.github/actions/setup-dotnet@v1.1.0
@@ -343,8 +371,19 @@ jobs:
         runs-on: ${{ inputs.runs-on }}
 
         steps:
+            - name: 🔑 Generate App Token
+              id: app-token
+              uses: actions/create-github-app-token@v2
+              continue-on-error: true
+              with:
+                  app-id: ${{ secrets.app-id }}
+                  private-key: ${{ secrets.app-private-key }}
+
             - name: 📂 Checkout Code
               uses: actions/checkout@v6
+              with:
+                  token: ${{ steps.app-token.outputs.token || secrets.github-token }}
+                  submodules: recursive
 
             - name: 🎮 Setup Unity
               uses: grovegs/actions/.github/actions/setup-unity@v1.1.0
@@ -397,8 +436,19 @@ jobs:
         runs-on: ${{ inputs.runs-on }}
 
         steps:
+            - name: 🔑 Generate App Token
+              id: app-token
+              uses: actions/create-github-app-token@v2
+              continue-on-error: true
+              with:
+                  app-id: ${{ secrets.app-id }}
+                  private-key: ${{ secrets.app-private-key }}
+
             - name: 📂 Checkout Code
               uses: actions/checkout@v6
+              with:
+                  token: ${{ steps.app-token.outputs.token || secrets.github-token }}
+                  submodules: recursive
 
             - name: 🍎 Setup Xcode
               if: inputs.ios-xcode-version != ''
