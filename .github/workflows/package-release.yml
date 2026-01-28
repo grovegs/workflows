@@ -141,7 +141,6 @@ jobs:
               id: generate-filename
               shell: bash
               run: |
-                  #!/usr/bin/env bash
                   set -euo pipefail
 
                   filename=$(echo "${{ inputs.package-name }}" | sed -E 's/[[:space:]]/-/g; s/([a-z])([A-Z])/\1-\2/g' | tr '[:upper:]' '[:lower:]')
@@ -186,7 +185,6 @@ jobs:
               id: generate-filename
               shell: bash
               run: |
-                  #!/usr/bin/env bash
                   set -euo pipefail
 
                   filename=$(echo "${{ inputs.package-name }}" | sed -E 's/[[:space:]]/-/g; s/([a-z])([A-Z])/\1-\2/g' | tr '[:upper:]' '[:lower:]')
@@ -230,7 +228,6 @@ jobs:
               id: generate-filename
               shell: bash
               run: |
-                  #!/usr/bin/env bash
                   set -euo pipefail
 
                   filename=$(echo "${{ inputs.package-name }}" | sed -E 's/[[:space:]]/-/g; s/([a-z])([A-Z])/\1-\2/g' | tr '[:upper:]' '[:lower:]')
@@ -329,7 +326,6 @@ jobs:
               id: find-packages
               shell: bash
               run: |
-                  #!/usr/bin/env bash
                   set -euo pipefail
 
                   all_packages=""

@@ -262,7 +262,6 @@ jobs:
               id: generate-filename
               shell: bash
               run: |
-                  #!/usr/bin/env bash
                   set -euo pipefail
 
                   filename=$(echo "${{ inputs.project-name }}" | sed -E 's/[[:space:]]/-/g; s/([a-z])([A-Z])/\1-\2/g' | tr '[:upper:]' '[:lower:]')
@@ -334,7 +333,6 @@ jobs:
               id: generate-filename
               shell: bash
               run: |
-                  #!/usr/bin/env bash
                   set -euo pipefail
 
                   filename=$(echo "${{ inputs.project-name }}" | sed -E 's/[[:space:]]/-/g; s/([a-z])([A-Z])/\1-\2/g' | tr '[:upper:]' '[:lower:]')
@@ -392,11 +390,22 @@ jobs:
                   unity-modules: android
                   unity-path: ${{ inputs.unity-path }}
 
+            - name: 🔧 Install NuGetForUnity CLI
+              shell: bash
+              run: |
+                  set -euo pipefail
+                  dotnet tool install --global NuGetForUnity.Cli
+
+            - name: 📦 Restore NuGetForUnity Packages
+              shell: bash
+              run: |
+                  set -euo pipefail
+                  nugetforunity restore "${{ inputs.unity-project }}"
+
             - name: 📦 Generate Filename
               id: generate-filename
               shell: bash
               run: |
-                  #!/usr/bin/env bash
                   set -euo pipefail
 
                   filename=$(echo "${{ inputs.project-name }}" | sed -E 's/[[:space:]]/-/g; s/([a-z])([A-Z])/\1-\2/g' | tr '[:upper:]' '[:lower:]')
@@ -463,11 +472,22 @@ jobs:
                   unity-modules: ios
                   unity-path: ${{ inputs.unity-path }}
 
+            - name: 🔧 Install NuGetForUnity CLI
+              shell: bash
+              run: |
+                  set -euo pipefail
+                  dotnet tool install --global NuGetForUnity.Cli
+
+            - name: 📦 Restore NuGetForUnity Packages
+              shell: bash
+              run: |
+                  set -euo pipefail
+                  nugetforunity restore "${{ inputs.unity-project }}"
+
             - name: 📦 Generate Filename
               id: generate-filename
               shell: bash
               run: |
-                  #!/usr/bin/env bash
                   set -euo pipefail
 
                   filename=$(echo "${{ inputs.project-name }}" | sed -E 's/[[:space:]]/-/g; s/([a-z])([A-Z])/\1-\2/g' | tr '[:upper:]' '[:lower:]')
@@ -537,7 +557,6 @@ jobs:
               id: find-build-files
               shell: bash
               run: |
-                  #!/usr/bin/env bash
                   set -euo pipefail
 
                   all_files=""
