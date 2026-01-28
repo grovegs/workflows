@@ -400,6 +400,7 @@ jobs:
               run: |
                   set -euo pipefail
                   dotnet tool install --global NuGetForUnity.Cli
+                  echo "${HOME}/.dotnet/tools" >> "${GITHUB_PATH}"
 
             - name: 📦 Restore NuGetForUnity Packages
               shell: bash
@@ -487,6 +488,7 @@ jobs:
               run: |
                   set -euo pipefail
                   dotnet tool install --global NuGetForUnity.Cli
+                  echo "${HOME}/.dotnet/tools" >> "${GITHUB_PATH}"
 
             - name: 📦 Restore NuGetForUnity Packages
               shell: bash
