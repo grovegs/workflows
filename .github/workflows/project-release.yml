@@ -17,7 +17,7 @@ on:
                 type: string
                 default: "macos-latest"
             global-json-file:
-                description: The relative path to the global.json file to extract .NET and Godot version
+                description: The relative path to the global.json file for .NET SDK configuration
                 required: false
                 type: string
                 default: ""
