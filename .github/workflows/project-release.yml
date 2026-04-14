@@ -288,7 +288,7 @@ jobs:
               with:
                   name: android-build
                   path: ${{ steps.build-godot.outputs.file }}
-                  retention-days: 7
+                  retention-days: 1
 
     build-godot-ios:
         name: Build Godot iOS
@@ -360,7 +360,7 @@ jobs:
               with:
                   name: ios-build
                   path: ${{ steps.build-godot.outputs.file }}
-                  retention-days: 7
+                  retention-days: 1
 
     build-unity-android:
         name: Build Unity Android
@@ -442,7 +442,7 @@ jobs:
               with:
                   name: android-build
                   path: ${{ steps.build-unity.outputs.file }}
-                  retention-days: 7
+                  retention-days: 1
 
     build-unity-ios:
         name: Build Unity iOS
@@ -532,7 +532,7 @@ jobs:
               with:
                   name: ios-build
                   path: ${{ steps.build-unity.outputs.file }}
-                  retention-days: 7
+                  retention-days: 1
 
     release:
         name: Release Platforms
