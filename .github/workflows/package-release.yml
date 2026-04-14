@@ -161,7 +161,7 @@ jobs:
               with:
                   name: nuget-package
                   path: ${{ steps.pack-nuget.outputs.package }}
-                  retention-days: 7
+                  retention-days: 1
 
             - name: 📤 Upload Modified Files
               if: steps.pack-nuget.outputs.modified-files != ''
@@ -205,7 +205,7 @@ jobs:
               with:
                   name: godot-addon
                   path: ${{ steps.pack-addon.outputs.package }}
-                  retention-days: 7
+                  retention-days: 1
 
             - name: 📤 Upload Modified Files
               uses: grovegs/actions/.github/actions/upload-artifact@v1.1.0
@@ -248,7 +248,7 @@ jobs:
               with:
                   name: unity-package
                   path: ${{ steps.pack-package.outputs.package }}
-                  retention-days: 7
+                  retention-days: 1
 
             - name: 📤 Upload Modified Files
               uses: grovegs/actions/.github/actions/upload-artifact@v1.1.0
