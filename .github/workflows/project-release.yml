@@ -228,7 +228,7 @@ jobs:
         steps:
             - name: 🔑 Generate App Token
               id: app-token
-              uses: actions/create-github-app-token@v2
+              uses: actions/create-github-app-token@v3
               continue-on-error: true
               with:
                   app-id: ${{ secrets.app-id }}
@@ -288,7 +288,7 @@ jobs:
               with:
                   name: android-build
                   path: ${{ steps.build-godot.outputs.file }}
-                  retention-days: 7
+                  retention-days: 1
 
     build-godot-ios:
         name: Build Godot iOS
@@ -299,7 +299,7 @@ jobs:
         steps:
             - name: 🔑 Generate App Token
               id: app-token
-              uses: actions/create-github-app-token@v2
+              uses: actions/create-github-app-token@v3
               continue-on-error: true
               with:
                   app-id: ${{ secrets.app-id }}
@@ -360,7 +360,7 @@ jobs:
               with:
                   name: ios-build
                   path: ${{ steps.build-godot.outputs.file }}
-                  retention-days: 7
+                  retention-days: 1
 
     build-unity-android:
         name: Build Unity Android
@@ -371,7 +371,7 @@ jobs:
         steps:
             - name: 🔑 Generate App Token
               id: app-token
-              uses: actions/create-github-app-token@v2
+              uses: actions/create-github-app-token@v3
               continue-on-error: true
               with:
                   app-id: ${{ secrets.app-id }}
@@ -442,7 +442,7 @@ jobs:
               with:
                   name: android-build
                   path: ${{ steps.build-unity.outputs.file }}
-                  retention-days: 7
+                  retention-days: 1
 
     build-unity-ios:
         name: Build Unity iOS
@@ -453,7 +453,7 @@ jobs:
         steps:
             - name: 🔑 Generate App Token
               id: app-token
-              uses: actions/create-github-app-token@v2
+              uses: actions/create-github-app-token@v3
               continue-on-error: true
               with:
                   app-id: ${{ secrets.app-id }}
@@ -532,7 +532,7 @@ jobs:
               with:
                   name: ios-build
                   path: ${{ steps.build-unity.outputs.file }}
-                  retention-days: 7
+                  retention-days: 1
 
     release:
         name: Release Platforms
