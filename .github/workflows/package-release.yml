@@ -76,11 +76,11 @@ on:
             github-token:
                 description: The GitHub token for authentication
                 required: true
-            app-id:
-                description: GitHub App ID for bypassing branch protection
+            client-id:
+                description: GitHub App client ID for generating an installation token
                 required: false
             app-private-key:
-                description: GitHub App private key for bypassing branch protection
+                description: GitHub App private key for generating an installation token
                 required: false
             nuget-api-key:
                 description: NuGet API key used for authenticating and publishing the package
@@ -269,7 +269,7 @@ jobs:
               uses: actions/create-github-app-token@v3
               continue-on-error: true
               with:
-                  app-id: ${{ secrets.app-id }}
+                  client-id: ${{ secrets.client-id }}
                   private-key: ${{ secrets.app-private-key }}
 
             - name: 📂 Checkout Code
