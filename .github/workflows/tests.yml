@@ -64,6 +64,8 @@ jobs:
             publish-discord: false
         secrets:
             github-token: ${{ secrets.GITHUB_TOKEN }}
+            client-id: ${{ secrets.CLIENT_ID }}
+            app-private-key: ${{ secrets.APP_PRIVATE_KEY }}
 
     test-project-release:
         name: Test Project Release
@@ -83,3 +85,5 @@ jobs:
             publish-discord: false
         secrets:
             github-token: ${{ secrets.GITHUB_TOKEN }}
+            client-id: ${{ secrets.CLIENT_ID }}
+            app-private-key: ${{ secrets.APP_PRIVATE_KEY }}
