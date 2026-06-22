@@ -20,7 +20,7 @@ jobs:
 
         steps:
             - name: 📂 Checkout Code
-              uses: actions/checkout@v6
+              uses: actions/checkout@v7
 
             - name: 🔧 Setup .NET
               uses: grovegs/actions/.github/actions/setup-dotnet@v1.2.0
@@ -43,7 +43,7 @@ jobs:
 
         steps:
             - name: 📂 Checkout Code
-              uses: actions/checkout@v6
+              uses: actions/checkout@v7
 
             - name: 🎨 Format YAML Files
               uses: grovegs/actions/.github/actions/format-files@v1.2.0
