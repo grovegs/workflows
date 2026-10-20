@@ -39,7 +39,26 @@ jobs:
             - name: 📂 Checkout Code
               uses: actions/checkout@v7
               with:
-                  lfs: true
+                  lfs: false
+
+            - name: 🔑 Hash Git LFS Files
+              id: lfs-files
+              shell: bash
+              run: echo "hash=$(git lfs ls-files --long | cut -d ' ' -f1 | sort | git hash-object --stdin)" >> "${GITHUB_OUTPUT}"
+
+            - name: 💾 Cache Git LFS Files
+              if: runner.environment == 'github-hosted'
+              uses: actions/cache@v6
+              with:
+                  path: .git/lfs
+                  key: lfs-${{ runner.os }}-${{ steps.lfs-files.outputs.hash }}
+                  restore-keys: lfs-${{ runner.os }}-
+
+            - name: 📦 Pull Git LFS Files
+              shell: bash
+              run: |
+                  git lfs install --local
+                  git lfs pull
 
             - name: 🔧 Setup .NET
               uses: grovegs/actions/.github/actions/setup-dotnet@v1.4.0
@@ -61,7 +80,26 @@ jobs:
             - name: 📂 Checkout Code
               uses: actions/checkout@v7
               with:
-                  lfs: true
+                  lfs: false
+
+            - name: 🔑 Hash Git LFS Files
+              id: lfs-files
+              shell: bash
+              run: echo "hash=$(git lfs ls-files --long | cut -d ' ' -f1 | sort | git hash-object --stdin)" >> "${GITHUB_OUTPUT}"
+
+            - name: 💾 Cache Git LFS Files
+              if: runner.environment == 'github-hosted'
+              uses: actions/cache@v6
+              with:
+                  path: .git/lfs
+                  key: lfs-${{ runner.os }}-${{ steps.lfs-files.outputs.hash }}
+                  restore-keys: lfs-${{ runner.os }}-
+
+            - name: 📦 Pull Git LFS Files
+              shell: bash
+              run: |
+                  git lfs install --local
+                  git lfs pull
 
             - name: 🔧 Setup .NET
               uses: grovegs/actions/.github/actions/setup-dotnet@v1.4.0
@@ -87,7 +125,26 @@ jobs:
             - name: 📂 Checkout Code
               uses: actions/checkout@v7
               with:
-                  lfs: true
+                  lfs: false
+
+            - name: 🔑 Hash Git LFS Files
+              id: lfs-files
+              shell: bash
+              run: echo "hash=$(git lfs ls-files --long | cut -d ' ' -f1 | sort | git hash-object --stdin)" >> "${GITHUB_OUTPUT}"
+
+            - name: 💾 Cache Git LFS Files
+              if: runner.environment == 'github-hosted'
+              uses: actions/cache@v6
+              with:
+                  path: .git/lfs
+                  key: lfs-${{ runner.os }}-${{ steps.lfs-files.outputs.hash }}
+                  restore-keys: lfs-${{ runner.os }}-
+
+            - name: 📦 Pull Git LFS Files
+              shell: bash
+              run: |
+                  git lfs install --local
+                  git lfs pull
 
             - name: 🎮 Setup Unity
               uses: grovegs/actions/.github/actions/setup-unity@v1.4.0
