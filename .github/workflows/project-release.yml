@@ -244,6 +244,7 @@ jobs:
               with:
                   token: ${{ steps.app-token.outputs.token || secrets.github-token }}
                   submodules: recursive
+                  lfs: true
 
             - name: 🔧 Setup .NET
               uses: grovegs/actions/.github/actions/setup-dotnet@v1.3.1
@@ -315,6 +316,7 @@ jobs:
               with:
                   token: ${{ steps.app-token.outputs.token || secrets.github-token }}
                   submodules: recursive
+                  lfs: true
 
             - name: 🔧 Setup .NET
               uses: grovegs/actions/.github/actions/setup-dotnet@v1.3.1
@@ -387,6 +389,7 @@ jobs:
               with:
                   token: ${{ steps.app-token.outputs.token || secrets.github-token }}
                   submodules: recursive
+                  lfs: true
 
             - name: 🔧 Setup .NET
               uses: grovegs/actions/.github/actions/setup-dotnet@v1.3.1
@@ -469,6 +472,7 @@ jobs:
               with:
                   token: ${{ steps.app-token.outputs.token || secrets.github-token }}
                   submodules: recursive
+                  lfs: true
 
             - name: 🔧 Setup .NET
               uses: grovegs/actions/.github/actions/setup-dotnet@v1.3.1
