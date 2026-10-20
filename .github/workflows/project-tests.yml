@@ -42,12 +42,12 @@ jobs:
                   lfs: true
 
             - name: 🔧 Setup .NET
-              uses: grovegs/actions/.github/actions/setup-dotnet@v1.3.1
+              uses: grovegs/actions/.github/actions/setup-dotnet@v1.4.0
               with:
                   global-json-file: ${{ inputs.global-json-file }}
 
             - name: 🧪 Test .NET Project
-              uses: grovegs/actions/.github/actions/test-dotnet@v1.3.1
+              uses: grovegs/actions/.github/actions/test-dotnet@v1.4.0
               with:
                   project: ${{ inputs.dotnet-project }}
                   configuration: Release
@@ -64,17 +64,17 @@ jobs:
                   lfs: true
 
             - name: 🔧 Setup .NET
-              uses: grovegs/actions/.github/actions/setup-dotnet@v1.3.1
+              uses: grovegs/actions/.github/actions/setup-dotnet@v1.4.0
               with:
                   global-json-file: ${{ inputs.global-json-file }}
 
             - name: 🎮 Setup Godot
-              uses: grovegs/actions/.github/actions/setup-godot@v1.3.1
+              uses: grovegs/actions/.github/actions/setup-godot@v1.4.0
               with:
                   global-json-file: ${{ inputs.global-json-file }}
 
             - name: 🧪 Test Godot Project
-              uses: grovegs/actions/.github/actions/test-godot@v1.3.1
+              uses: grovegs/actions/.github/actions/test-godot@v1.4.0
               with:
                   project: ${{ inputs.godot-project }}
 
@@ -90,11 +90,11 @@ jobs:
                   lfs: true
 
             - name: 🎮 Setup Unity
-              uses: grovegs/actions/.github/actions/setup-unity@v1.3.1
+              uses: grovegs/actions/.github/actions/setup-unity@v1.4.0
               with:
                   project: ${{ inputs.unity-project }}
 
             - name: 🧪 Test Unity Project
-              uses: grovegs/actions/.github/actions/test-unity@v1.3.1
+              uses: grovegs/actions/.github/actions/test-unity@v1.4.0
               with:
                   project: ${{ inputs.unity-project }}
