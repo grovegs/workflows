@@ -387,7 +387,6 @@ jobs:
 
             - name: 📤 Publish to NuGet
               if: inputs.publish-nuget && steps.find-packages.outputs.dotnet-package != ''
-              continue-on-error: true
               uses: grovegs/actions/.github/actions/publish-nuget@v1.4.0
               with:
                   file: ${{ steps.find-packages.outputs.dotnet-package }}
