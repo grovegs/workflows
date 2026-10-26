@@ -144,7 +144,7 @@ jobs:
       nuget-api-key: ${{ secrets.NUGET_API_KEY }}
 ```
 
-Consumer `nuget.config`:
+Consumer `nuget.config`. Every workflow exports `GITHUB_TOKEN`, so restores from GitHub Packages work in any repo without extra setup; locally, set `GITHUB_TOKEN` to a classic token with `read:packages`:
 
 ```xml
 <configuration>

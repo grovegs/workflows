@@ -19,6 +19,9 @@ on:
                 type: string
                 default: ""
 
+env:
+    GITHUB_TOKEN: ${{ github.token }}
+
 jobs:
     test-dotnet:
         name: Test .NET
