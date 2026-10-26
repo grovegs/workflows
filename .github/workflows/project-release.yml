@@ -743,7 +743,7 @@ jobs:
                   description: |
                       ${{ needs.prepare.outputs.changelog-markdown }}
 
-                      [View Release](${{ github.server_url }}/${{ github.repository }}/releases/tag/v${{ needs.prepare.outputs.version }})
+                      ${{ inputs.publish-github && format('[View Release]({0}/{1}/releases/tag/v{2})', github.server_url, github.repository, needs.prepare.outputs.version) || format('[View Workflow Run]({0}/{1}/actions/runs/{2})', github.server_url, github.repository, github.run_id) }}
                   color: "3066993"
 
             - name: 📢 Notify Discord Failure
