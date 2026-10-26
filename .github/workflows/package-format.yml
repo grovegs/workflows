@@ -24,6 +24,9 @@ on:
                 type: string
                 default: ""
 
+env:
+    GITHUB_TOKEN: ${{ github.token }}
+
 jobs:
     format-files:
         name: Format Files
