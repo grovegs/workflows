@@ -25,17 +25,17 @@ This is Grove Games' collection of reusable GitHub Actions workflows for buildin
 
 ### Project Workflows
 
-Unified workflows for both Godot and Unity game projects using array-based inputs:
+Unified workflows for both Godot and Unity game projects:
 
-- **Release**: `project-release.yml` - Builds Android/iOS releases for multiple projects, publishes to Firebase/GitHub/TestFlight
-- **Testing**: `project-tests.yml` - Runs .NET unit tests and engine-specific tests for multiple projects
-- **Formatting**: `project-format.yml` - Formats C# code and project files for multiple projects
+- **Release**: `project-release.yml` - Builds Android/iOS releases, publishes to Firebase/GitHub/TestFlight
+- **Testing**: `project-tests.yml` - Runs .NET unit tests and engine-specific tests
+- **Formatting**: `project-format.yml` - Formats C# code and project files
 
-These workflows use array-based inputs to support any number of projects:
+Each workflow handles a single project; use a matrix in the caller for several:
 
-- `godot-projects` - Array of Godot project paths containing project.godot files
-- `godot-tests` - Array of Godot test project paths containing .csproj files
-- `unity-projects` - Array of Unity project paths containing ProjectSettings folders
+- `godot-project` - Godot project path containing a project.godot file
+- `unity-project` - Unity project path containing a ProjectSettings folder
+- `dotnet-project` - .NET test project path containing a .csproj file
 
 Key requirements:
 
@@ -45,15 +45,15 @@ Key requirements:
 
 ### Package Workflows
 
-- **Release**: `package-release.yml` - Builds and publishes NuGet packages for both .NET and Godot projects
-- **Testing**: `package-tests.yml` - Runs .NET unit tests with support for multiple project types
+- **Release**: `package-release.yml` - Builds .NET, Godot and Unity packages, publishes to GitHub Packages, nuget.org and GitHub releases
+- **Testing**: `package-tests.yml` - Runs .NET unit tests
 - **Formatting**: `package-format.yml` - Formats C# code for .NET and Godot projects
 
-These unified workflows use array-based inputs to support any number of projects:
+Each workflow handles a single package:
 
-- `dotnet-projects` - Array of .NET project paths to build/format/package
-- `dotnet-tests` - Array of .NET test project paths to test
-- `godot-addons` - Array of Godot addon paths to package
+- `dotnet-project` - .NET project path to build, format, package or test
+- `godot-addon` - Godot addon path to package
+- `unity-package` - Unity package path to package
 
 ## Version Management
 
@@ -97,85 +97,89 @@ Workflows depend on custom actions from the `grovegs/actions` repository:
 
 ### Using Project Workflows
 
-For releasing multiple Godot projects:
+Each workflow handles a single project. Development and Production are chosen by the caller through the `publish-*` flags:
 
 ```yaml
-uses: ./.github/workflows/project-release.yml
+uses: grovegs/workflows/.github/workflows/project-release.yml@v1
 with:
-  name: "My Game Collection"
-  godot-projects: '["games/PuzzleGame", "games/ActionGame"]'
+  project-name: "My Game"
+  godot-project: "projects/Game"
   version-type: "minor"
-  environment: "Development"
   global-json-file: "global.json"
+  publish-firebase: ${{ inputs.environment == 'Development' }}
+  publish-testflight: ${{ inputs.environment == 'Production' }}
 ```
 
-For releasing Unity projects:
+For testing a project:
 
 ```yaml
-uses: ./.github/workflows/project-release.yml
+uses: grovegs/workflows/.github/workflows/project-tests.yml@v1
 with:
-  name: "My Unity Game"
-  unity-projects: '["projects/MainGame", "projects/DemoLevel"]'
-  version-type: "patch"
-  environment: "Production"
-```
-
-For testing multiple projects:
-
-```yaml
-uses: ./.github/workflows/project-tests.yml
-with:
-  godot-projects: '["games/PuzzleGame", "games/ActionGame"]'
-  godot-tests: '["tests/PuzzleGame.Tests", "tests/ActionGame.Tests"]'
-  unity-projects: '["projects/MainGame"]'
+  dotnet-project: "tests/Game.Tests"
+  godot-project: "projects/Game"
   global-json-file: "global.json"
 ```
 
 ### Using Package Workflows
 
-For a simple .NET package:
+Development releases go to GitHub Packages, Production releases go to nuget.org. Consumers list both feeds in their `nuget.config`, so they can restore either. The caller must grant `packages: write` for GitHub Packages:
 
 ```yaml
-uses: ./.github/workflows/package-release.yml
-with:
-  name: "My Package"
-  dotnet-projects: '["src/MyPackage"]'
-  version-type: "minor"
-  global-json-file: "global.json"
+jobs:
+  release:
+    uses: grovegs/workflows/.github/workflows/package-release.yml@v1
+    permissions:
+      contents: write
+      packages: write
+    with:
+      package-name: "My Package"
+      dotnet-project: "src/MyPackage"
+      version-type: ${{ inputs.version-type }}
+      global-json-file: "global.json"
+      publish-github-packages: ${{ inputs.environment == 'Development' }}
+      publish-nuget: ${{ inputs.environment == 'Production' }}
+      publish-github: ${{ inputs.environment == 'Production' }}
+    secrets:
+      github-token: ${{ secrets.GITHUB_TOKEN }}
+      nuget-api-key: ${{ secrets.NUGET_API_KEY }}
 ```
 
-For a complex multi-project package:
+Consumer `nuget.config`:
 
-```yaml
-uses: ./.github/workflows/package-release.yml
-with:
-  name: "My Godot Package"
-  dotnet-projects: '["src/Core", "src/Godot", "src/Extensions"]'
-  godot-addons: '["addons/my-plugin", "addons/another-plugin"]'
-  version-type: "patch"
-  global-json-file: "global.json"
+```xml
+<configuration>
+  <packageSources>
+    <add key="nuget.org" value="https://api.nuget.org/v3/index.json" />
+    <add key="github" value="https://nuget.pkg.github.com/grovegs/index.json" />
+  </packageSources>
+  <packageSourceCredentials>
+    <github>
+      <add key="Username" value="%GITHUB_ACTOR%" />
+      <add key="ClearTextPassword" value="%GITHUB_TOKEN%" />
+    </github>
+  </packageSourceCredentials>
+</configuration>
 ```
 
-For testing multiple packages:
+For testing a package:
 
 ```yaml
-uses: ./.github/workflows/package-tests.yml
+uses: grovegs/workflows/.github/workflows/package-tests.yml@v1
 with:
-  dotnet-tests: '["tests/Core.Tests", "tests/Godot.Tests", "tests/Integration.Tests"]'
+  dotnet-project: "tests/MyPackage.Tests"
   global-json-file: "global.json"
 ```
 
 ## Development Notes
 
 - All workflows are designed as reusable (`workflow_call`) for use by other repositories
-- Both project and package workflows use array-based inputs with GitHub Actions matrix strategy for scalability
-- Conditional job execution - only runs jobs for provided inputs (e.g., if `godot-projects` array is empty, Godot jobs are skipped)
-- Environment-specific builds support both `Development` and `Production` configurations
-- Caching is enabled for main/develop branches to improve build performance
-- Firebase publishing is only enabled for Development builds, TestFlight for Production
-- GitHub releases include downloadable build artifacts from all successful platform builds
+- Each workflow handles a single project or package; jobs only run for the inputs that are provided
+- Development and Production are selected by the caller through `publish-*` flags, not a dedicated input
+- Projects: Firebase for Development, TestFlight for Production
+- Packages: GitHub Packages for Development, nuget.org for Production
+- Caching is only used on GitHub-hosted runners; self-hosted runners reuse locally installed tools
+- GitHub releases include downloadable artifacts from all successful builds
 - Use `tests.yml` to validate workflow changes against sandbox applications
-- Project workflows support mixed engine types (can build both Godot and Unity projects in same release)
 
 ## Cross-Platform Compatibility
 

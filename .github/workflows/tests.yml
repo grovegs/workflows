@@ -61,6 +61,7 @@ jobs:
             create-tag: false
             publish-github: false
             publish-nuget: false
+            publish-github-packages: false
             publish-discord: false
         secrets:
             github-token: ${{ secrets.GITHUB_TOKEN }}

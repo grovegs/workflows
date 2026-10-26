@@ -66,6 +66,11 @@ on:
                 required: false
                 type: boolean
                 default: false
+            publish-github-packages:
+                description: If true, publish packages to GitHub Packages. The caller must grant packages write permission.
+                required: false
+                type: boolean
+                default: false
             publish-discord:
                 description: If true, send Discord notifications
                 required: false
@@ -391,6 +396,14 @@ jobs:
               with:
                   file: ${{ steps.find-packages.outputs.dotnet-package }}
                   api-key: ${{ secrets.nuget-api-key }}
+
+            - name: 📤 Publish to GitHub Packages
+              if: inputs.publish-github-packages && steps.find-packages.outputs.dotnet-package != ''
+              uses: grovegs/actions/.github/actions/publish-nuget@v1.4.0
+              with:
+                  file: ${{ steps.find-packages.outputs.dotnet-package }}
+                  api-key: ${{ secrets.github-token }}
+                  source: https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json
 
             - name: 📢 Notify Discord Success
               if: success() && inputs.publish-discord
