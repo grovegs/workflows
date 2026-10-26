@@ -144,14 +144,24 @@ jobs:
       nuget-api-key: ${{ secrets.NUGET_API_KEY }}
 ```
 
-Consumer `nuget.config`. Every workflow exports `GITHUB_TOKEN`, so restores from GitHub Packages work in any repo without extra setup; locally, set `GITHUB_TOKEN` to a classic token with `read:packages`:
+Consumer `nuget.config`. Package source mapping limits the `github` feed to `GroveGames.*`; list `GroveGames.*` under nuget.org too, because the most specific pattern wins and released versions live there. Every workflow exports `GITHUB_TOKEN`, so restores from GitHub Packages work in any repo without extra setup; locally, set `GITHUB_TOKEN` to a classic token with `read:packages`:
 
 ```xml
 <configuration>
   <packageSources>
+    <clear />
     <add key="nuget.org" value="https://api.nuget.org/v3/index.json" />
     <add key="github" value="https://nuget.pkg.github.com/grovegs/index.json" />
   </packageSources>
+  <packageSourceMapping>
+    <packageSource key="nuget.org">
+      <package pattern="*" />
+      <package pattern="GroveGames.*" />
+    </packageSource>
+    <packageSource key="github">
+      <package pattern="GroveGames.*" />
+    </packageSource>
+  </packageSourceMapping>
   <packageSourceCredentials>
     <github>
       <add key="Username" value="%GITHUB_ACTOR%" />
