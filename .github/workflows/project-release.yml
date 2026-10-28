@@ -213,17 +213,17 @@ jobs:
 
             - name: 📝 Generate Changelog
               id: generate-changelog
-              uses: grovegs/actions/.github/actions/generate-changelog@v1.4.0
+              uses: grovegs/actions/.github/actions/generate-changelog@v1.4.2
 
             - name: 🆙 Bump Version
               id: bump-version
-              uses: grovegs/actions/.github/actions/bump-version@v1.4.0
+              uses: grovegs/actions/.github/actions/bump-version@v1.4.2
               with:
                   version-type: ${{ inputs.version-type }}
 
             - name: 🏷️ Create Tag
               if: inputs.create-tag
-              uses: grovegs/actions/.github/actions/create-tag@v1.4.0
+              uses: grovegs/actions/.github/actions/create-tag@v1.4.2
               with:
                   version: ${{ steps.bump-version.outputs.next-version }}
 
@@ -269,19 +269,19 @@ jobs:
                   git lfs pull
 
             - name: 🔧 Setup .NET
-              uses: grovegs/actions/.github/actions/setup-dotnet@v1.4.0
+              uses: grovegs/actions/.github/actions/setup-dotnet@v1.4.2
               with:
                   global-json-file: ${{ inputs.global-json-file }}
 
             - name: 🎮 Setup Godot
-              uses: grovegs/actions/.github/actions/setup-godot@v1.4.0
+              uses: grovegs/actions/.github/actions/setup-godot@v1.4.2
               with:
                   global-json-file: ${{ inputs.global-json-file }}
                   target-platforms: Android
                   godot-path: ${{ inputs.godot-path }}
 
             - name: 🤖 Setup Android
-              uses: grovegs/actions/.github/actions/setup-android@v1.4.0
+              uses: grovegs/actions/.github/actions/setup-android@v1.4.2
               with:
                   java-version: ${{ inputs.android-java-version }}
                   android-packages: ${{ inputs.android-ndk-version != '' && format('ndk;{0}', inputs.android-ndk-version) || '' }} ${{ inputs.android-platform-version != '' && format('platforms;android-{0}', inputs.android-platform-version) || '' }} ${{ inputs.android-build-tools-version != '' && format('build-tools;{0}', inputs.android-build-tools-version) || '' }}
@@ -297,7 +297,7 @@ jobs:
 
             - name: 🏗️ Build Godot
               id: build-godot
-              uses: grovegs/actions/.github/actions/build-godot@v1.4.0
+              uses: grovegs/actions/.github/actions/build-godot@v1.4.2
               with:
                   project: ${{ inputs.godot-project }}
                   global-json-file: ${{ inputs.global-json-file }}
@@ -311,7 +311,7 @@ jobs:
                   android-keystore-password: ${{ secrets.android-keystore-password }}
 
             - name: 📤 Upload Build Artifact
-              uses: grovegs/actions/.github/actions/upload-artifact@v1.4.0
+              uses: grovegs/actions/.github/actions/upload-artifact@v1.4.2
               if: steps.build-godot.outputs.file != ''
               with:
                   name: android-build
@@ -360,12 +360,12 @@ jobs:
                   git lfs pull
 
             - name: 🔧 Setup .NET
-              uses: grovegs/actions/.github/actions/setup-dotnet@v1.4.0
+              uses: grovegs/actions/.github/actions/setup-dotnet@v1.4.2
               with:
                   global-json-file: ${{ inputs.global-json-file }}
 
             - name: 🎮 Setup Godot
-              uses: grovegs/actions/.github/actions/setup-godot@v1.4.0
+              uses: grovegs/actions/.github/actions/setup-godot@v1.4.2
               with:
                   global-json-file: ${{ inputs.global-json-file }}
                   target-platforms: iOS
@@ -373,7 +373,7 @@ jobs:
 
             - name: 🍎 Setup Xcode
               if: inputs.ios-xcode-version != ''
-              uses: grovegs/actions/.github/actions/setup-xcode@v1.4.0
+              uses: grovegs/actions/.github/actions/setup-xcode@v1.4.2
               with:
                   xcode-version: ${{ inputs.ios-xcode-version }}
 
@@ -388,7 +388,7 @@ jobs:
 
             - name: 🏗️ Build Godot
               id: build-godot
-              uses: grovegs/actions/.github/actions/build-godot@v1.4.0
+              uses: grovegs/actions/.github/actions/build-godot@v1.4.2
               with:
                   project: ${{ inputs.godot-project }}
                   global-json-file: ${{ inputs.global-json-file }}
@@ -403,7 +403,7 @@ jobs:
                   ios-provisioning-profile: ${{ secrets.ios-provisioning-profile }}
 
             - name: 📤 Upload Build Artifact
-              uses: grovegs/actions/.github/actions/upload-artifact@v1.4.0
+              uses: grovegs/actions/.github/actions/upload-artifact@v1.4.2
               if: steps.build-godot.outputs.file != ''
               with:
                   name: ios-build
@@ -452,12 +452,12 @@ jobs:
                   git lfs pull
 
             - name: 🔧 Setup .NET
-              uses: grovegs/actions/.github/actions/setup-dotnet@v1.4.0
+              uses: grovegs/actions/.github/actions/setup-dotnet@v1.4.2
               with:
                   global-json-file: ${{ inputs.global-json-file }}
 
             - name: 🎮 Setup Unity
-              uses: grovegs/actions/.github/actions/setup-unity@v1.4.0
+              uses: grovegs/actions/.github/actions/setup-unity@v1.4.2
               with:
                   project: ${{ inputs.unity-project }}
                   unity-modules: android
@@ -487,7 +487,7 @@ jobs:
 
             - name: 🏗️ Build Unity
               id: build-unity
-              uses: grovegs/actions/.github/actions/build-unity@v1.4.0
+              uses: grovegs/actions/.github/actions/build-unity@v1.4.2
               with:
                   project: ${{ inputs.unity-project }}
                   version: ${{ needs.prepare.outputs.version }}
@@ -505,7 +505,7 @@ jobs:
                   cache: ${{ inputs.unity-cache }}
 
             - name: 📤 Upload Build Artifact
-              uses: grovegs/actions/.github/actions/upload-artifact@v1.4.0
+              uses: grovegs/actions/.github/actions/upload-artifact@v1.4.2
               if: steps.build-unity.outputs.file != ''
               with:
                   name: android-build
@@ -554,18 +554,18 @@ jobs:
                   git lfs pull
 
             - name: 🔧 Setup .NET
-              uses: grovegs/actions/.github/actions/setup-dotnet@v1.4.0
+              uses: grovegs/actions/.github/actions/setup-dotnet@v1.4.2
               with:
                   global-json-file: ${{ inputs.global-json-file }}
 
             - name: 🍎 Setup Xcode
               if: inputs.ios-xcode-version != ''
-              uses: grovegs/actions/.github/actions/setup-xcode@v1.4.0
+              uses: grovegs/actions/.github/actions/setup-xcode@v1.4.2
               with:
                   xcode-version: ${{ inputs.ios-xcode-version }}
 
             - name: 🎮 Setup Unity
-              uses: grovegs/actions/.github/actions/setup-unity@v1.4.0
+              uses: grovegs/actions/.github/actions/setup-unity@v1.4.2
               with:
                   project: ${{ inputs.unity-project }}
                   unity-modules: ios
@@ -595,7 +595,7 @@ jobs:
 
             - name: 🏗️ Build Unity
               id: build-unity
-              uses: grovegs/actions/.github/actions/build-unity@v1.4.0
+              uses: grovegs/actions/.github/actions/build-unity@v1.4.2
               with:
                   project: ${{ inputs.unity-project }}
                   version: ${{ needs.prepare.outputs.version }}
@@ -615,7 +615,7 @@ jobs:
                   cache: ${{ inputs.unity-cache }}
 
             - name: 📤 Upload Build Artifact
-              uses: grovegs/actions/.github/actions/upload-artifact@v1.4.0
+              uses: grovegs/actions/.github/actions/upload-artifact@v1.4.2
               if: steps.build-unity.outputs.file != ''
               with:
                   name: ios-build
@@ -641,14 +641,14 @@ jobs:
 
             - name: 📥 Download Android Artifact
               if: needs.build-godot-android.result == 'success' || needs.build-unity-android.result == 'success'
-              uses: grovegs/actions/.github/actions/download-artifact@v1.4.0
+              uses: grovegs/actions/.github/actions/download-artifact@v1.4.2
               with:
                   name: android-build
                   path: builds/android
 
             - name: 📥 Download iOS Artifact
               if: needs.build-godot-ios.result == 'success' || needs.build-unity-ios.result == 'success'
-              uses: grovegs/actions/.github/actions/download-artifact@v1.4.0
+              uses: grovegs/actions/.github/actions/download-artifact@v1.4.2
               with:
                   name: ios-build
                   path: builds/ios
@@ -689,7 +689,7 @@ jobs:
 
             - name: 🚀 Publish to GitHub
               if: inputs.publish-github && steps.find-build-files.outputs.all-files != ''
-              uses: grovegs/actions/.github/actions/publish-github@v1.4.0
+              uses: grovegs/actions/.github/actions/publish-github@v1.4.2
               with:
                   title: ${{ inputs.project-name }} v${{ needs.prepare.outputs.version }}
                   version: v${{ needs.prepare.outputs.version }}
@@ -699,12 +699,12 @@ jobs:
 
             - name: 📤 Setup Firebase
               if: inputs.publish-firebase && (steps.find-build-files.outputs.android-file != '' || steps.find-build-files.outputs.ios-file != '')
-              uses: grovegs/actions/.github/actions/setup-firebase@v1.4.0
+              uses: grovegs/actions/.github/actions/setup-firebase@v1.4.2
 
             - name: 📤 Publish Android to Firebase
               if: inputs.publish-firebase && steps.find-build-files.outputs.android-file != ''
               continue-on-error: true
-              uses: grovegs/actions/.github/actions/publish-firebase@v1.4.0
+              uses: grovegs/actions/.github/actions/publish-firebase@v1.4.2
               with:
                   file: ${{ steps.find-build-files.outputs.android-file }}
                   app-id: ${{ secrets.firebase-app-id-android }}
@@ -715,7 +715,7 @@ jobs:
             - name: 📤 Publish iOS to Firebase
               if: inputs.publish-firebase && steps.find-build-files.outputs.ios-file != ''
               continue-on-error: true
-              uses: grovegs/actions/.github/actions/publish-firebase@v1.4.0
+              uses: grovegs/actions/.github/actions/publish-firebase@v1.4.2
               with:
                   file: ${{ steps.find-build-files.outputs.ios-file }}
                   app-id: ${{ secrets.firebase-app-id-ios }}
@@ -726,7 +726,7 @@ jobs:
             - name: 📤 Publish to TestFlight
               if: inputs.publish-testflight && steps.find-build-files.outputs.ios-file != ''
               continue-on-error: true
-              uses: grovegs/actions/.github/actions/publish-testflight@v1.4.0
+              uses: grovegs/actions/.github/actions/publish-testflight@v1.4.2
               with:
                   file: ${{ steps.find-build-files.outputs.ios-file }}
                   api-key: ${{ secrets.ios-api-key }}
@@ -736,7 +736,7 @@ jobs:
             - name: 📢 Notify Discord Success
               if: success() && inputs.publish-discord
               continue-on-error: true
-              uses: grovegs/actions/.github/actions/notify-discord@v1.4.0
+              uses: grovegs/actions/.github/actions/notify-discord@v1.4.2
               with:
                   webhook-url: ${{ secrets.discord-webhook }}
                   title: ✅ ${{ github.event.repository.name }} v${{ needs.prepare.outputs.version }} (${{ github.ref_name }})
@@ -749,7 +749,7 @@ jobs:
             - name: 📢 Notify Discord Failure
               if: failure() && inputs.publish-discord
               continue-on-error: true
-              uses: grovegs/actions/.github/actions/notify-discord@v1.4.0
+              uses: grovegs/actions/.github/actions/notify-discord@v1.4.2
               with:
                   webhook-url: ${{ secrets.discord-webhook }}
                   title: ❌ ${{ github.event.repository.name }} v${{ needs.prepare.outputs.version }} (${{ github.ref_name }})
