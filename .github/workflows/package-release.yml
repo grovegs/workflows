@@ -114,11 +114,11 @@ jobs:
 
             - name: 📝 Generate Changelog
               id: generate-changelog
-              uses: grovegs/actions/.github/actions/generate-changelog@v1.4.4
+              uses: grovegs/actions/.github/actions/generate-changelog@v1.4.5
 
             - name: 🆙 Bump Version
               id: bump-version
-              uses: grovegs/actions/.github/actions/bump-version@v1.4.4
+              uses: grovegs/actions/.github/actions/bump-version@v1.4.5
               with:
                   version-type: ${{ inputs.version-type }}
 
@@ -133,12 +133,12 @@ jobs:
               uses: actions/checkout@v7
 
             - name: 🔧 Setup .NET
-              uses: grovegs/actions/.github/actions/setup-dotnet@v1.4.4
+              uses: grovegs/actions/.github/actions/setup-dotnet@v1.4.5
               with:
                   global-json-file: ${{ inputs.global-json-file }}
 
             - name: 🏗️ Build .NET Project
-              uses: grovegs/actions/.github/actions/build-dotnet@v1.4.4
+              uses: grovegs/actions/.github/actions/build-dotnet@v1.4.5
               with:
                   project: ${{ inputs.dotnet-project }}
                   configuration: Release
@@ -155,7 +155,7 @@ jobs:
 
             - name: 📦 Pack NuGet
               id: pack-nuget
-              uses: grovegs/actions/.github/actions/pack-dotnet@v1.4.4
+              uses: grovegs/actions/.github/actions/pack-dotnet@v1.4.5
               with:
                   project: ${{ inputs.dotnet-project }}
                   configuration: Release
@@ -164,7 +164,7 @@ jobs:
                   directory-build-props: ${{ inputs.directory-build-props }}
 
             - name: 📤 Upload Package Artifact
-              uses: grovegs/actions/.github/actions/upload-artifact@v1.4.4
+              uses: grovegs/actions/.github/actions/upload-artifact@v1.4.5
               with:
                   name: nuget-package
                   path: ${{ steps.pack-nuget.outputs.package }}
@@ -172,7 +172,7 @@ jobs:
 
             - name: 📤 Upload Modified Files
               if: steps.pack-nuget.outputs.modified-files != ''
-              uses: grovegs/actions/.github/actions/upload-artifact@v1.4.4
+              uses: grovegs/actions/.github/actions/upload-artifact@v1.4.5
               with:
                   name: modified-dotnet
                   path: ${{ steps.pack-nuget.outputs.modified-files }}
@@ -199,7 +199,7 @@ jobs:
 
             - name: 📦 Pack Godot Addon
               id: pack-addon
-              uses: grovegs/actions/.github/actions/pack-godot-addon@v1.4.4
+              uses: grovegs/actions/.github/actions/pack-godot-addon@v1.4.5
               with:
                   addon: ${{ inputs.godot-addon }}
                   version: ${{ needs.prepare.outputs.version }}
@@ -208,14 +208,14 @@ jobs:
                   license: ${{ inputs.license-file }}
 
             - name: 📤 Upload Package Artifact
-              uses: grovegs/actions/.github/actions/upload-artifact@v1.4.4
+              uses: grovegs/actions/.github/actions/upload-artifact@v1.4.5
               with:
                   name: godot-addon
                   path: ${{ steps.pack-addon.outputs.package }}
                   retention-days: 1
 
             - name: 📤 Upload Modified Files
-              uses: grovegs/actions/.github/actions/upload-artifact@v1.4.4
+              uses: grovegs/actions/.github/actions/upload-artifact@v1.4.5
               with:
                   name: modified-godot
                   path: ${{ steps.pack-addon.outputs.modified-files }}
@@ -242,7 +242,7 @@ jobs:
 
             - name: 📦 Pack Unity Package
               id: pack-package
-              uses: grovegs/actions/.github/actions/pack-unity-package@v1.4.4
+              uses: grovegs/actions/.github/actions/pack-unity-package@v1.4.5
               with:
                   package: ${{ inputs.unity-package }}
                   version: ${{ needs.prepare.outputs.version }}
@@ -251,14 +251,14 @@ jobs:
                   license: ${{ inputs.license-file }}
 
             - name: 📤 Upload Package Artifact
-              uses: grovegs/actions/.github/actions/upload-artifact@v1.4.4
+              uses: grovegs/actions/.github/actions/upload-artifact@v1.4.5
               with:
                   name: unity-package
                   path: ${{ steps.pack-package.outputs.package }}
                   retention-days: 1
 
             - name: 📤 Upload Modified Files
-              uses: grovegs/actions/.github/actions/upload-artifact@v1.4.4
+              uses: grovegs/actions/.github/actions/upload-artifact@v1.4.5
               with:
                   name: modified-unity
                   path: ${{ steps.pack-package.outputs.modified-files }}
@@ -285,7 +285,7 @@ jobs:
                   token: ${{ steps.app-token.outputs.token || secrets.github-token }}
 
             - name: 📥 Download Modified Files
-              uses: grovegs/actions/.github/actions/download-artifact@v1.4.4
+              uses: grovegs/actions/.github/actions/download-artifact@v1.4.5
               continue-on-error: true
               with:
                   pattern: modified-*
@@ -310,27 +310,27 @@ jobs:
 
             - name: 🏷️ Create Tag
               if: inputs.create-tag
-              uses: grovegs/actions/.github/actions/create-tag@v1.4.4
+              uses: grovegs/actions/.github/actions/create-tag@v1.4.5
               with:
                   version: ${{ needs.prepare.outputs.version }}
 
             - name: 📥 Download .NET Package
               continue-on-error: true
-              uses: grovegs/actions/.github/actions/download-artifact@v1.4.4
+              uses: grovegs/actions/.github/actions/download-artifact@v1.4.5
               with:
                   name: nuget-package
                   path: packages/dotnet
 
             - name: 📥 Download Godot Package
               continue-on-error: true
-              uses: grovegs/actions/.github/actions/download-artifact@v1.4.4
+              uses: grovegs/actions/.github/actions/download-artifact@v1.4.5
               with:
                   name: godot-addon
                   path: packages/godot
 
             - name: 📥 Download Unity Package
               continue-on-error: true
-              uses: grovegs/actions/.github/actions/download-artifact@v1.4.4
+              uses: grovegs/actions/.github/actions/download-artifact@v1.4.5
               with:
                   name: unity-package
                   path: packages/unity
@@ -385,7 +385,7 @@ jobs:
 
             - name: 🚀 Publish to GitHub
               if: inputs.publish-github && steps.find-packages.outputs.all-packages != ''
-              uses: grovegs/actions/.github/actions/publish-github@v1.4.4
+              uses: grovegs/actions/.github/actions/publish-github@v1.4.5
               with:
                   title: ${{ inputs.package-name }} v${{ needs.prepare.outputs.version }}
                   version: v${{ needs.prepare.outputs.version }}
@@ -395,14 +395,14 @@ jobs:
 
             - name: 📤 Publish to NuGet
               if: inputs.publish-nuget && steps.find-packages.outputs.dotnet-package != ''
-              uses: grovegs/actions/.github/actions/publish-nuget@v1.4.4
+              uses: grovegs/actions/.github/actions/publish-nuget@v1.4.5
               with:
                   file: ${{ steps.find-packages.outputs.dotnet-package }}
                   api-key: ${{ secrets.nuget-api-key }}
 
             - name: 📤 Publish to GitHub Packages
               if: inputs.publish-github-packages && steps.find-packages.outputs.dotnet-package != ''
-              uses: grovegs/actions/.github/actions/publish-nuget@v1.4.4
+              uses: grovegs/actions/.github/actions/publish-nuget@v1.4.5
               with:
                   file: ${{ steps.find-packages.outputs.dotnet-package }}
                   api-key: ${{ secrets.github-token }}
@@ -411,7 +411,7 @@ jobs:
             - name: 📢 Notify Discord Success
               if: success() && inputs.publish-discord
               continue-on-error: true
-              uses: grovegs/actions/.github/actions/notify-discord@v1.4.4
+              uses: grovegs/actions/.github/actions/notify-discord@v1.4.5
               with:
                   webhook-url: ${{ secrets.discord-webhook }}
                   title: ✅ ${{ github.event.repository.name }} v${{ needs.prepare.outputs.version }} (${{ github.ref_name }})
@@ -424,7 +424,7 @@ jobs:
             - name: 📢 Notify Discord Failure
               if: failure() && inputs.publish-discord
               continue-on-error: true
-              uses: grovegs/actions/.github/actions/notify-discord@v1.4.4
+              uses: grovegs/actions/.github/actions/notify-discord@v1.4.5
               with:
                   webhook-url: ${{ secrets.discord-webhook }}
                   title: ❌ ${{ github.event.repository.name }} v${{ needs.prepare.outputs.version }} (${{ github.ref_name }})
