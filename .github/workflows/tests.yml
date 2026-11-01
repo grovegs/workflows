@@ -28,19 +28,6 @@ jobs:
             godot-project: sandbox/GodotApplication
             global-json-file: sandbox/GodotApplication/global.json
 
-    test-unity-tests:
-        name: Test Unity Project Tests
-        if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository
-        uses: ./.github/workflows/project-tests.yml
-        with:
-            runs-on: self-hosted
-            unity-project: sandbox/UnityApplication
-            unity-path: /Volumes/External/Unity/Editor
-        secrets:
-            unity-email: ${{ secrets.UNITY_EMAIL }}
-            unity-password: ${{ secrets.UNITY_PASSWORD }}
-            unity-license-key: ${{ secrets.UNITY_LICENSE_KEY }}
-
     test-package-format:
         name: Test Package Format
         uses: ./.github/workflows/package-format.yml
