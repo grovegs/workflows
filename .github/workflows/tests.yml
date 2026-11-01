@@ -47,7 +47,8 @@ jobs:
         uses: ./.github/workflows/package-release.yml
         with:
             package-name: Test Package
-            version-type: patch
+            version-type: auto
+            version-suffix: dev
             dotnet-project: sandbox/ConsoleApplication
             godot-addon: sandbox/GodotApplication/addons/TestAddon
             unity-package: sandbox/UnityApplication/Packages/com.test.package
@@ -99,7 +100,8 @@ jobs:
         uses: ./.github/workflows/project-release.yml
         with:
             project-name: Test Project
-            version-type: patch
+            version-type: auto
+            version-suffix: dev
             godot-project: sandbox/GodotApplication
             unity-project: sandbox/UnityApplication
             global-json-file: sandbox/GodotApplication/global.json

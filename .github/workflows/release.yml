@@ -4,11 +4,12 @@ on:
     workflow_dispatch:
         inputs:
             version-type:
-                description: Select the version to increment such as major, minor, or patch
+                description: Select the version to increment, or auto to read it from the commits
                 required: true
-                default: patch
+                default: auto
                 type: choice
                 options:
+                    - auto
                     - major
                     - minor
                     - patch

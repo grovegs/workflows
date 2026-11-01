@@ -1,0 +1,21 @@
+name: 🔎 Check Pull Request Title
+
+on:
+    workflow_call:
+        inputs:
+            runs-on:
+                description: The type of runner to use (ubuntu-latest, macos-latest, or self-hosted label)
+                required: false
+                type: string
+                default: "ubuntu-latest"
+
+jobs:
+    check-title:
+        name: Check Title
+        runs-on: ${{ inputs.runs-on }}
+
+        steps:
+            - name: 🔎 Check Pull Request Title
+              uses: grovegs/actions/.github/actions/check-pull-request-title@v1.4.7
+              with:
+                  title: ${{ github.event.pull_request.title }}
