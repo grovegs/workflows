@@ -76,6 +76,16 @@ on:
                 required: false
                 type: boolean
                 default: false
+            skip-unchanged:
+                description: If true, skip the release when nothing under src changed since the latest GitHub release, such as for scheduled releases
+                required: false
+                type: boolean
+                default: false
+
+        outputs:
+            has-changes:
+                description: Whether the release ran because src changed or skip-unchanged was off
+                value: ${{ jobs.prepare.outputs.has-changes }}
 
         secrets:
             github-token:
@@ -102,6 +112,7 @@ jobs:
         name: Prepare Release
         runs-on: ${{ inputs.runs-on }}
         outputs:
+            has-changes: ${{ steps.check-changes.outputs.has-changes }}
             version: ${{ steps.bump-version.outputs.next-version }}
             changelog-plain: ${{ steps.generate-changelog.outputs.changelog-plain }}
             changelog-markdown: ${{ steps.generate-changelog.outputs.changelog-markdown }}
@@ -112,19 +123,51 @@ jobs:
               with:
                   fetch-depth: 0
 
+            - name: 🔍 Check Package Changes
+              id: check-changes
+              shell: bash
+              env:
+                  SKIP_UNCHANGED: ${{ inputs.skip-unchanged }}
+                  REPOSITORY: ${{ github.repository }}
+              run: |
+                  set -euo pipefail
+
+                  if [ "${SKIP_UNCHANGED}" != "true" ]; then
+                      echo "has-changes=true" >> "${GITHUB_OUTPUT}"
+                      exit 0
+                  fi
+
+                  latest_release=$(gh release view --repo "${REPOSITORY}" --json tagName --jq .tagName 2> /dev/null || echo "")
+
+                  if [ -z "${latest_release}" ]; then
+                      echo "::notice::No GitHub release yet, releasing"
+                      echo "has-changes=true" >> "${GITHUB_OUTPUT}"
+                      exit 0
+                  fi
+
+                  if git diff --quiet "${latest_release}" HEAD -- src; then
+                      echo "::notice::Nothing under src changed since ${latest_release}, skipping the release"
+                      echo "has-changes=false" >> "${GITHUB_OUTPUT}"
+                  else
+                      echo "::notice::src changed since ${latest_release}, releasing"
+                      echo "has-changes=true" >> "${GITHUB_OUTPUT}"
+                  fi
+
             - name: 📝 Generate Changelog
               id: generate-changelog
+              if: steps.check-changes.outputs.has-changes == 'true'
               uses: grovegs/actions/.github/actions/generate-changelog@v1.4.7
 
             - name: 🆙 Bump Version
               id: bump-version
+              if: steps.check-changes.outputs.has-changes == 'true'
               uses: grovegs/actions/.github/actions/bump-version@v1.4.7
               with:
                   version-type: ${{ inputs.version-type }}
 
     build-dotnet:
         name: Build .NET Package
-        if: inputs.dotnet-project != ''
+        if: inputs.dotnet-project != '' && needs.prepare.outputs.has-changes == 'true'
         needs: prepare
         runs-on: ${{ inputs.runs-on }}
 
@@ -180,7 +223,7 @@ jobs:
 
     build-godot:
         name: Build Godot Addon
-        if: inputs.godot-addon != ''
+        if: inputs.godot-addon != '' && needs.prepare.outputs.has-changes == 'true'
         needs: prepare
         runs-on: ${{ inputs.runs-on }}
 
@@ -223,7 +266,7 @@ jobs:
 
     build-unity:
         name: Build Unity Package
-        if: inputs.unity-package != ''
+        if: inputs.unity-package != '' && needs.prepare.outputs.has-changes == 'true'
         needs: prepare
         runs-on: ${{ inputs.runs-on }}
 

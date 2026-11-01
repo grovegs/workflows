@@ -316,6 +316,9 @@ jobs:
   - `publish-github` - Publish to GitHub
   - `publish-nuget` - Publish to NuGet
   - `publish-discord` - Send Discord notifications
+  - `skip-unchanged` - Skip the release when nothing under `src` changed since the latest GitHub release, for scheduled releases
+- Outputs:
+  - `has-changes` - Whether the release ran
 
 **package-tests.yml** - Run tests for packages
 
