@@ -30,9 +30,12 @@ jobs:
 
     test-unity-tests:
         name: Test Unity Project Tests
+        if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository
         uses: ./.github/workflows/project-tests.yml
         with:
+            runs-on: self-hosted
             unity-project: sandbox/UnityApplication
+            unity-path: /Volumes/External/Unity/Editor
         secrets:
             unity-email: ${{ secrets.UNITY_EMAIL }}
             unity-password: ${{ secrets.UNITY_PASSWORD }}
