@@ -82,7 +82,7 @@ on:
                 type: boolean
                 default: false
             skip-unchanged:
-                description: If true, skip the release when nothing under src changed since the latest GitHub release, such as for scheduled releases
+                description: If true, skip the release when nothing under src changed since the previous release, such as for scheduled releases. Development releases compare against the latest version tag, Production releases against the latest stable tag.
                 required: false
                 type: boolean
                 default: false
@@ -133,7 +133,7 @@ jobs:
               shell: bash
               env:
                   SKIP_UNCHANGED: ${{ inputs.skip-unchanged }}
-                  REPOSITORY: ${{ github.repository }}
+                  VERSION_SUFFIX: ${{ inputs.version-suffix }}
               run: |
                   set -euo pipefail
 
@@ -142,10 +142,21 @@ jobs:
                       exit 0
                   fi
 
-                  latest_release=$(gh release view --repo "${REPOSITORY}" --json tagName --jq .tagName 2> /dev/null || echo "")
+                  if [ -n "${VERSION_SUFFIX}" ]; then
+                      tag_pattern='^v?[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$'
+                  else
+                      tag_pattern='^v?[0-9]+\.[0-9]+\.[0-9]+$'
+                  fi
+
+                  latest_release=$(git tag --merged HEAD |
+                      grep -E "${tag_pattern}" |
+                      awk '{ base = $0; sub(/^v/, "", base); sub(/-.*/, "", base); print base " " $0 }' |
+                      sort -V |
+                      tail -n 1 |
+                      cut -d ' ' -f 2 || true)
 
                   if [ -z "${latest_release}" ]; then
-                      echo "::notice::No GitHub release yet, releasing"
+                      echo "::notice::No previous release yet, releasing"
                       echo "has-changes=true" >> "${GITHUB_OUTPUT}"
                       exit 0
                   fi

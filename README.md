@@ -323,7 +323,7 @@ jobs:
   - `publish-github` - Publish to GitHub
   - `publish-nuget` - Publish to NuGet
   - `publish-discord` - Send Discord notifications
-  - `skip-unchanged` - Skip the release when nothing under `src` changed since the latest GitHub release, for scheduled releases
+  - `skip-unchanged` - Skip the release when nothing under `src` changed since the previous release, for scheduled releases. Development releases compare against the latest version tag, Production releases against the latest stable tag
 - Outputs:
   - `has-changes` - Whether the release ran
 
