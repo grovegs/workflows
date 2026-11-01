@@ -288,6 +288,8 @@ jobs:
   - `godot-project` - Path to Godot project
   - `unity-project` - Path to Unity project
   - `global-json-file` - Path to global.json
+- Secrets:
+  - `unity-email`, `unity-password`, `unity-license-key` - Unity license for the Unity tests, returned when they end
 
 **project-format.yml** - Format game project code
 

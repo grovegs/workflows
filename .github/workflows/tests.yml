@@ -33,6 +33,10 @@ jobs:
         uses: ./.github/workflows/project-tests.yml
         with:
             unity-project: sandbox/UnityApplication
+        secrets:
+            unity-email: ${{ secrets.UNITY_EMAIL }}
+            unity-password: ${{ secrets.UNITY_PASSWORD }}
+            unity-license-key: ${{ secrets.UNITY_LICENSE_KEY }}
 
     test-package-format:
         name: Test Package Format
