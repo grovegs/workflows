@@ -47,7 +47,8 @@ jobs:
         uses: ./.github/workflows/package-release.yml
         with:
             package-name: Test Package
-            version-type: patch
+            version-type: auto
+            version-suffix: dev
             dotnet-project: sandbox/ConsoleApplication
             godot-addon: sandbox/GodotApplication/addons/TestAddon
             unity-package: sandbox/UnityApplication/Packages/com.test.package
@@ -62,12 +63,45 @@ jobs:
             client-id: ${{ secrets.CLIENT_ID }}
             app-private-key: ${{ secrets.APP_PRIVATE_KEY }}
 
+    test-package-release-unchanged:
+        name: Test Package Release Unchanged
+        uses: ./.github/workflows/package-release.yml
+        with:
+            package-name: Test Package
+            version-type: patch
+            dotnet-project: sandbox/ConsoleApplication
+            global-json-file: sandbox/ConsoleApplication/global.json
+            create-tag: false
+            publish-github: false
+            publish-nuget: false
+            publish-github-packages: false
+            publish-discord: false
+            skip-unchanged: true
+        secrets:
+            github-token: ${{ secrets.GITHUB_TOKEN }}
+
+    check-package-release-unchanged:
+        name: Check Package Release Unchanged
+        needs: test-package-release-unchanged
+        runs-on: ubuntu-latest
+        steps:
+            - name: ✅ Check Skipped Release
+              shell: bash
+              env:
+                  HAS_CHANGES: ${{ needs.test-package-release-unchanged.outputs.has-changes }}
+              run: |
+                  if [ "${HAS_CHANGES}" != "false" ]; then
+                      echo "::error::Expected a skipped release because this repository has no src folder, got has-changes=${HAS_CHANGES}"
+                      exit 1
+                  fi
+
     test-project-release:
         name: Test Project Release
         uses: ./.github/workflows/project-release.yml
         with:
             project-name: Test Project
-            version-type: patch
+            version-type: auto
+            version-suffix: dev
             godot-project: sandbox/GodotApplication
             unity-project: sandbox/UnityApplication
             global-json-file: sandbox/GodotApplication/global.json

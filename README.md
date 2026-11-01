@@ -103,7 +103,9 @@ on:
         description: "Version bump type"
         required: true
         type: choice
+        default: auto
         options:
+          - auto
           - major
           - minor
           - patch
@@ -154,7 +156,8 @@ on:
       version-type:
         required: true
         type: choice
-        options: [major, minor, patch]
+        default: auto
+        options: [auto, major, minor, patch]
 
 permissions:
   contents: write
@@ -202,7 +205,8 @@ on:
       version-type:
         required: true
         type: choice
-        options: [major, minor, patch]
+        default: auto
+        options: [auto, major, minor, patch]
 
 permissions:
   contents: write
@@ -235,7 +239,8 @@ on:
       version-type:
         required: true
         type: choice
-        options: [major, minor, patch]
+        default: auto
+        options: [auto, major, minor, patch]
 
 permissions:
   contents: write
@@ -269,7 +274,8 @@ jobs:
 - Publishing: Firebase, TestFlight, GitHub Releases
 - Inputs:
   - `project-name` - Project name
-  - `version-type` - major, minor, or patch
+  - `version-type` - auto, major, minor, or patch. Auto reads the commits since the previous release: `feat:` and breaking changes bump minor, anything else bumps patch, and major is only bumped when chosen
+  - `version-suffix` - Prerelease suffix such as `dev` for Development releases, shown in the tag and release name. The app's store version and build number use the version without it
   - `godot-project` - Path to Godot project
   - `unity-project` - Path to Unity project
   - `global-json-file` - Path to global.json
@@ -307,7 +313,8 @@ jobs:
 - Publishing: NuGet, GitHub Releases
 - Inputs:
   - `package-name` - Package name
-  - `version-type` - major, minor, or patch
+  - `version-type` - auto, major, minor, or patch. Auto reads the commits since the previous release: breaking changes bump major from 1.0.0 on and minor before it, `feat:` bumps minor, and anything else bumps patch
+  - `version-suffix` - Prerelease suffix such as `dev` for Development releases, which gives `1.2.0-dev`. A stable package can't depend on a prerelease one
   - `dotnet-project` - Path to .NET project
   - `godot-addon` - Path to Godot addon
   - `unity-package` - Path to Unity package
@@ -316,6 +323,9 @@ jobs:
   - `publish-github` - Publish to GitHub
   - `publish-nuget` - Publish to NuGet
   - `publish-discord` - Send Discord notifications
+  - `skip-unchanged` - Skip the release when nothing under `src` changed since the previous release, for scheduled releases. Development releases compare against the latest version tag, Production releases against the latest stable tag
+- Outputs:
+  - `has-changes` - Whether the release ran
 
 **package-tests.yml** - Run tests for packages
 
@@ -331,6 +341,13 @@ jobs:
   - `global-json-file` - Path to global.json
 
 ---
+
+### Pull Request Workflows
+
+**pull-request-title.yml** - Check that a pull request title follows Conventional Commits
+
+- Squash merges use the title as the commit message, which drives versions and changelogs
+- Call it from a workflow that runs on `pull_request` with the `opened`, `edited`, `synchronize` and `reopened` types
 
 ## Advanced Usage
 

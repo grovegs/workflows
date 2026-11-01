@@ -4,11 +4,12 @@ on:
     workflow_dispatch:
         inputs:
             version-type:
-                description: Select the version to increment such as major, minor, or patch
+                description: Select the version to increment, or auto to read it from the commits
                 required: true
-                default: patch
+                default: auto
                 type: choice
                 options:
+                    - auto
                     - major
                     - minor
                     - patch
@@ -34,11 +35,11 @@ jobs:
 
             - name: 📝 Generate Changelog
               id: generate-changelog
-              uses: grovegs/actions/.github/actions/generate-changelog@v1.4.7
+              uses: grovegs/actions/.github/actions/generate-changelog@v1.5.0
 
             - name: 🆙 Bump Version
               id: bump-version
-              uses: grovegs/actions/.github/actions/bump-version@v1.4.7
+              uses: grovegs/actions/.github/actions/bump-version@v1.5.0
               with:
                   version-type: ${{ inputs.version-type }}
 
@@ -52,7 +53,7 @@ jobs:
               uses: actions/checkout@v7
 
             - name: 🚀 Publish to GitHub
-              uses: grovegs/actions/.github/actions/publish-github@v1.4.7
+              uses: grovegs/actions/.github/actions/publish-github@v1.5.0
               with:
                   title: Release v${{ needs.prepare.outputs.version }}
                   version: v${{ needs.prepare.outputs.version }}
@@ -62,7 +63,7 @@ jobs:
             - name: 📢 Notify Discord Success
               if: success()
               continue-on-error: true
-              uses: grovegs/actions/.github/actions/notify-discord@v1.4.7
+              uses: grovegs/actions/.github/actions/notify-discord@v1.5.0
               with:
                   webhook-url: ${{ secrets.DISCORD_WEBHOOK }}
                   title: ✅ ${{ github.event.repository.name }} v${{ needs.prepare.outputs.version }} (${{ github.ref_name }})
@@ -75,7 +76,7 @@ jobs:
             - name: 📢 Notify Discord Failure
               if: failure()
               continue-on-error: true
-              uses: grovegs/actions/.github/actions/notify-discord@v1.4.7
+              uses: grovegs/actions/.github/actions/notify-discord@v1.5.0
               with:
                   webhook-url: ${{ secrets.DISCORD_WEBHOOK }}
                   title: ❌ ${{ github.event.repository.name }} v${{ needs.prepare.outputs.version }} (${{ github.ref_name }})

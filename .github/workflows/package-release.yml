@@ -8,9 +8,14 @@ on:
                 required: true
                 type: string
             version-type:
-                description: Specifies the version type such as major, minor, or patch for the build
+                description: Specifies the version type such as auto, major, minor, or patch. Auto reads Conventional Commits since the previous release.
                 required: true
                 type: string
+            version-suffix:
+                description: Prerelease suffix appended to the version such as dev for Development releases, which gives 1.2.0-dev. Empty for Production releases.
+                required: false
+                type: string
+                default: ""
             runs-on:
                 description: The type of runner to use (ubuntu-latest, macos-latest, or self-hosted label)
                 required: false
@@ -76,6 +81,16 @@ on:
                 required: false
                 type: boolean
                 default: false
+            skip-unchanged:
+                description: If true, skip the release when nothing under src changed since the previous release, such as for scheduled releases. Development releases compare against the latest version tag, Production releases against the latest stable tag.
+                required: false
+                type: boolean
+                default: false
+
+        outputs:
+            has-changes:
+                description: Whether the release ran because src changed or skip-unchanged was off
+                value: ${{ jobs.prepare.outputs.has-changes }}
 
         secrets:
             github-token:
@@ -102,6 +117,7 @@ jobs:
         name: Prepare Release
         runs-on: ${{ inputs.runs-on }}
         outputs:
+            has-changes: ${{ steps.check-changes.outputs.has-changes }}
             version: ${{ steps.bump-version.outputs.next-version }}
             changelog-plain: ${{ steps.generate-changelog.outputs.changelog-plain }}
             changelog-markdown: ${{ steps.generate-changelog.outputs.changelog-markdown }}
@@ -112,19 +128,65 @@ jobs:
               with:
                   fetch-depth: 0
 
+            - name: 🔍 Check Package Changes
+              id: check-changes
+              shell: bash
+              env:
+                  SKIP_UNCHANGED: ${{ inputs.skip-unchanged }}
+                  VERSION_SUFFIX: ${{ inputs.version-suffix }}
+              run: |
+                  set -euo pipefail
+
+                  if [ "${SKIP_UNCHANGED}" != "true" ]; then
+                      echo "has-changes=true" >> "${GITHUB_OUTPUT}"
+                      exit 0
+                  fi
+
+                  if [ -n "${VERSION_SUFFIX}" ]; then
+                      tag_pattern='^v?[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$'
+                  else
+                      tag_pattern='^v?[0-9]+\.[0-9]+\.[0-9]+$'
+                  fi
+
+                  latest_release=$(git tag --merged HEAD |
+                      grep -E "${tag_pattern}" |
+                      awk '{ base = $0; sub(/^v/, "", base); sub(/-.*/, "", base); print base " " $0 }' |
+                      sort -V |
+                      tail -n 1 |
+                      cut -d ' ' -f 2 || true)
+
+                  if [ -z "${latest_release}" ]; then
+                      echo "::notice::No previous release yet, releasing"
+                      echo "has-changes=true" >> "${GITHUB_OUTPUT}"
+                      exit 0
+                  fi
+
+                  if git diff --quiet "${latest_release}" HEAD -- src; then
+                      echo "::notice::Nothing under src changed since ${latest_release}, skipping the release"
+                      echo "has-changes=false" >> "${GITHUB_OUTPUT}"
+                  else
+                      echo "::notice::src changed since ${latest_release}, releasing"
+                      echo "has-changes=true" >> "${GITHUB_OUTPUT}"
+                  fi
+
             - name: 📝 Generate Changelog
               id: generate-changelog
-              uses: grovegs/actions/.github/actions/generate-changelog@v1.4.7
+              if: steps.check-changes.outputs.has-changes == 'true'
+              uses: grovegs/actions/.github/actions/generate-changelog@v1.5.0
+              with:
+                  include-prereleases: ${{ inputs.version-suffix != '' }}
 
             - name: 🆙 Bump Version
               id: bump-version
-              uses: grovegs/actions/.github/actions/bump-version@v1.4.7
+              if: steps.check-changes.outputs.has-changes == 'true'
+              uses: grovegs/actions/.github/actions/bump-version@v1.5.0
               with:
                   version-type: ${{ inputs.version-type }}
+                  version-suffix: ${{ inputs.version-suffix }}
 
     build-dotnet:
         name: Build .NET Package
-        if: inputs.dotnet-project != ''
+        if: inputs.dotnet-project != '' && needs.prepare.outputs.has-changes == 'true'
         needs: prepare
         runs-on: ${{ inputs.runs-on }}
 
@@ -133,12 +195,12 @@ jobs:
               uses: actions/checkout@v7
 
             - name: 🔧 Setup .NET
-              uses: grovegs/actions/.github/actions/setup-dotnet@v1.4.7
+              uses: grovegs/actions/.github/actions/setup-dotnet@v1.5.0
               with:
                   global-json-file: ${{ inputs.global-json-file }}
 
             - name: 🏗️ Build .NET Project
-              uses: grovegs/actions/.github/actions/build-dotnet@v1.4.7
+              uses: grovegs/actions/.github/actions/build-dotnet@v1.5.0
               with:
                   project: ${{ inputs.dotnet-project }}
                   configuration: Release
@@ -155,7 +217,7 @@ jobs:
 
             - name: 📦 Pack NuGet
               id: pack-nuget
-              uses: grovegs/actions/.github/actions/pack-dotnet@v1.4.7
+              uses: grovegs/actions/.github/actions/pack-dotnet@v1.5.0
               with:
                   project: ${{ inputs.dotnet-project }}
                   configuration: Release
@@ -164,7 +226,7 @@ jobs:
                   directory-build-props: ${{ inputs.directory-build-props }}
 
             - name: 📤 Upload Package Artifact
-              uses: grovegs/actions/.github/actions/upload-artifact@v1.4.7
+              uses: grovegs/actions/.github/actions/upload-artifact@v1.5.0
               with:
                   name: nuget-package
                   path: ${{ steps.pack-nuget.outputs.package }}
@@ -172,7 +234,7 @@ jobs:
 
             - name: 📤 Upload Modified Files
               if: steps.pack-nuget.outputs.modified-files != ''
-              uses: grovegs/actions/.github/actions/upload-artifact@v1.4.7
+              uses: grovegs/actions/.github/actions/upload-artifact@v1.5.0
               with:
                   name: modified-dotnet
                   path: ${{ steps.pack-nuget.outputs.modified-files }}
@@ -180,7 +242,7 @@ jobs:
 
     build-godot:
         name: Build Godot Addon
-        if: inputs.godot-addon != ''
+        if: inputs.godot-addon != '' && needs.prepare.outputs.has-changes == 'true'
         needs: prepare
         runs-on: ${{ inputs.runs-on }}
 
@@ -199,7 +261,7 @@ jobs:
 
             - name: 📦 Pack Godot Addon
               id: pack-addon
-              uses: grovegs/actions/.github/actions/pack-godot-addon@v1.4.7
+              uses: grovegs/actions/.github/actions/pack-godot-addon@v1.5.0
               with:
                   addon: ${{ inputs.godot-addon }}
                   version: ${{ needs.prepare.outputs.version }}
@@ -208,14 +270,14 @@ jobs:
                   license: ${{ inputs.license-file }}
 
             - name: 📤 Upload Package Artifact
-              uses: grovegs/actions/.github/actions/upload-artifact@v1.4.7
+              uses: grovegs/actions/.github/actions/upload-artifact@v1.5.0
               with:
                   name: godot-addon
                   path: ${{ steps.pack-addon.outputs.package }}
                   retention-days: 1
 
             - name: 📤 Upload Modified Files
-              uses: grovegs/actions/.github/actions/upload-artifact@v1.4.7
+              uses: grovegs/actions/.github/actions/upload-artifact@v1.5.0
               with:
                   name: modified-godot
                   path: ${{ steps.pack-addon.outputs.modified-files }}
@@ -223,7 +285,7 @@ jobs:
 
     build-unity:
         name: Build Unity Package
-        if: inputs.unity-package != ''
+        if: inputs.unity-package != '' && needs.prepare.outputs.has-changes == 'true'
         needs: prepare
         runs-on: ${{ inputs.runs-on }}
 
@@ -242,7 +304,7 @@ jobs:
 
             - name: 📦 Pack Unity Package
               id: pack-package
-              uses: grovegs/actions/.github/actions/pack-unity-package@v1.4.7
+              uses: grovegs/actions/.github/actions/pack-unity-package@v1.5.0
               with:
                   package: ${{ inputs.unity-package }}
                   version: ${{ needs.prepare.outputs.version }}
@@ -251,14 +313,14 @@ jobs:
                   license: ${{ inputs.license-file }}
 
             - name: 📤 Upload Package Artifact
-              uses: grovegs/actions/.github/actions/upload-artifact@v1.4.7
+              uses: grovegs/actions/.github/actions/upload-artifact@v1.5.0
               with:
                   name: unity-package
                   path: ${{ steps.pack-package.outputs.package }}
                   retention-days: 1
 
             - name: 📤 Upload Modified Files
-              uses: grovegs/actions/.github/actions/upload-artifact@v1.4.7
+              uses: grovegs/actions/.github/actions/upload-artifact@v1.5.0
               with:
                   name: modified-unity
                   path: ${{ steps.pack-package.outputs.modified-files }}
@@ -285,7 +347,7 @@ jobs:
                   token: ${{ steps.app-token.outputs.token || secrets.github-token }}
 
             - name: 📥 Download Modified Files
-              uses: grovegs/actions/.github/actions/download-artifact@v1.4.7
+              uses: grovegs/actions/.github/actions/download-artifact@v1.5.0
               continue-on-error: true
               with:
                   pattern: modified-*
@@ -310,27 +372,27 @@ jobs:
 
             - name: 🏷️ Create Tag
               if: inputs.create-tag
-              uses: grovegs/actions/.github/actions/create-tag@v1.4.7
+              uses: grovegs/actions/.github/actions/create-tag@v1.5.0
               with:
                   version: ${{ needs.prepare.outputs.version }}
 
             - name: 📥 Download .NET Package
               continue-on-error: true
-              uses: grovegs/actions/.github/actions/download-artifact@v1.4.7
+              uses: grovegs/actions/.github/actions/download-artifact@v1.5.0
               with:
                   name: nuget-package
                   path: packages/dotnet
 
             - name: 📥 Download Godot Package
               continue-on-error: true
-              uses: grovegs/actions/.github/actions/download-artifact@v1.4.7
+              uses: grovegs/actions/.github/actions/download-artifact@v1.5.0
               with:
                   name: godot-addon
                   path: packages/godot
 
             - name: 📥 Download Unity Package
               continue-on-error: true
-              uses: grovegs/actions/.github/actions/download-artifact@v1.4.7
+              uses: grovegs/actions/.github/actions/download-artifact@v1.5.0
               with:
                   name: unity-package
                   path: packages/unity
@@ -385,7 +447,7 @@ jobs:
 
             - name: 🚀 Publish to GitHub
               if: inputs.publish-github && steps.find-packages.outputs.all-packages != ''
-              uses: grovegs/actions/.github/actions/publish-github@v1.4.7
+              uses: grovegs/actions/.github/actions/publish-github@v1.5.0
               with:
                   title: ${{ inputs.package-name }} v${{ needs.prepare.outputs.version }}
                   version: v${{ needs.prepare.outputs.version }}
@@ -395,14 +457,14 @@ jobs:
 
             - name: 📤 Publish to NuGet
               if: inputs.publish-nuget && steps.find-packages.outputs.dotnet-package != ''
-              uses: grovegs/actions/.github/actions/publish-nuget@v1.4.7
+              uses: grovegs/actions/.github/actions/publish-nuget@v1.5.0
               with:
                   file: ${{ steps.find-packages.outputs.dotnet-package }}
                   api-key: ${{ secrets.nuget-api-key }}
 
             - name: 📤 Publish to GitHub Packages
               if: inputs.publish-github-packages && steps.find-packages.outputs.dotnet-package != ''
-              uses: grovegs/actions/.github/actions/publish-nuget@v1.4.7
+              uses: grovegs/actions/.github/actions/publish-nuget@v1.5.0
               with:
                   file: ${{ steps.find-packages.outputs.dotnet-package }}
                   api-key: ${{ secrets.github-token }}
@@ -411,7 +473,7 @@ jobs:
             - name: 📢 Notify Discord Success
               if: success() && inputs.publish-discord
               continue-on-error: true
-              uses: grovegs/actions/.github/actions/notify-discord@v1.4.7
+              uses: grovegs/actions/.github/actions/notify-discord@v1.5.0
               with:
                   webhook-url: ${{ secrets.discord-webhook }}
                   title: ✅ ${{ github.event.repository.name }} v${{ needs.prepare.outputs.version }} (${{ github.ref_name }})
@@ -424,7 +486,7 @@ jobs:
             - name: 📢 Notify Discord Failure
               if: failure() && inputs.publish-discord
               continue-on-error: true
-              uses: grovegs/actions/.github/actions/notify-discord@v1.4.7
+              uses: grovegs/actions/.github/actions/notify-discord@v1.5.0
               with:
                   webhook-url: ${{ secrets.discord-webhook }}
                   title: ❌ ${{ github.event.repository.name }} v${{ needs.prepare.outputs.version }} (${{ github.ref_name }})
