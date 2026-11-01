@@ -28,6 +28,21 @@ on:
                 required: false
                 type: string
                 default: ""
+            unity-path:
+                description: Custom directory for Unity installations (default /Applications/Unity on macOS, $HOME on Linux)
+                required: false
+                type: string
+                default: ""
+        secrets:
+            unity-email:
+                description: The Unity account email address
+                required: false
+            unity-password:
+                description: The Unity account password
+                required: false
+            unity-license-key:
+                description: The Unity license serial key, returned when the tests end
+                required: false
 
 env:
     GITHUB_TOKEN: ${{ github.token }}
@@ -64,12 +79,12 @@ jobs:
                   git lfs pull
 
             - name: 🔧 Setup .NET
-              uses: grovegs/actions/.github/actions/setup-dotnet@v1.4.6
+              uses: grovegs/actions/.github/actions/setup-dotnet@v1.4.7
               with:
                   global-json-file: ${{ inputs.global-json-file }}
 
             - name: 🧪 Test .NET Project
-              uses: grovegs/actions/.github/actions/test-dotnet@v1.4.6
+              uses: grovegs/actions/.github/actions/test-dotnet@v1.4.7
               with:
                   project: ${{ inputs.dotnet-project }}
                   configuration: Release
@@ -105,17 +120,17 @@ jobs:
                   git lfs pull
 
             - name: 🔧 Setup .NET
-              uses: grovegs/actions/.github/actions/setup-dotnet@v1.4.6
+              uses: grovegs/actions/.github/actions/setup-dotnet@v1.4.7
               with:
                   global-json-file: ${{ inputs.global-json-file }}
 
             - name: 🎮 Setup Godot
-              uses: grovegs/actions/.github/actions/setup-godot@v1.4.6
+              uses: grovegs/actions/.github/actions/setup-godot@v1.4.7
               with:
                   global-json-file: ${{ inputs.global-json-file }}
 
             - name: 🧪 Test Godot Project
-              uses: grovegs/actions/.github/actions/test-godot@v1.4.6
+              uses: grovegs/actions/.github/actions/test-godot@v1.4.7
               with:
                   project: ${{ inputs.godot-project }}
 
@@ -150,11 +165,16 @@ jobs:
                   git lfs pull
 
             - name: 🎮 Setup Unity
-              uses: grovegs/actions/.github/actions/setup-unity@v1.4.6
+              uses: grovegs/actions/.github/actions/setup-unity@v1.4.7
               with:
                   project: ${{ inputs.unity-project }}
+                  unity-path: ${{ inputs.unity-path }}
 
             - name: 🧪 Test Unity Project
-              uses: grovegs/actions/.github/actions/test-unity@v1.4.6
+              uses: grovegs/actions/.github/actions/test-unity@v1.4.7
               with:
                   project: ${{ inputs.unity-project }}
+                  unity-path: ${{ inputs.unity-path }}
+                  unity-email: ${{ secrets.unity-email }}
+                  unity-password: ${{ secrets.unity-password }}
+                  unity-license-key: ${{ secrets.unity-license-key }}

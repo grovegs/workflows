@@ -287,7 +287,10 @@ jobs:
   - `dotnet-project` - Path to .NET test project
   - `godot-project` - Path to Godot project
   - `unity-project` - Path to Unity project
+  - `unity-path` - Directory of pre-installed Unity editors
   - `global-json-file` - Path to global.json
+- Secrets:
+  - `unity-email`, `unity-password`, `unity-license-key` - Unity license for the Unity tests, returned when they end
 
 **project-format.yml** - Format game project code
 
