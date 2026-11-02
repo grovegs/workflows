@@ -34,6 +34,7 @@ jobs:
         with:
             dotnet-project: sandbox/ConsoleApplication
             global-json-file: sandbox/ConsoleApplication/global.json
+            unity-package: sandbox/UnityApplication/Packages/com.test.package
 
     test-project-format:
         name: Test Project Format

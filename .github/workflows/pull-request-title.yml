@@ -16,6 +16,6 @@ jobs:
 
         steps:
             - name: 🔎 Check Pull Request Title
-              uses: grovegs/actions/.github/actions/check-pull-request-title@v1.5.0
+              uses: grovegs/actions/.github/actions/check-pull-request-title@v1.7.0
               with:
                   title: ${{ github.event.pull_request.title }}
