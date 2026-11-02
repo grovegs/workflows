@@ -317,7 +317,7 @@ jobs:
   - `version-suffix` - Prerelease suffix such as `dev` for Development releases, which gives `1.2.0-dev`. A stable package can't depend on a prerelease one
   - `dotnet-project` - Path to .NET project
   - `godot-addon` - Path to Godot addon
-  - `unity-package` - Path to Unity package
+  - `unity-package` - Path to Unity package. The release fails before packing when a file in it has no `.meta` file
   - `global-json-file` - Path to global.json
   - `directory-build-props` - Path to Directory.Build.props
   - `publish-github` - Publish to GitHub
@@ -339,6 +339,7 @@ jobs:
   - `files` - File patterns to format using Prettier
   - `dotnet-project` - Path to .NET project
   - `global-json-file` - Path to global.json
+  - `unity-package` - Path to a Unity package to check for missing and orphaned `.meta` files. Unity ignores files without a `.meta` in git packages
 
 ---
 
