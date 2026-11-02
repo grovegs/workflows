@@ -79,12 +79,12 @@ jobs:
                   git lfs pull
 
             - name: 🔧 Setup .NET
-              uses: grovegs/actions/.github/actions/setup-dotnet@v1.7.0
+              uses: grovegs/actions/.github/actions/setup-dotnet@v1.7.1
               with:
                   global-json-file: ${{ inputs.global-json-file }}
 
             - name: 🧪 Test .NET Project
-              uses: grovegs/actions/.github/actions/test-dotnet@v1.7.0
+              uses: grovegs/actions/.github/actions/test-dotnet@v1.7.1
               with:
                   project: ${{ inputs.dotnet-project }}
                   configuration: Release
@@ -120,17 +120,17 @@ jobs:
                   git lfs pull
 
             - name: 🔧 Setup .NET
-              uses: grovegs/actions/.github/actions/setup-dotnet@v1.7.0
+              uses: grovegs/actions/.github/actions/setup-dotnet@v1.7.1
               with:
                   global-json-file: ${{ inputs.global-json-file }}
 
             - name: 🎮 Setup Godot
-              uses: grovegs/actions/.github/actions/setup-godot@v1.7.0
+              uses: grovegs/actions/.github/actions/setup-godot@v1.7.1
               with:
                   global-json-file: ${{ inputs.global-json-file }}
 
             - name: 🧪 Test Godot Project
-              uses: grovegs/actions/.github/actions/test-godot@v1.7.0
+              uses: grovegs/actions/.github/actions/test-godot@v1.7.1
               with:
                   project: ${{ inputs.godot-project }}
 
@@ -165,13 +165,13 @@ jobs:
                   git lfs pull
 
             - name: 🎮 Setup Unity
-              uses: grovegs/actions/.github/actions/setup-unity@v1.7.0
+              uses: grovegs/actions/.github/actions/setup-unity@v1.7.1
               with:
                   project: ${{ inputs.unity-project }}
                   unity-path: ${{ inputs.unity-path }}
 
             - name: 🧪 Test Unity Project
-              uses: grovegs/actions/.github/actions/test-unity@v1.7.0
+              uses: grovegs/actions/.github/actions/test-unity@v1.7.1
               with:
                   project: ${{ inputs.unity-project }}
                   unity-path: ${{ inputs.unity-path }}
