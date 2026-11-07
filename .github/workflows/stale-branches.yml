@@ -1,4 +1,4 @@
-name: 🧹 Prune Branches
+name: 🧹 Stale Branches
 
 on:
     workflow_call:
@@ -28,22 +28,22 @@ on:
         outputs:
             deleted-branches:
                 description: Newline-separated names of the deleted branches, or the branches that would be deleted in a dry run
-                value: ${{ jobs.prune-branches.outputs.deleted-branches }}
+                value: ${{ jobs.delete-stale-branches.outputs.deleted-branches }}
 
 jobs:
-    prune-branches:
-        name: Prune Branches
+    delete-stale-branches:
+        name: Delete Stale Branches
         runs-on: ${{ inputs.runs-on }}
         permissions:
             contents: write
             pull-requests: read
         outputs:
-            deleted-branches: ${{ steps.prune-branches.outputs.deleted-branches }}
+            deleted-branches: ${{ steps.delete-stale-branches.outputs.deleted-branches }}
 
         steps:
-            - name: 🧹 Prune Branches
-              id: prune-branches
-              uses: grovegs/actions/.github/actions/prune-branches@v1.8.0
+            - name: 🧹 Delete Stale Branches
+              id: delete-stale-branches
+              uses: grovegs/actions/.github/actions/delete-stale-branches@v1.8.0
               with:
                   exclude-branches: ${{ inputs.exclude-branches }}
                   stale-days: ${{ inputs.stale-days }}

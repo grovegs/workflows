@@ -352,7 +352,7 @@ jobs:
 
 ### Repository Maintenance Workflows
 
-**prune-branches.yml** - Delete stale remote branches
+**stale-branches.yml** - Delete stale remote branches
 
 - Inputs:
   - `exclude-branches` - Newline-separated branch name patterns to keep, default `main` and `develop`
@@ -372,8 +372,8 @@ on:
         default: true
 
 jobs:
-  prune-branches:
-    uses: grovegs/workflows/.github/workflows/prune-branches.yml@v1
+  delete-stale-branches:
+    uses: grovegs/workflows/.github/workflows/stale-branches.yml@v1
     permissions:
       contents: write
       pull-requests: read
