@@ -352,14 +352,14 @@ jobs:
 
 ### Repository Maintenance Workflows
 
-**prune-branches.yml** - Delete remote branches whose pull request was merged
+**prune-branches.yml** - Delete stale remote branches
 
 - Inputs:
   - `exclude-branches` - Newline-separated branch name patterns to keep, default `main` and `develop`
-  - `stale-days` - Also delete branches whose last commit is this many days old, default `0` for merged branches only
+  - `stale-days` - Delete branches whose last commit is this many days old, default `30`
   - `dry-run` - List the branches without deleting them
-- Squash merges are detected through the merged pull request, and protected branches, the default branch and branches with an open pull request are always kept
-- The caller must grant `contents: write` and `pull-requests: read`
+- Protected branches, the default branch and branches with an open pull request are always kept
+- Run it weekly, like Dependabot. The caller must grant `contents: write` and `pull-requests: read`
 
 ```yaml
 on:
@@ -378,7 +378,6 @@ jobs:
       contents: write
       pull-requests: read
     with:
-      stale-days: 90
       dry-run: ${{ inputs.dry-run == true }}
 ```
 

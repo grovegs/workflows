@@ -16,10 +16,10 @@ on:
                     main
                     develop
             stale-days:
-                description: Delete branches without a merged pull request whose last commit is at least this many days old. Use 0 to only delete merged branches
+                description: Delete branches whose last commit is at least this many days old
                 required: false
                 type: number
-                default: 0
+                default: 30
             dry-run:
                 description: List the branches that would be deleted without deleting them
                 required: false
