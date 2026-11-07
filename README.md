@@ -350,6 +350,37 @@ jobs:
 - Squash merges use the title as the commit message, which drives versions and changelogs
 - Call it from a workflow that runs on `pull_request` with the `opened`, `edited`, `synchronize` and `reopened` types
 
+### Repository Maintenance Workflows
+
+**stale-branches.yml** - Delete stale remote branches
+
+- Inputs:
+  - `exclude-branches` - Newline-separated branch name patterns to keep, default `main` and `develop`
+  - `stale-days` - Delete branches whose last commit is this many days old, default `30`
+  - `dry-run` - List the branches without deleting them
+- Protected branches, the default branch and branches with an open pull request are always kept
+- Run it weekly, like Dependabot. The caller must grant `contents: write` and `pull-requests: read`
+
+```yaml
+on:
+  schedule:
+    - cron: "0 3 * * 1"
+  workflow_dispatch:
+    inputs:
+      dry-run:
+        type: boolean
+        default: true
+
+jobs:
+  delete-stale-branches:
+    uses: grovegs/workflows/.github/workflows/stale-branches.yml@v1
+    permissions:
+      contents: write
+      pull-requests: read
+    with:
+      dry-run: ${{ inputs.dry-run == true }}
+```
+
 ## Advanced Usage
 
 ### Conditional Platform Builds

@@ -1,0 +1,50 @@
+name: 🧹 Stale Branches
+
+on:
+    workflow_call:
+        inputs:
+            runs-on:
+                description: The type of runner to use (ubuntu-latest, macos-latest, or self-hosted label)
+                required: false
+                type: string
+                default: "ubuntu-latest"
+            exclude-branches:
+                description: Newline-separated branch name patterns to keep, such as main or release/*
+                required: false
+                type: string
+                default: |
+                    main
+                    develop
+            stale-days:
+                description: Delete branches whose last commit is at least this many days old
+                required: false
+                type: number
+                default: 30
+            dry-run:
+                description: List the branches that would be deleted without deleting them
+                required: false
+                type: boolean
+                default: false
+        outputs:
+            deleted-branches:
+                description: Newline-separated names of the deleted branches, or the branches that would be deleted in a dry run
+                value: ${{ jobs.delete-stale-branches.outputs.deleted-branches }}
+
+jobs:
+    delete-stale-branches:
+        name: Delete Stale Branches
+        runs-on: ${{ inputs.runs-on }}
+        permissions:
+            contents: write
+            pull-requests: read
+        outputs:
+            deleted-branches: ${{ steps.delete-stale-branches.outputs.deleted-branches }}
+
+        steps:
+            - name: 🧹 Delete Stale Branches
+              id: delete-stale-branches
+              uses: grovegs/actions/.github/actions/delete-stale-branches@v1.8.0
+              with:
+                  exclude-branches: ${{ inputs.exclude-branches }}
+                  stale-days: ${{ inputs.stale-days }}
+                  dry-run: ${{ inputs.dry-run }}
