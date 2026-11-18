@@ -23,6 +23,11 @@ on:
                 required: false
                 type: string
                 default: ""
+            agent-skills:
+                description: Directory to search for agent skills such as .claude/skills, or the repository root to cover package skills too
+                required: false
+                type: string
+                default: ""
 
 env:
     GITHUB_TOKEN: ${{ github.token }}
@@ -60,3 +65,17 @@ jobs:
               uses: grovegs/actions/.github/actions/format-dotnet@v1.10.0
               with:
                   project: ${{ inputs.dotnet-project }}
+
+    check-agent-skills:
+        name: Check Agent Skills
+        if: inputs.agent-skills != ''
+        runs-on: ${{ inputs.runs-on }}
+
+        steps:
+            - name: 📂 Checkout Code
+              uses: actions/checkout@v7
+
+            - name: 🔎 Check Agent Skills
+              uses: grovegs/actions/.github/actions/check-agent-skills@v1.9.0
+              with:
+                  path: ${{ inputs.agent-skills }}
