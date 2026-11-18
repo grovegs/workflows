@@ -39,7 +39,7 @@ on:
                 type: string
                 default: "EditMode,PlayMode"
             unity-graphics:
-                description: Set to true when the runner has a graphics device, so that Unity tests in the RequiresGraphics category run
+                description: Set to true when the runner has a graphics device, so that Unity tests in the Graphics category run
                 required: false
                 type: boolean
                 default: false
@@ -185,13 +185,13 @@ jobs:
                   git lfs pull
 
             - name: 🎮 Setup Unity
-              uses: grovegs/actions/.github/actions/setup-unity@c483da0156cb11bdd0a7f40cd211d6cffbfca23d
+              uses: grovegs/actions/.github/actions/setup-unity@8b569fe6f3c5a25417f4ac2173689d506461302e
               with:
                   project: ${{ inputs.unity-project }}
                   unity-path: ${{ inputs.unity-path }}
 
             - name: 🧪 Test Unity Project
-              uses: grovegs/actions/.github/actions/test-unity@c483da0156cb11bdd0a7f40cd211d6cffbfca23d
+              uses: grovegs/actions/.github/actions/test-unity@8b569fe6f3c5a25417f4ac2173689d506461302e
               with:
                   project: ${{ inputs.unity-project }}
                   unity-path: ${{ inputs.unity-path }}
