@@ -294,6 +294,10 @@ jobs:
   - `godot-project` - Path to Godot project
   - `unity-project` - Path to Unity project
   - `unity-path` - Directory of pre-installed Unity editors
+  - `unity-test-modes` - Unity test platforms to run (default: `EditMode,PlayMode`)
+  - `unity-graphics` - Set to `true` when the runner has a graphics device, so tests in the `Graphics` category run (default: `false`)
+  - `unity-test-retries` - Times to run a Unity test mode again when tests fail (default: `0`)
+  - `unity-test-timeout` - Seconds each Unity test run may take (default: `3600`)
   - `global-json-file` - Path to global.json
 - Secrets:
   - `unity-email`, `unity-password`, `unity-license-key` - Unity license for the Unity tests, returned when they end
