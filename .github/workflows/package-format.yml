@@ -79,3 +79,17 @@ jobs:
               uses: grovegs/actions/.github/actions/check-unity-meta-files@v1.10.0
               with:
                   package: ${{ inputs.unity-package }}
+
+    check-agent-skills:
+        name: Check Agent Skills
+        if: inputs.unity-package != ''
+        runs-on: ${{ inputs.runs-on }}
+
+        steps:
+            - name: 📂 Checkout Code
+              uses: actions/checkout@v7
+
+            - name: 🔎 Check Agent Skills
+              uses: grovegs/actions/.github/actions/check-agent-skills@v1.10.0
+              with:
+                  path: ${{ inputs.unity-package }}

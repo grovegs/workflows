@@ -308,6 +308,7 @@ jobs:
   - `files` - File patterns to format using Prettier
   - `dotnet-project` - Path to .NET project
   - `global-json-file` - Path to global.json
+  - `agent-skills` - Directory to check for agent skills with a front matter that does not load, such as `.claude/skills`
 
 ### Package Workflows
 
@@ -343,7 +344,7 @@ jobs:
   - `files` - File patterns to format using Prettier
   - `dotnet-project` - Path to .NET project
   - `global-json-file` - Path to global.json
-  - `unity-package` - Path to a Unity package to check for missing and orphaned `.meta` files. Unity ignores files without a `.meta` in git packages
+  - `unity-package` - Path to a Unity package to check for missing and orphaned `.meta` files. Unity ignores files without a `.meta` in git packages. Agent skills in the package are checked too
 
 ---
 
