@@ -325,6 +325,8 @@ jobs:
   - `unity-package` - Path to Unity package. The release fails before packing when a file in it has no `.meta` file
   - `global-json-file` - Path to global.json
   - `directory-build-props` - Path to Directory.Build.props
+  - `readme-file`, `license-file` - Paths to the README and the license, copied into the Godot addon and the Unity package
+  - `agent-skills` - Path to the folder of agent skills such as `skills`. Each skill is written into the Godot addon and the Unity package as its `SKILL.md` followed by `godot.md` or `unity.md`, when there is one, and the release commit carries the result
   - `publish-github` - Publish to GitHub
   - `publish-nuget` - Publish to NuGet
   - `publish-discord` - Send Discord notifications
@@ -345,7 +347,7 @@ jobs:
   - `dotnet-project` - Path to .NET project
   - `global-json-file` - Path to global.json
   - `unity-package` - Path to a Unity package to check for missing and orphaned `.meta` files. Unity ignores files without a `.meta` in git packages
-- Agent skills are always checked: every `SKILL.md` in the repository must have a front matter that loads, and the skills the Unity package and the Godot addon ship must match their source in `skills/`. A repository without skills passes
+- Agent skills are always checked: every `SKILL.md` in the repository must have a front matter that loads. A repository without skills passes
 
 ---
 
