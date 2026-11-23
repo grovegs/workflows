@@ -63,6 +63,12 @@ on:
             unity-license-key:
                 description: The Unity license serial key, returned when the tests end
                 required: false
+            client-id:
+                description: GitHub App client ID for generating a token that reads the owner's private Git packages
+                required: false
+            app-private-key:
+                description: GitHub App private key for generating a token that reads the owner's private Git packages
+                required: false
 
 env:
     GITHUB_TOKEN: ${{ github.token }}
@@ -183,6 +189,28 @@ jobs:
               run: |
                   git lfs install --local
                   git lfs pull
+
+            - name: 🔑 Generate Package Token
+              id: package-token
+              uses: actions/create-github-app-token@v3
+              continue-on-error: true
+              with:
+                  client-id: ${{ secrets.client-id }}
+                  private-key: ${{ secrets.app-private-key }}
+                  owner: ${{ github.repository_owner }}
+                  permission-contents: read
+
+            - name: 🔐 Authorize Private Git Packages
+              if: steps.package-token.outputs.token != ''
+              shell: bash
+              env:
+                  PACKAGE_TOKEN: ${{ steps.package-token.outputs.token }}
+              run: |
+                  {
+                      echo "GIT_CONFIG_COUNT=1"
+                      echo "GIT_CONFIG_KEY_0=url.https://x-access-token:${PACKAGE_TOKEN}@github.com/${GITHUB_REPOSITORY_OWNER}/.insteadOf"
+                      echo "GIT_CONFIG_VALUE_0=https://github.com/${GITHUB_REPOSITORY_OWNER}/"
+                  } >> "${GITHUB_ENV}"
 
             - name: 🎮 Setup Unity
               uses: grovegs/actions/.github/actions/setup-unity@v1.12.1
