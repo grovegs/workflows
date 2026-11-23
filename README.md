@@ -344,7 +344,8 @@ jobs:
   - `files` - File patterns to format using Prettier
   - `dotnet-project` - Path to .NET project
   - `global-json-file` - Path to global.json
-  - `unity-package` - Path to a Unity package to check for missing and orphaned `.meta` files. Unity ignores files without a `.meta` in git packages. Agent skills in the package are checked too
+  - `unity-package` - Path to a Unity package to check for missing and orphaned `.meta` files. Unity ignores files without a `.meta` in git packages
+- Agent skills are always checked: every `SKILL.md` in the repository must have a front matter that loads, and the skills the Unity package and the Godot addon ship must match their source in `skills/`. A repository without skills passes
 
 ---
 
