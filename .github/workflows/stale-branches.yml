@@ -43,7 +43,7 @@ jobs:
         steps:
             - name: 🧹 Delete Stale Branches
               id: delete-stale-branches
-              uses: grovegs/actions/.github/actions/delete-stale-branches@v1.8.0
+              uses: grovegs/actions/.github/actions/delete-stale-branches@v1.10.0
               with:
                   exclude-branches: ${{ inputs.exclude-branches }}
                   stale-days: ${{ inputs.stale-days }}
