@@ -37,10 +37,20 @@ on:
                 type: string
                 default: ""
             godot-preset-name:
-                description: The Godot export preset name to use for the build
+                description: The Godot export preset name for both platforms, used when a platform has no preset name of its own
                 required: false
                 type: string
                 default: "Default"
+            godot-android-preset-name:
+                description: The Godot export preset name to use for the Android build such as "Android Production"
+                required: false
+                type: string
+                default: ""
+            godot-ios-preset-name:
+                description: The Godot export preset name to use for the iOS build such as "iOS Production"
+                required: false
+                type: string
+                default: ""
             unity-project:
                 description: Path to the Unity project containing the ProjectSettings folder
                 required: false
@@ -313,7 +323,7 @@ jobs:
                   global-json-file: ${{ inputs.global-json-file }}
                   version: ${{ needs.prepare.outputs.base-version }}
                   platform: Android
-                  preset: ${{ inputs.godot-preset-name }}
+                  preset: ${{ inputs.godot-android-preset-name || inputs.godot-preset-name }}
                   configuration: Release
                   filename: ${{ steps.generate-filename.outputs.filename }}
                   android-keystore: ${{ secrets.android-keystore }}
@@ -404,7 +414,7 @@ jobs:
                   global-json-file: ${{ inputs.global-json-file }}
                   version: ${{ needs.prepare.outputs.base-version }}
                   platform: iOS
-                  preset: ${{ inputs.godot-preset-name }}
+                  preset: ${{ inputs.godot-ios-preset-name || inputs.godot-preset-name }}
                   configuration: Release
                   filename: ${{ steps.generate-filename.outputs.filename }}
                   ios-team-id: ${{ secrets.ios-team-id }}
