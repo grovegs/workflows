@@ -277,6 +277,7 @@ jobs:
   - `version-type` - auto, major, minor, or patch. Auto reads the commits since the previous release: `feat:` and breaking changes bump minor, anything else bumps patch, and major is only bumped when chosen
   - `version-suffix` - Prerelease suffix such as `dev` for Development releases, shown in the tag and release name. The app's store version and build number use the version without it
   - `godot-project` - Path to Godot project
+  - `godot-android-preset-name`, `godot-ios-preset-name` - Godot export preset for each platform, such as `Android Production` and `iOS Production`. Each falls back to `godot-preset-name` (default: `Default`)
   - `unity-project` - Path to Unity project
   - `global-json-file` - Path to global.json
   - `tester-groups` - Firebase tester groups
